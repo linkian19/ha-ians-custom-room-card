@@ -1,9 +1,28 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { HomeAssistant, CardConfig, SubButtonConfig, SubButtonsLayout } from "./types";
+import type { HomeAssistant, CardConfig, SubButtonConfig, SubButtonsLayout, IconPosition, BadgePosition } from "./types";
 import { CARD_TYPE } from "./const";
 import { loadHaComponents } from "./utils/loader";
 import { isTemplate } from "./utils/template-manager";
+
+const ICON_POSITION_OPTIONS = [
+  { value: "top-left",      label: "Top Left (default)" },
+  { value: "top-right",     label: "Top Right" },
+  { value: "bottom-left",   label: "Bottom Left" },
+  { value: "bottom-right",  label: "Bottom Right" },
+  { value: "center",        label: "Center" },
+  { value: "center-left",   label: "Center Left" },
+  { value: "center-right",  label: "Center Right" },
+  { value: "custom",        label: "Custom" },
+];
+
+const BADGE_POSITION_OPTIONS = [
+  { value: "top-right",     label: "Top Right (default)" },
+  { value: "top-left",      label: "Top Left" },
+  { value: "bottom-left",   label: "Bottom Left" },
+  { value: "bottom-right",  label: "Bottom Right" },
+  { value: "custom",        label: "Custom" },
+];
 
 const SUB_BUTTON_LAYOUT_OPTIONS = [
   { value: "bottom-row", label: "Bottom Row" },
@@ -290,6 +309,52 @@ export class IansCustomRoomCardEditor extends LitElement {
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("icon_background_color", ev.detail.value || undefined)}
         ></ha-selector>
+        <div class="two-col">
+          <ha-selector
+            .hass=${this.hass}
+            .label=${"Icon Size (px)"}
+            .selector=${{ number: { min: 8, max: 120, step: 2, mode: "box" } }}
+            .value=${c.icon_size ?? 24}
+            @value-changed=${(ev: CustomEvent) =>
+              this._fieldChanged("icon_size", ev.detail.value)}
+          ></ha-selector>
+          <ha-selector
+            .hass=${this.hass}
+            .label=${"Background Size (px)"}
+            .selector=${{ number: { min: 8, max: 160, step: 2, mode: "box" } }}
+            .value=${c.icon_background_size ?? 40}
+            @value-changed=${(ev: CustomEvent) =>
+              this._fieldChanged("icon_background_size", ev.detail.value)}
+          ></ha-selector>
+        </div>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Icon Position"}
+          .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${c.icon_position ?? "top-left"}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("icon_position", ev.detail.value as IconPosition || undefined)}
+        ></ha-selector>
+        ${c.icon_position === "custom" ? html`
+          <div class="two-col">
+            <ha-selector
+              .hass=${this.hass}
+              .label=${"Position X (CSS)"}
+              .selector=${{ text: {} }}
+              .value=${c.icon_position_x ?? ""}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("icon_position_x", ev.detail.value || undefined)}
+            ></ha-selector>
+            <ha-selector
+              .hass=${this.hass}
+              .label=${"Position Y (CSS)"}
+              .selector=${{ text: {} }}
+              .value=${c.icon_position_y ?? ""}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("icon_position_y", ev.detail.value || undefined)}
+            ></ha-selector>
+          </div>
+        ` : nothing}
       </div>
 
       <!-- ── Badge ──────────────────────────────────────────────────────── -->
@@ -317,6 +382,42 @@ export class IansCustomRoomCardEditor extends LitElement {
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("badge_background_color", ev.detail.value || undefined)}
         ></ha-selector>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Badge Size (px)"}
+          .selector=${{ number: { min: 8, max: 48, step: 1, mode: "box" } }}
+          .value=${c.badge_size ?? 18}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("badge_size", ev.detail.value)}
+        ></ha-selector>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Badge Position (relative to icon)"}
+          .selector=${{ select: { options: BADGE_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${c.badge_position ?? "top-right"}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("badge_position", ev.detail.value as BadgePosition || undefined)}
+        ></ha-selector>
+        ${c.badge_position === "custom" ? html`
+          <div class="two-col">
+            <ha-selector
+              .hass=${this.hass}
+              .label=${"Badge X (CSS)"}
+              .selector=${{ text: {} }}
+              .value=${c.badge_position_x ?? ""}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("badge_position_x", ev.detail.value || undefined)}
+            ></ha-selector>
+            <ha-selector
+              .hass=${this.hass}
+              .label=${"Badge Y (CSS)"}
+              .selector=${{ text: {} }}
+              .value=${c.badge_position_y ?? ""}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("badge_position_y", ev.detail.value || undefined)}
+            ></ha-selector>
+          </div>
+        ` : nothing}
       </div>
 
       <!-- ── Card background & border ──────────────────────────────────── -->
@@ -678,6 +779,12 @@ export class IansCustomRoomCardEditor extends LitElement {
 
       .grid-options ha-selector {
         flex: 1;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
       }
 
       .field-row {

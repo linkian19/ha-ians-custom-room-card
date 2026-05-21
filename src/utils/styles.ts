@@ -11,7 +11,8 @@ export const cardStyles = css`
     --ians-card-border-radius: var(--ha-card-border-radius, 12px);
     --ians-icon-color: var(--state-icon-color, var(--primary-text-color));
     --ians-icon-background-color: transparent;
-    --ians-icon-size: 40px;
+    --ians-icon-background-size: 40px;  /* icon container / circle size */
+    --ians-icon-size: calc(var(--ians-icon-background-size) * 0.6); /* MDI glyph size */
     --ians-badge-color: #fff;
     --ians-badge-background-color: var(--error-color, #db4437);
     --ians-badge-size: 18px;
@@ -86,8 +87,8 @@ export const cardStyles = css`
   /* ── Icon ─────────────────────────────────────────────────────────────────── */
   .icon-container {
     position: relative;
-    width: var(--ians-icon-size);
-    height: var(--ians-icon-size);
+    width: var(--ians-icon-background-size);
+    height: var(--ians-icon-background-size);
     flex-shrink: 0;
     border-radius: 50%;
     background-color: var(--ians-icon-background-color);
@@ -97,16 +98,31 @@ export const cardStyles = css`
   }
 
   .icon-container ha-icon {
-    --mdc-icon-size: calc(var(--ians-icon-size) * 0.6);
+    --mdc-icon-size: var(--ians-icon-size);
     color: var(--ians-icon-color);
     display: flex;
   }
 
+  /* Absolute positioning — rendered as direct child of ha-card */
+  .icon-container.icon-absolute {
+    position: absolute;
+    z-index: 3;
+    flex-shrink: 0;
+  }
+
+  .icon-container.icon-pos-top-left    { top: 12px; left: 12px; }
+  .icon-container.icon-pos-top-right   { top: 12px; right: 12px; }
+  .icon-container.icon-pos-bottom-left { bottom: 12px; left: 12px; }
+  .icon-container.icon-pos-bottom-right { bottom: 12px; right: 12px; }
+  .icon-container.icon-pos-center      { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .icon-container.icon-pos-center-left { top: 50%; left: 12px; transform: translateY(-50%); }
+  .icon-container.icon-pos-center-right { top: 50%; right: 12px; transform: translateY(-50%); }
+
   /* ── Icon badge ───────────────────────────────────────────────────────────── */
   .badge {
     position: absolute;
-    top: -2px;
-    right: -2px;
+    top: -4px;
+    right: -4px;
     width: var(--ians-badge-size);
     height: var(--ians-badge-size);
     border-radius: 50%;
@@ -122,6 +138,12 @@ export const cardStyles = css`
     color: var(--ians-badge-color);
     display: flex;
   }
+
+  /* Badge position relative to icon-container */
+  .badge.badge-pos-top-left    { top: -4px;  left: -4px;  right: auto;  bottom: auto; }
+  .badge.badge-pos-top-right   { top: -4px;  right: -4px; left: auto;   bottom: auto; }
+  .badge.badge-pos-bottom-left { bottom: -4px; left: -4px;  top: auto; right: auto; }
+  .badge.badge-pos-bottom-right { bottom: -4px; right: -4px; top: auto; left: auto; }
 
   /* ── Title ────────────────────────────────────────────────────────────────── */
   .card-title {

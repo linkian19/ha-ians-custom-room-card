@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-05-21
+
+### Added
+- **Icon size controls** — independently configure the MDI glyph size (`icon_size`) and the circle background size (`icon_background_size`), both in px
+- **Icon position** — place the icon anywhere on the card: top-left (default in-flow), top-right, bottom-left, bottom-right, center, center-left, center-right, or custom (CSS X/Y values). Icon is absolutely positioned on the card when set; title remains in the header
+- **Badge size** — configure badge circle diameter in px (`badge_size`)
+- **Badge position** — place the badge relative to the icon: top-right (default), top-left, bottom-left, bottom-right, or custom (CSS X/Y). Badge always moves with the icon regardless of icon position
+
 ## [0.1.4] - 2026-05-21
 
 ### Changed

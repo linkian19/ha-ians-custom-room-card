@@ -140,21 +140,53 @@ export type SubButtonsLayout =
   | "grid"
   | "custom";
 
+export type IconPosition =
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right"
+  | "center"
+  | "center-left"
+  | "center-right"
+  | "custom";
+
+export type BadgePosition =
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right"
+  | "custom";
+
 export interface CardConfig {
   type: string;
   entity?: string;
   title?: string;
+  // Icon
   icon?: string;
   icon_color?: string;
+  icon_size?: number;            // MDI glyph size in px
   icon_background_color?: string;
+  icon_background_size?: number; // icon container circle size in px
+  // Icon position within card
+  icon_position?: IconPosition;
+  icon_position_x?: string;      // CSS value; used when icon_position: "custom"
+  icon_position_y?: string;      // CSS value; used when icon_position: "custom"
+  // Badge
   badge_icon?: string;
   badge_color?: string;
   badge_background_color?: string;
+  badge_size?: number;           // badge circle size in px
+  // Badge position relative to icon
+  badge_position?: BadgePosition;
+  badge_position_x?: string;     // CSS value; used when badge_position: "custom"
+  badge_position_y?: string;     // CSS value; used when badge_position: "custom"
+  // Card background & border
   background_color?: string;
   background_opacity?: number;
   background_image?: string;
   border_color?: string;
   border_opacity?: number;
+  // Layout
   grid_options?: GridOptions;
   sub_buttons_layout?: SubButtonsLayout;
   sub_buttons?: SubButtonConfig[];

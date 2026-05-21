@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { HomeAssistant, CardConfig, GridOptions } from "./types";
+import type { HomeAssistant, CardConfig, GridOptions, IconPosition, BadgePosition } from "./types";
 import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION } from "./const";
 import { cardStyles } from "./utils/styles";
 import { resolveAreaImage } from "./utils/area-image";
@@ -270,14 +270,20 @@ export class IansCustomRoomCard extends LitElement {
       c.border_opacity !== undefined ? String(c.border_opacity) : undefined
     );
     this._setCSSVar("--ians-icon-color", resolve("icon_color", c.icon_color));
+    this._setCSSVar("--ians-icon-background-color", c.icon_background_color);
     this._setCSSVar(
-      "--ians-icon-background-color",
-      c.icon_background_color
+      "--ians-icon-background-size",
+      c.icon_background_size !== undefined ? `${c.icon_background_size}px` : undefined
+    );
+    this._setCSSVar(
+      "--ians-icon-size",
+      c.icon_size !== undefined ? `${c.icon_size}px` : undefined
     );
     this._setCSSVar("--ians-badge-color", resolve("badge_color", c.badge_color));
+    this._setCSSVar("--ians-badge-background-color", c.badge_background_color);
     this._setCSSVar(
-      "--ians-badge-background-color",
-      c.badge_background_color
+      "--ians-badge-size",
+      c.badge_size !== undefined ? `${c.badge_size}px` : undefined
     );
   }
 
@@ -374,6 +380,59 @@ export class IansCustomRoomCard extends LitElement {
       ? `background-image: url('${bgImageUrl}');`
       : "";
 
+    const iconPosition: IconPosition | undefined = c.icon_position;
+    const badgePosition = c.badge_position ?? "top-right";
+
+    // Badge element (shared between flow and absolute icon renders)
+    const badgeEl = badgeIcon
+      ? html`
+          <div
+            part="badge"
+            class=${[
+              "badge",
+              badgePosition !== "custom" ? `badge-pos-${badgePosition}` : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            style=${badgePosition === "custom"
+              ? `top: ${c.badge_position_y ?? "auto"}; left: ${c.badge_position_x ?? "auto"};`
+              : ""}
+          >
+            <ha-icon part="badge-icon" .icon=${badgeIcon}></ha-icon>
+          </div>
+        `
+      : nothing;
+
+    // Icon container — rendered in header flow (default) or absolutely positioned
+    const iconEl =
+      icon !== undefined
+        ? iconPosition
+          ? html`
+              <div
+                part="icon-container"
+                class=${[
+                  "icon-container",
+                  "icon-absolute",
+                  iconPosition !== "custom" ? `icon-pos-${iconPosition}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style=${iconPosition === "custom"
+                  ? `top: ${c.icon_position_y ?? "auto"}; left: ${c.icon_position_x ?? "auto"};`
+                  : ""}
+              >
+                <ha-icon part="icon" .icon=${icon}></ha-icon>
+                ${badgeEl}
+              </div>
+            `
+          : html`
+              <div part="icon-container" class="icon-container">
+                <ha-icon part="icon" .icon=${icon}></ha-icon>
+                ${badgeEl}
+              </div>
+            `
+        : nothing;
+
     return html`
       <ha-card
         part="card"
@@ -394,27 +453,14 @@ export class IansCustomRoomCard extends LitElement {
             ></div>`
           : nothing}
 
+        <!-- Absolutely positioned icon (rendered outside card-inner flow) -->
+        ${iconPosition ? iconEl : nothing}
+
         <!-- Content -->
         <div class="card-inner">
-          <!-- Header: icon + title -->
+          <!-- Header: icon (default flow) + title -->
           <div part="header" class="card-header">
-            ${icon !== undefined
-              ? html`
-                  <div part="icon-container" class="icon-container">
-                    <ha-icon part="icon" .icon=${icon}></ha-icon>
-                    ${badgeIcon
-                      ? html`
-                          <div part="badge" class="badge">
-                            <ha-icon
-                              part="badge-icon"
-                              .icon=${badgeIcon}
-                            ></ha-icon>
-                          </div>
-                        `
-                      : nothing}
-                  </div>
-                `
-              : nothing}
+            ${!iconPosition ? iconEl : nothing}
             ${title
               ? html`<span part="title" class="card-title">${title}</span>`
               : nothing}
