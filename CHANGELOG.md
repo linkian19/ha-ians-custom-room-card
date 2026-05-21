@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-21
+
+### Fixed
+- Add `"type": "module"` to package.json to suppress Vite CJS Node API deprecation warning in build output
+
 ## [0.1.0] - 2026-05-21
 
 ### Added
