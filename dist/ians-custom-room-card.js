@@ -1064,16 +1064,10 @@ function attachActionHandler(element, config, dispatch) {
 }
 async function loadHaComponents() {
   var _a2, _b2;
-  if (!customElements.get("ha-form") || !customElements.get("hui-card-features-editor")) {
+  if (!customElements.get("ha-form")) {
     (_b2 = (_a2 = customElements.get("hui-tile-card")) == null ? void 0 : _a2.getConfigElement) == null ? void 0 : _b2.call(_a2);
   }
-  await Promise.all([
-    customElements.whenDefined("ha-entity-picker"),
-    customElements.whenDefined("ha-icon-picker"),
-    customElements.whenDefined("ha-selector"),
-    customElements.whenDefined("ha-form"),
-    customElements.whenDefined("ha-textfield")
-  ]);
+  await Promise.resolve();
 }
 var __defProp$1 = Object.defineProperty;
 var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;

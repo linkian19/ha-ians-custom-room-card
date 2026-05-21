@@ -9,18 +9,10 @@
  * on HA updates. Monitor after major HA releases.
  */
 export async function loadHaComponents(): Promise<void> {
-  if (
-    !customElements.get("ha-form") ||
-    !customElements.get("hui-card-features-editor")
-  ) {
+  if (!customElements.get("ha-form")) {
     (customElements.get("hui-tile-card") as any)?.getConfigElement?.();
   }
-
-  await Promise.all([
-    customElements.whenDefined("ha-entity-picker"),
-    customElements.whenDefined("ha-icon-picker"),
-    customElements.whenDefined("ha-selector"),
-    customElements.whenDefined("ha-form"),
-    customElements.whenDefined("ha-textfield"),
-  ]);
+  // HA lazy-loads its own elements when first rendered; no need to await them.
+  // A single microtask tick gives the registry a chance to process the trigger.
+  await Promise.resolve();
 }

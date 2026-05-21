@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-05-21
+
+### Fixed
+- Visual editor no longer gets stuck on "Loading editor…" — removed blocking `Promise.all` wait on HA element registration that never resolved in current HA versions
+
 ## [0.1.1] - 2026-05-21
 
 ### Fixed
