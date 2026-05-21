@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-05-21
+
+### Fixed
+- Replace `ha-textfield` with native `<input>` elements — text fields (Title, color fields, image URL, sub-button label) were invisible because `ha-textfield` is not auto-loaded in current HA versions
+- Change action selectors from `{ action: {} }` to `{ ui_action: {} }` — the correct `ha-selector` type in HA 2024+; previously action selectors rendered blank
+
 ## [0.1.2] - 2026-05-21
 
 ### Fixed
