@@ -213,17 +213,14 @@ export class IansCustomRoomCardEditor extends LitElement {
     const isTemplate = TEMPLATE_CAPABLE_FIELDS.has(fieldKey);
 
     const widget = () => html`
-      <input
-        type="text"
-        class="ha-input"
+      <ha-selector
+        .hass=${this.hass}
+        .label=${label}
+        .selector=${{ text: {} }}
         .value=${(this._config?.[fieldKey as keyof CardConfig] as string) ?? ""}
-        placeholder="rgba(0,0,0,0.5) or #hex or var(--primary-color)"
-        @change=${(ev: Event) =>
-          this._fieldChanged(
-            fieldKey,
-            (ev.target as HTMLInputElement).value
-          )}
-      />
+        @value-changed=${(ev: CustomEvent) =>
+          this._fieldChanged(fieldKey, ev.detail.value || undefined)}
+      ></ha-selector>
     `;
 
     if (!isTemplate) return widget();
@@ -256,17 +253,14 @@ export class IansCustomRoomCardEditor extends LitElement {
           "title",
           "Title",
           () => html`
-            <input
-              type="text"
-              class="ha-input"
+            <ha-selector
+              .hass=${this.hass}
+              .label=${"Title"}
+              .selector=${{ text: {} }}
               .value=${c.title ?? ""}
-              placeholder="Room name or 'entity'"
-              @change=${(ev: Event) =>
-                this._fieldChanged(
-                  "title",
-                  (ev.target as HTMLInputElement).value || undefined
-                )}
-            />
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("title", ev.detail.value || undefined)}
+            ></ha-selector>
           `
         )}
         ${this._renderTemplateField(
@@ -288,20 +282,14 @@ export class IansCustomRoomCardEditor extends LitElement {
       <div class="section-header">Icon Appearance</div>
       <div class="section-body">
         ${this._renderColorField("icon_color", "Icon Color")}
-        <div class="text-field">
-          <label>Icon Background Color</label>
-          <input
-            type="text"
-            class="ha-input"
-            .value=${c.icon_background_color ?? ""}
-            placeholder="transparent or rgba(…)"
-            @change=${(ev: Event) =>
-              this._fieldChanged(
-                "icon_background_color",
-                (ev.target as HTMLInputElement).value || undefined
-              )}
-          />
-        </div>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Icon Background Color"}
+          .selector=${{ text: {} }}
+          .value=${c.icon_background_color ?? ""}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("icon_background_color", ev.detail.value || undefined)}
+        ></ha-selector>
       </div>
 
       <!-- ── Badge ──────────────────────────────────────────────────────── -->
@@ -321,20 +309,14 @@ export class IansCustomRoomCardEditor extends LitElement {
           `
         )}
         ${this._renderColorField("badge_color", "Badge Icon Color")}
-        <div class="text-field">
-          <label>Badge Background Color</label>
-          <input
-            type="text"
-            class="ha-input"
-            .value=${c.badge_background_color ?? ""}
-            placeholder="var(--error-color)"
-            @change=${(ev: Event) =>
-              this._fieldChanged(
-                "badge_background_color",
-                (ev.target as HTMLInputElement).value || undefined
-              )}
-          />
-        </div>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Badge Background Color"}
+          .selector=${{ text: {} }}
+          .value=${c.badge_background_color ?? ""}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("badge_background_color", ev.detail.value || undefined)}
+        ></ha-selector>
       </div>
 
       <!-- ── Card background & border ──────────────────────────────────── -->
@@ -353,20 +335,14 @@ export class IansCustomRoomCardEditor extends LitElement {
           ></ha-selector>
         </div>
 
-        <div class="text-field">
-          <label>Background Image URL (or 'area')</label>
-          <input
-            type="text"
-            class="ha-input"
-            .value=${c.background_image ?? ""}
-            placeholder="/local/room.jpg or 'area'"
-            @change=${(ev: Event) =>
-              this._fieldChanged(
-                "background_image",
-                (ev.target as HTMLInputElement).value || undefined
-              )}
-          />
-        </div>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Background Image URL (or 'area')"}
+          .selector=${{ text: {} }}
+          .value=${c.background_image ?? ""}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("background_image", ev.detail.value || undefined)}
+        ></ha-selector>
 
         ${this._renderColorField("border_color", "Border Color")}
 
@@ -536,20 +512,14 @@ export class IansCustomRoomCardEditor extends LitElement {
                     )}
                 ></ha-icon-picker>
 
-                <div class="text-field">
-                  <label>Label (or 'entity')</label>
-                  <input
-                    type="text"
-                    class="ha-input"
-                    .value=${btn.label ?? ""}
-                    @change=${(ev: Event) =>
-                      this._subButtonChanged(
-                        index,
-                        "label",
-                        (ev.target as HTMLInputElement).value || undefined
-                      )}
-                  />
-                </div>
+                <ha-selector
+                  .hass=${this.hass}
+                  .label=${"Label (or 'entity')"}
+                  .selector=${{ text: {} }}
+                  .value=${btn.label ?? ""}
+                  @value-changed=${(ev: CustomEvent) =>
+                    this._subButtonChanged(index, "label", ev.detail.value || undefined)}
+                ></ha-selector>
 
                 <ha-form
                   .hass=${this.hass}
@@ -855,35 +825,6 @@ export class IansCustomRoomCardEditor extends LitElement {
         margin-top: 4px;
       }
 
-      .ha-input {
-        width: 100%;
-        height: 56px;
-        padding: 0 12px;
-        border: 1px solid var(--divider-color);
-        border-radius: 4px;
-        background: var(--card-background-color, transparent);
-        color: var(--primary-text-color);
-        font-size: 14px;
-        font-family: inherit;
-        box-sizing: border-box;
-        outline: none;
-      }
-
-      .ha-input:focus {
-        border-color: var(--primary-color);
-        border-width: 2px;
-      }
-
-      .text-field {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .text-field label {
-        font-size: 12px;
-        color: var(--secondary-text-color);
-      }
     `;
   }
 }

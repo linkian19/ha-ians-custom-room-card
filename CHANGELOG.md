@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-05-21
+
+### Changed
+- Replace all remaining plain `<input>` elements in the editor with `ha-selector` using `{ text: {} }` — all text fields now use native HA-styled inputs consistent with the rest of the editor
+
 ## [0.1.3] - 2026-05-21
 
 ### Fixed

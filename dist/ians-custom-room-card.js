@@ -1256,16 +1256,13 @@ let IansCustomRoomCardEditor = class extends i {
     const widget = () => {
       var _a2, _b2;
       return b`
-      <input
-        type="text"
-        class="ha-input"
+      <ha-selector
+        .hass=${this.hass}
+        .label=${label}
+        .selector=${{ text: {} }}
         .value=${(_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : ""}
-        placeholder="rgba(0,0,0,0.5) or #hex or var(--primary-color)"
-        @change=${(ev) => this._fieldChanged(
-        fieldKey,
-        ev.target.value
-      )}
-      />
+        @value-changed=${(ev) => this._fieldChanged(fieldKey, ev.detail.value || void 0)}
+      ></ha-selector>
     `;
     };
     if (!isTemplate2) return widget();
@@ -1296,16 +1293,13 @@ let IansCustomRoomCardEditor = class extends i {
       () => {
         var _a3;
         return b`
-            <input
-              type="text"
-              class="ha-input"
+            <ha-selector
+              .hass=${this.hass}
+              .label=${"Title"}
+              .selector=${{ text: {} }}
               .value=${(_a3 = c2.title) != null ? _a3 : ""}
-              placeholder="Room name or 'entity'"
-              @change=${(ev) => this._fieldChanged(
-          "title",
-          ev.target.value || void 0
-        )}
-            />
+              @value-changed=${(ev) => this._fieldChanged("title", ev.detail.value || void 0)}
+            ></ha-selector>
           `;
       }
     )}
@@ -1330,19 +1324,13 @@ let IansCustomRoomCardEditor = class extends i {
       <div class="section-header">Icon Appearance</div>
       <div class="section-body">
         ${this._renderColorField("icon_color", "Icon Color")}
-        <div class="text-field">
-          <label>Icon Background Color</label>
-          <input
-            type="text"
-            class="ha-input"
-            .value=${(_b2 = c2.icon_background_color) != null ? _b2 : ""}
-            placeholder="transparent or rgba(…)"
-            @change=${(ev) => this._fieldChanged(
-      "icon_background_color",
-      ev.target.value || void 0
-    )}
-          />
-        </div>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Icon Background Color"}
+          .selector=${{ text: {} }}
+          .value=${(_b2 = c2.icon_background_color) != null ? _b2 : ""}
+          @value-changed=${(ev) => this._fieldChanged("icon_background_color", ev.detail.value || void 0)}
+        ></ha-selector>
       </div>
 
       <!-- ── Badge ──────────────────────────────────────────────────────── -->
@@ -1364,19 +1352,13 @@ let IansCustomRoomCardEditor = class extends i {
       }
     )}
         ${this._renderColorField("badge_color", "Badge Icon Color")}
-        <div class="text-field">
-          <label>Badge Background Color</label>
-          <input
-            type="text"
-            class="ha-input"
-            .value=${(_c2 = c2.badge_background_color) != null ? _c2 : ""}
-            placeholder="var(--error-color)"
-            @change=${(ev) => this._fieldChanged(
-      "badge_background_color",
-      ev.target.value || void 0
-    )}
-          />
-        </div>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Badge Background Color"}
+          .selector=${{ text: {} }}
+          .value=${(_c2 = c2.badge_background_color) != null ? _c2 : ""}
+          @value-changed=${(ev) => this._fieldChanged("badge_background_color", ev.detail.value || void 0)}
+        ></ha-selector>
       </div>
 
       <!-- ── Card background & border ──────────────────────────────────── -->
@@ -1394,19 +1376,13 @@ let IansCustomRoomCardEditor = class extends i {
           ></ha-selector>
         </div>
 
-        <div class="text-field">
-          <label>Background Image URL (or 'area')</label>
-          <input
-            type="text"
-            class="ha-input"
-            .value=${(_e2 = c2.background_image) != null ? _e2 : ""}
-            placeholder="/local/room.jpg or 'area'"
-            @change=${(ev) => this._fieldChanged(
-      "background_image",
-      ev.target.value || void 0
-    )}
-          />
-        </div>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${"Background Image URL (or 'area')"}
+          .selector=${{ text: {} }}
+          .value=${(_e2 = c2.background_image) != null ? _e2 : ""}
+          @value-changed=${(ev) => this._fieldChanged("background_image", ev.detail.value || void 0)}
+        ></ha-selector>
 
         ${this._renderColorField("border_color", "Border Color")}
 
@@ -1562,19 +1538,13 @@ let IansCustomRoomCardEditor = class extends i {
     )}
                 ></ha-icon-picker>
 
-                <div class="text-field">
-                  <label>Label (or 'entity')</label>
-                  <input
-                    type="text"
-                    class="ha-input"
-                    .value=${(_i = btn.label) != null ? _i : ""}
-                    @change=${(ev) => this._subButtonChanged(
-      index,
-      "label",
-      ev.target.value || void 0
-    )}
-                  />
-                </div>
+                <ha-selector
+                  .hass=${this.hass}
+                  .label=${"Label (or 'entity')"}
+                  .selector=${{ text: {} }}
+                  .value=${(_i = btn.label) != null ? _i : ""}
+                  @value-changed=${(ev) => this._subButtonChanged(index, "label", ev.detail.value || void 0)}
+                ></ha-selector>
 
                 <ha-form
                   .hass=${this.hass}
@@ -1871,35 +1841,6 @@ let IansCustomRoomCardEditor = class extends i {
         margin-top: 4px;
       }
 
-      .ha-input {
-        width: 100%;
-        height: 56px;
-        padding: 0 12px;
-        border: 1px solid var(--divider-color);
-        border-radius: 4px;
-        background: var(--card-background-color, transparent);
-        color: var(--primary-text-color);
-        font-size: 14px;
-        font-family: inherit;
-        box-sizing: border-box;
-        outline: none;
-      }
-
-      .ha-input:focus {
-        border-color: var(--primary-color);
-        border-width: 2px;
-      }
-
-      .text-field {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .text-field label {
-        font-size: 12px;
-        color: var(--secondary-text-color);
-      }
     `;
   }
 };
