@@ -1,0 +1,565 @@
+import { LitElement, html, nothing } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import type { HomeAssistant, CardConfig, GridOptions } from "./types";
+import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION } from "./const";
+import { cardStyles } from "./utils/styles";
+import { resolveAreaImage } from "./utils/area-image";
+import { subscribeTemplate, isTemplate } from "./utils/template-manager";
+import { attachActionHandler, dispatchAction } from "./utils/action-handler";
+import type { ActionHandlerConfig } from "./utils/action-handler";
+import "./editor";
+
+// Fields whose values can be HA templates (card-level)
+const TEMPLATE_FIELDS = [
+  "icon",
+  "icon_color",
+  "badge_icon",
+  "badge_color",
+  "background_color",
+  "border_color",
+  "title",
+] as const;
+
+type TemplateField = (typeof TEMPLATE_FIELDS)[number];
+
+// Corner positions for the "corners" layout preset (up to 4 buttons)
+const CORNER_POSITIONS = [
+  "top-left",
+  "top-right",
+  "bottom-left",
+  "bottom-right",
+] as const;
+
+@customElement(CARD_TYPE)
+export class IansCustomRoomCard extends LitElement {
+  @property({ attribute: false }) public hass!: HomeAssistant;
+  @state() private _config?: CardConfig;
+  @state() private _templateResults: Partial<Record<TemplateField, string>> = {};
+  @state() private _templateErrors: Partial<Record<TemplateField, string>> = {};
+
+  private _templateUnsubs = new Map<TemplateField, () => Promise<void>>();
+  private _cardActionCleanup?: () => void;
+
+  // Sub-button template subscriptions — keyed as "sub_{index}_{field}"
+  @state() private _subTemplateResults: Record<string, string> = {};
+  private _subTemplateUnsubs = new Map<string, () => Promise<void>>();
+  private _subButtonCleanups: Array<() => void> = [];
+
+  // ── Static card metadata ───────────────────────────────────────────────────
+
+  static getStubConfig(hass?: HomeAssistant): CardConfig {
+    if (hass) {
+      const lightKey = Object.keys(hass.states).find((e) =>
+        e.startsWith("light.")
+      );
+      if (lightKey) {
+        return {
+          type: `custom:${CARD_TYPE}`,
+          entity: lightKey,
+          title:
+            (hass.states[lightKey]?.attributes.friendly_name as string) ??
+            "Room",
+          icon: "mdi:lightbulb",
+        };
+      }
+    }
+    return { type: `custom:${CARD_TYPE}`, title: "Room", icon: "mdi:home" };
+  }
+
+  static getGridOptions(config?: CardConfig) {
+    const g: GridOptions = config?.grid_options ?? {};
+    return {
+      columns: g.columns ?? 6,
+      rows: g.rows ?? 2,
+      min_columns: g.min_columns ?? 3,
+      min_rows: g.min_rows ?? 1,
+      ...(g.max_columns !== undefined && { max_columns: g.max_columns }),
+      ...(g.max_rows !== undefined && { max_rows: g.max_rows }),
+    };
+  }
+
+  static getConfigElement(): HTMLElement {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
+
+  // ── Config ─────────────────────────────────────────────────────────────────
+
+  public setConfig(config: CardConfig): void {
+    if (!config) throw new Error("Invalid configuration");
+    this._config = config;
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (this._config && this.hass) {
+      this._subscribeTemplates();
+    }
+  }
+
+  protected firstUpdated(): void {
+    this._setupCardActionHandler();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._unsubscribeTemplates();
+    this._unsubscribeSubButtonTemplates();
+    this._cardActionCleanup?.();
+    this._cardActionCleanup = undefined;
+    this._cleanupSubButtonHandlers();
+  }
+
+  protected updated(changedProps: Map<string, unknown>): void {
+    super.updated(changedProps);
+
+    const configChanged = changedProps.has("_config");
+    const templateResultsChanged = changedProps.has("_templateResults");
+
+    if (configChanged) {
+      this._subscribeTemplates();
+      this._subscribeSubButtonTemplates();
+      this._setupCardActionHandler();
+    }
+
+    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults")) {
+      this._applyConfigStyles();
+      // Re-attach sub-button action handlers after re-render
+      this._setupSubButtonHandlers();
+    }
+  }
+
+  // ── Template subscriptions ─────────────────────────────────────────────────
+
+  private async _subscribeTemplates(): Promise<void> {
+    await this._unsubscribeTemplates();
+
+    const c = this._config;
+    if (!c || !this.hass) return;
+
+    const variables: Record<string, unknown> = {
+      config: c,
+      user: this.hass.user?.name ?? "",
+      entity: c.entity ? this.hass.states[c.entity] : undefined,
+    };
+
+    const templateErrors: Partial<Record<TemplateField, string>> = {};
+
+    for (const field of TEMPLATE_FIELDS) {
+      const value = c[field as keyof CardConfig] as string | undefined;
+      if (!value || !isTemplate(value)) continue;
+
+      try {
+        const unsub = await subscribeTemplate(
+          this.hass,
+          value,
+          variables,
+          (result) => {
+            this._templateResults = { ...this._templateResults, [field]: result };
+            // Clear any prior error for this field
+            const errs = { ...this._templateErrors };
+            delete errs[field as TemplateField];
+            this._templateErrors = errs;
+          },
+          (error) => {
+            console.warn(`[ians-room-card] Template error in ${field}:`, error);
+            this._templateErrors = { ...this._templateErrors, [field]: error };
+          }
+        );
+        this._templateUnsubs.set(field, unsub);
+      } catch (e) {
+        console.error(`[ians-room-card] Failed to subscribe template for ${field}:`, e);
+        templateErrors[field] = String(e);
+      }
+    }
+
+    if (Object.keys(templateErrors).length > 0) {
+      this._templateErrors = { ...this._templateErrors, ...templateErrors };
+    }
+  }
+
+  private async _unsubscribeTemplates(): Promise<void> {
+    for (const unsub of this._templateUnsubs.values()) {
+      try {
+        await unsub();
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+    this._templateUnsubs.clear();
+    this._templateResults = {};
+    this._templateErrors = {};
+  }
+
+  private async _subscribeSubButtonTemplates(): Promise<void> {
+    await this._unsubscribeSubButtonTemplates();
+
+    const c = this._config;
+    if (!c?.sub_buttons || !this.hass) return;
+
+    const variables: Record<string, unknown> = {
+      config: c,
+      user: this.hass.user?.name ?? "",
+    };
+
+    for (const [i, btn] of c.sub_buttons.entries()) {
+      const btnVars = {
+        ...variables,
+        entity: btn.entity ? this.hass.states[btn.entity] : undefined,
+      };
+
+      for (const field of ["icon", "label"] as const) {
+        const value = btn[field];
+        if (!value || !isTemplate(value)) continue;
+
+        const key = `sub_${i}_${field}`;
+        try {
+          const unsub = await subscribeTemplate(
+            this.hass,
+            value,
+            btnVars,
+            (result) => {
+              this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
+            }
+          );
+          this._subTemplateUnsubs.set(key, unsub);
+        } catch (e) {
+          console.warn(`[ians-room-card] Sub-button template error (${key}):`, e);
+        }
+      }
+    }
+  }
+
+  private async _unsubscribeSubButtonTemplates(): Promise<void> {
+    for (const unsub of this._subTemplateUnsubs.values()) {
+      try {
+        await unsub();
+      } catch {
+        // ignore
+      }
+    }
+    this._subTemplateUnsubs.clear();
+    this._subTemplateResults = {};
+  }
+
+  // ── CSS variable application ───────────────────────────────────────────────
+
+  private _applyConfigStyles(): void {
+    const c = this._config;
+    if (!c) return;
+
+    // Template result takes precedence over static config value
+    const resolve = (field: TemplateField, configValue: string | undefined) =>
+      this._templateResults[field] ?? configValue;
+
+    this._setCSSVar(
+      "--ians-card-background-color",
+      resolve("background_color", c.background_color)
+    );
+    this._setCSSVar(
+      "--ians-card-background-opacity",
+      c.background_opacity !== undefined ? String(c.background_opacity) : undefined
+    );
+    this._setCSSVar(
+      "--ians-card-border-color",
+      resolve("border_color", c.border_color)
+    );
+    this._setCSSVar(
+      "--ians-card-border-opacity",
+      c.border_opacity !== undefined ? String(c.border_opacity) : undefined
+    );
+    this._setCSSVar("--ians-icon-color", resolve("icon_color", c.icon_color));
+    this._setCSSVar(
+      "--ians-icon-background-color",
+      c.icon_background_color
+    );
+    this._setCSSVar("--ians-badge-color", resolve("badge_color", c.badge_color));
+    this._setCSSVar(
+      "--ians-badge-background-color",
+      c.badge_background_color
+    );
+  }
+
+  // ── Action handlers ────────────────────────────────────────────────────────
+
+  private _setupSubButtonHandlers(): void {
+    this._cleanupSubButtonHandlers();
+
+    const c = this._config;
+    // When global_action is active, sub-buttons are display-only — no handlers
+    if (!c?.sub_buttons || c.global_action) return;
+
+    const subBtnEls =
+      this.shadowRoot?.querySelectorAll<HTMLElement>(".sub-button");
+    if (!subBtnEls) return;
+
+    subBtnEls.forEach((el, i) => {
+      const btn = c.sub_buttons![i];
+      if (!btn) return;
+
+      const actionConfig: ActionHandlerConfig = {
+        entity: btn.entity,
+        tap_action: btn.tap_action ?? { action: "more-info" },
+        hold_action: btn.hold_action ?? { action: "more-info" },
+        double_tap_action: btn.double_tap_action ?? { action: "none" },
+      };
+
+      const cleanup = attachActionHandler(el, actionConfig, (action) =>
+        dispatchAction(el, actionConfig, action)
+      );
+      this._subButtonCleanups.push(cleanup);
+    });
+  }
+
+  private _cleanupSubButtonHandlers(): void {
+    for (const cleanup of this._subButtonCleanups) cleanup();
+    this._subButtonCleanups = [];
+  }
+
+  private _setupCardActionHandler(): void {
+    this._cardActionCleanup?.();
+    this._cardActionCleanup = undefined;
+
+    const c = this._config;
+    if (!c?.global_action) return;
+
+    const haCard = this.shadowRoot?.querySelector("ha-card") as HTMLElement | null;
+    if (!haCard) return;
+
+    const actionConfig: ActionHandlerConfig = {
+      entity: c.entity,
+      tap_action: c.global_action.tap_action,
+      hold_action: c.global_action.hold_action,
+      double_tap_action: c.global_action.double_tap_action,
+    };
+
+    this._cardActionCleanup = attachActionHandler(
+      haCard,
+      actionConfig,
+      (action) => dispatchAction(haCard, actionConfig, action)
+    );
+  }
+
+  private _setCSSVar(prop: string, value: string | undefined): void {
+    if (value !== undefined && value !== "") {
+      this.style.setProperty(prop, value);
+    } else {
+      this.style.removeProperty(prop);
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  protected render() {
+    if (!this._config) return nothing;
+
+    const c = this._config;
+    const hasErrors = Object.keys(this._templateErrors).length > 0;
+    const isInteractive = !!c.global_action;
+
+    // Resolve values — template results override static config
+    const icon = this._templateResults.icon ?? c.icon;
+    const badgeIcon = this._templateResults.badge_icon ?? c.badge_icon;
+    const title = this._resolveTitle();
+
+    // Resolve background image
+    let bgImageUrl: string | undefined;
+    if (c.background_image === "area") {
+      bgImageUrl = this.hass ? resolveAreaImage(this.hass, c.entity) : undefined;
+    } else if (c.background_image) {
+      bgImageUrl = c.background_image;
+    }
+    const bgImageStyle = bgImageUrl
+      ? `background-image: url('${bgImageUrl}');`
+      : "";
+
+    return html`
+      <ha-card
+        part="card"
+        class=${[
+          hasErrors ? "has-template-error" : "",
+          isInteractive ? "interactive" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <!-- Background: color layer (opacity-controlled) -->
+        <div part="background" class="card-background-color"></div>
+        <!-- Background: image layer (always full opacity) -->
+        ${bgImageStyle
+          ? html`<div
+              class="card-background-image"
+              style=${bgImageStyle}
+            ></div>`
+          : nothing}
+
+        <!-- Content -->
+        <div class="card-inner">
+          <!-- Header: icon + title -->
+          <div part="header" class="card-header">
+            ${icon !== undefined
+              ? html`
+                  <div part="icon-container" class="icon-container">
+                    <ha-icon part="icon" .icon=${icon}></ha-icon>
+                    ${badgeIcon
+                      ? html`
+                          <div part="badge" class="badge">
+                            <ha-icon
+                              part="badge-icon"
+                              .icon=${badgeIcon}
+                            ></ha-icon>
+                          </div>
+                        `
+                      : nothing}
+                  </div>
+                `
+              : nothing}
+            ${title
+              ? html`<span part="title" class="card-title">${title}</span>`
+              : nothing}
+          </div>
+
+          <!-- Template error indicator -->
+          ${hasErrors
+            ? html`
+                <div class="template-error">
+                  <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+                  <span>Template error — check browser console</span>
+                </div>
+              `
+            : nothing}
+
+          <!-- Sub-buttons -->
+          ${this._renderSubButtons()}
+        </div>
+      </ha-card>
+    `;
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  private _renderSubButtons() {
+    const c = this._config;
+    if (!c?.sub_buttons?.length) return nothing;
+
+    const layout = c.sub_buttons_layout ?? "bottom-row";
+    const isAbsolute = layout === "corners" || layout === "custom";
+    const isGlobal = !!c.global_action;
+
+    const buttons = c.sub_buttons.map((btn, i) => {
+      const entityState = btn.entity ? this.hass?.states[btn.entity] : undefined;
+
+      // Resolve icon
+      let icon =
+        this._subTemplateResults[`sub_${i}_icon`] ??
+        btn.icon ??
+        (entityState?.attributes.icon as string | undefined) ??
+        "mdi:circle";
+
+      // Resolve label
+      let label: string | undefined;
+      if (btn.label !== undefined) {
+        if (btn.label === "entity" && entityState) {
+          label =
+            (entityState.attributes.friendly_name as string | undefined) ??
+            btn.entity;
+        } else {
+          label =
+            this._subTemplateResults[`sub_${i}_label`] ?? btn.label;
+        }
+      }
+
+      // Resolve position class for corners/custom layout
+      let posClass = "";
+      if (layout === "corners") {
+        posClass = `pos-${CORNER_POSITIONS[i] ?? "bottom-right"}`;
+      } else if (layout === "custom" && btn.position) {
+        posClass = `pos-${btn.position}`;
+      }
+
+      const classes = [
+        "sub-button",
+        btn.background !== false ? "has-background" : "",
+        isGlobal ? "display-only" : "",
+        posClass,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      return html`
+        <div class=${classes} part="sub-button">
+          ${btn.show_icon !== false
+            ? html`<ha-icon part="sub-button-icon" .icon=${icon}></ha-icon>`
+            : nothing}
+          ${btn.show_label && label
+            ? html`<span part="sub-button-label" class="sub-button-label"
+                >${label}</span
+              >`
+            : nothing}
+          ${btn.show_state && entityState
+            ? html`<span part="sub-button-state" class="sub-button-state"
+                >${entityState.state}</span
+              >`
+            : nothing}
+        </div>
+      `;
+    });
+
+    const containerClasses = [
+      "sub-buttons",
+      `layout-${layout}`,
+      isAbsolute ? "absolute-layout" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return html`<div part="sub-buttons" class=${containerClasses}>
+      ${buttons}
+    </div>`;
+  }
+
+  private _resolveTitle(): string | undefined {
+    const c = this._config;
+    if (!c) return undefined;
+
+    // Template result takes precedence
+    if (this._templateResults.title) return this._templateResults.title;
+
+    if (!c.title) return undefined;
+    if (c.title === "entity" && c.entity && this.hass) {
+      return (
+        (this.hass.states[c.entity]?.attributes.friendly_name as string) ??
+        c.entity
+      );
+    }
+    return c.title;
+  }
+
+  // ── Styles ─────────────────────────────────────────────────────────────────
+
+  static get styles() {
+    return cardStyles;
+  }
+}
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: CARD_TYPE,
+  name: CARD_NAME,
+  description: CARD_DESCRIPTION,
+  preview: false,
+  documentationURL: "https://github.com/IanStanek/ha-ians-custom-room-card",
+});
+
+declare global {
+  interface Window {
+    customCards: Array<{
+      type: string;
+      name: string;
+      description?: string;
+      preview?: boolean;
+      documentationURL?: string;
+    }>;
+  }
+}
