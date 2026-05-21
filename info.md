@@ -11,4 +11,4 @@ A customizable room card for Home Assistant dashboards.
 - Full visual editor — no YAML required for basic use
 - card-mod compatible (CSS custom properties + `::part()` selectors)
 
-See [README](https://github.com/IanStanek/ha-ians-custom-room-card) for full documentation.
+See [README](https://github.com/linkian19/ha-ians-custom-room-card) for full documentation.

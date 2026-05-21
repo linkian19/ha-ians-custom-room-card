@@ -10,7 +10,7 @@ Step-by-step setup for adding your first room card to a Home Assistant dashboard
 2. Click the three-dot menu (⋮) in the top right → **Custom Repositories**.
 3. In the "Repository" field, enter:
    ```
-   https://github.com/IanStanek/ha-ians-custom-room-card
+   https://github.com/linkian19/ha-ians-custom-room-card
    ```
 4. Set the category to **Dashboard**, then click **Add**.
 5. Search for **Ian's Custom Room Card** and click it.

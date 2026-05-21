@@ -19,14 +19,14 @@ A customizable room card for Home Assistant's Lovelace dashboard. Combines a roo
 ### Via HACS (recommended)
 
 1. In HACS → Integrations → ⋮ → Custom Repositories
-2. Repository URL: `https://github.com/IanStanek/ha-ians-custom-room-card`
+2. Repository URL: `https://github.com/linkian19/ha-ians-custom-room-card`
 3. Category: Dashboard
 4. Click Add → search "Ian's Custom Room Card" → Install
 5. Restart Home Assistant (or reload Lovelace resources)
 
 ### Manual
 
-1. Download `ians-custom-room-card.js` from the latest [Release](https://github.com/IanStanek/ha-ians-custom-room-card/releases)
+1. Download `ians-custom-room-card.js` from the latest [Release](https://github.com/linkian19/ha-ians-custom-room-card/releases)
 2. Copy to `/config/www/`
 3. In Lovelace → Dashboard Resources → Add `/local/ians-custom-room-card.js` (type: JavaScript module)
 
