@@ -4,6 +4,7 @@
   "description": "Custom Home Assistant Lovelace room card with icon, badge, sub-buttons, and navigable actions",
   "keywords": ["home-assistant", "lovelace", "custom-card", "hacs"],
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "watch": "vite build --watch",
