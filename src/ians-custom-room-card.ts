@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { HomeAssistant, CardConfig, GridOptions, IconPosition, BadgePosition } from "./types";
+import type { HomeAssistant, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape } from "./types";
 import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION } from "./const";
 import { cardStyles } from "./utils/styles";
 import { resolveAreaImage } from "./utils/area-image";
@@ -21,6 +21,42 @@ const TEMPLATE_FIELDS = [
 ] as const;
 
 type TemplateField = (typeof TEMPLATE_FIELDS)[number];
+
+// Default icon per entity domain, used when no icon is configured or found in entity attributes
+const DOMAIN_ICONS: Record<string, string> = {
+  light: "mdi:lightbulb",
+  switch: "mdi:toggle-switch",
+  sensor: "mdi:eye",
+  binary_sensor: "mdi:radiobox-marked",
+  climate: "mdi:thermostat",
+  cover: "mdi:garage",
+  fan: "mdi:fan",
+  media_player: "mdi:cast",
+  lock: "mdi:lock",
+  vacuum: "mdi:robot-vacuum",
+  camera: "mdi:camera",
+  person: "mdi:account",
+  device_tracker: "mdi:map-marker",
+  weather: "mdi:weather-partly-cloudy",
+  script: "mdi:script-text",
+  automation: "mdi:robot",
+  scene: "mdi:palette",
+  input_boolean: "mdi:toggle-switch-outline",
+  input_number: "mdi:numeric",
+  input_select: "mdi:form-select",
+  number: "mdi:numeric",
+  select: "mdi:form-select",
+  button: "mdi:gesture-tap-button",
+  water_heater: "mdi:water-boiler",
+  alarm_control_panel: "mdi:shield-home",
+};
+
+const SHAPE_BORDER_RADIUS: Record<IconBackgroundShape, string> = {
+  circle: "50%",
+  "rounded-rect": "8px",
+  squircle: "30%",
+  square: "0",
+};
 
 // Corner positions for the "corners" layout preset (up to 4 buttons)
 const CORNER_POSITIONS = [
@@ -255,42 +291,34 @@ export class IansCustomRoomCard extends LitElement {
     const c = this._config;
     if (!c) return;
 
-    // Template result takes precedence over static config value
     const resolve = (field: TemplateField, configValue: string | undefined) =>
       this._templateResults[field] ?? configValue;
 
-    this._setCSSVar(
-      "--ians-card-background-color",
-      resolve("background_color", c.background_color)
-    );
-    this._setCSSVar(
-      "--ians-card-background-opacity",
-      c.background_opacity !== undefined ? String(c.background_opacity) : undefined
-    );
-    this._setCSSVar(
-      "--ians-card-border-color",
-      resolve("border_color", c.border_color)
-    );
-    this._setCSSVar(
-      "--ians-card-border-opacity",
-      c.border_opacity !== undefined ? String(c.border_opacity) : undefined
-    );
+    this._setCSSVar("--ians-card-background-color", resolve("background_color", c.background_color));
+    this._setCSSVar("--ians-card-background-opacity", c.background_opacity !== undefined ? String(c.background_opacity) : undefined);
+    this._setCSSVar("--ians-card-border-color", resolve("border_color", c.border_color));
+    this._setCSSVar("--ians-card-border-opacity", c.border_opacity !== undefined ? String(c.border_opacity) : undefined);
+
     this._setCSSVar("--ians-icon-color", resolve("icon_color", c.icon_color));
+    this._setCSSVar("--ians-icon-opacity", c.icon_opacity !== undefined ? String(c.icon_opacity) : undefined);
     this._setCSSVar("--ians-icon-background-color", c.icon_background_color);
-    this._setCSSVar(
-      "--ians-icon-background-size",
-      c.icon_background_size !== undefined ? `${c.icon_background_size}px` : undefined
-    );
-    this._setCSSVar(
-      "--ians-icon-size",
-      c.icon_size !== undefined ? `${c.icon_size}px` : undefined
-    );
+    this._setCSSVar("--ians-icon-background-opacity", c.icon_background_opacity !== undefined ? String(c.icon_background_opacity) : undefined);
+    this._setCSSVar("--ians-icon-background-size", c.icon_background_size !== undefined ? `${c.icon_background_size}px` : undefined);
+    this._setCSSVar("--ians-icon-background-border-radius", c.icon_background_shape ? SHAPE_BORDER_RADIUS[c.icon_background_shape] : undefined);
+    this._setCSSVar("--ians-icon-size", c.icon_size !== undefined ? `${c.icon_size}px` : undefined);
+
     this._setCSSVar("--ians-badge-color", resolve("badge_color", c.badge_color));
     this._setCSSVar("--ians-badge-background-color", c.badge_background_color);
-    this._setCSSVar(
-      "--ians-badge-size",
-      c.badge_size !== undefined ? `${c.badge_size}px` : undefined
-    );
+    this._setCSSVar("--ians-badge-size", c.badge_size !== undefined ? `${c.badge_size}px` : undefined);
+    this._setCSSVar("--ians-badge-opacity", c.badge_opacity !== undefined ? String(c.badge_opacity) : undefined);
+
+    this._setCSSVar("--ians-title-color", c.title_color);
+    this._setCSSVar("--ians-title-font-size", c.title_font_size !== undefined ? `${c.title_font_size}px` : undefined);
+    this._setCSSVar("--ians-title-align", c.title_align);
+
+    this._setCSSVar("--ians-sub-button-icon-color", c.sub_button_icon_color);
+    this._setCSSVar("--ians-sub-button-background-color", c.sub_button_background_color);
+    this._setCSSVar("--ians-sub-button-opacity", c.sub_button_opacity !== undefined ? String(c.sub_button_opacity) : undefined);
   }
 
   // ── Action handlers ────────────────────────────────────────────────────────
@@ -388,6 +416,7 @@ export class IansCustomRoomCard extends LitElement {
 
     const iconPosition: IconPosition | undefined = c.icon_position;
     const badgePosition = c.badge_position ?? "top-right";
+    const titlePosition: IconPosition | undefined = c.title_position;
 
     // Badge element (shared between flow and absolute icon renders)
     const badgeEl = badgeIcon
@@ -439,6 +468,21 @@ export class IansCustomRoomCard extends LitElement {
             `
         : nothing;
 
+    // Title rendered absolutely (outside card-inner flow)
+    const titleAbsoluteEl = title && titlePosition
+      ? html`
+          <span
+            part="title"
+            class=${[
+              "card-title-absolute",
+              titlePosition !== "custom" ? `card-title-abs-${titlePosition}` : "",
+            ].filter(Boolean).join(" ")}
+            style=${titlePosition === "custom"
+              ? `top: ${c.title_position_y ?? "auto"}; left: ${c.title_position_x ?? "auto"};`
+              : ""}
+          >${title}</span>`
+      : nothing;
+
     return html`
       <ha-card
         part="card"
@@ -449,30 +493,22 @@ export class IansCustomRoomCard extends LitElement {
           .filter(Boolean)
           .join(" ")}
       >
-        <!-- Background: color layer (opacity-controlled) -->
         <div part="background" class="card-background-color"></div>
-        <!-- Background: image layer (always full opacity) -->
         ${bgImageStyle
-          ? html`<div
-              class="card-background-image"
-              style=${bgImageStyle}
-            ></div>`
+          ? html`<div class="card-background-image" style=${bgImageStyle}></div>`
           : nothing}
 
-        <!-- Absolutely positioned icon (rendered outside card-inner flow) -->
+        <!-- Absolutely positioned icon — z-index 2, BEFORE card-inner so card-inner (same z-index, later in DOM) renders on top -->
         ${iconPosition ? iconEl : nothing}
 
-        <!-- Content -->
         <div class="card-inner">
-          <!-- Header: icon (default flow) + title -->
           <div part="header" class="card-header">
             ${!iconPosition ? iconEl : nothing}
-            ${title
+            ${title && !titlePosition
               ? html`<span part="title" class="card-title">${title}</span>`
               : nothing}
           </div>
 
-          <!-- Template error indicator -->
           ${hasErrors
             ? html`
                 <div class="template-error">
@@ -482,9 +518,11 @@ export class IansCustomRoomCard extends LitElement {
               `
             : nothing}
 
-          <!-- Sub-buttons -->
           ${this._renderSubButtons()}
         </div>
+
+        <!-- Absolute title — rendered after card-inner so it paints on top -->
+        ${titleAbsoluteEl}
       </ha-card>
     `;
   }
@@ -496,33 +534,33 @@ export class IansCustomRoomCard extends LitElement {
     if (!c?.sub_buttons?.length) return nothing;
 
     const layout = c.sub_buttons_layout ?? "bottom-row";
-    const isAbsolute = layout === "corners" || layout === "custom";
+    const isAbsolute = layout === "corners" || layout === "custom"
+      || layout === "left-column" || layout === "right-column";
     const isGlobal = !!c.global_action;
 
     const buttons = c.sub_buttons.map((btn, i) => {
       const entityState = btn.entity ? this.hass?.states[btn.entity] : undefined;
 
-      // Resolve icon
-      let icon =
+      // Resolve icon: template → user override → entity attribute → domain default → fallback
+      const domain = btn.entity?.split(".")[0] ?? "";
+      const domainIcon = domain ? (DOMAIN_ICONS[domain] ?? "mdi:circle") : "mdi:circle";
+      const icon =
         this._subTemplateResults[`sub_${i}_icon`] ??
         btn.icon ??
         (entityState?.attributes.icon as string | undefined) ??
-        "mdi:circle";
+        domainIcon;
 
       // Resolve label
       let label: string | undefined;
       if (btn.label !== undefined) {
         if (btn.label === "entity" && entityState) {
-          label =
-            (entityState.attributes.friendly_name as string | undefined) ??
-            btn.entity;
+          label = (entityState.attributes.friendly_name as string | undefined) ?? btn.entity;
         } else {
-          label =
-            this._subTemplateResults[`sub_${i}_label`] ?? btn.label;
+          label = this._subTemplateResults[`sub_${i}_label`] ?? btn.label;
         }
       }
 
-      // Resolve position class for corners/custom layout
+      // Position class for corners/custom layouts
       let posClass = "";
       if (layout === "corners") {
         posClass = `pos-${CORNER_POSITIONS[i] ?? "bottom-right"}`;
@@ -535,40 +573,33 @@ export class IansCustomRoomCard extends LitElement {
         btn.background !== false ? "has-background" : "",
         isGlobal ? "display-only" : "",
         posClass,
-      ]
-        .filter(Boolean)
-        .join(" ");
+      ].filter(Boolean).join(" ");
+
+      // Per-button color overrides via inline style
+      const btnStyle = [
+        btn.icon_color ? `--ians-sub-button-icon-color: ${btn.icon_color}` : "",
+        btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
+        btn.opacity !== undefined ? `opacity: ${btn.opacity}` : "",
+      ].filter(Boolean).join("; ");
 
       return html`
-        <div class=${classes} part="sub-button">
+        <div class=${classes} part="sub-button" style=${btnStyle || nothing}>
           ${btn.show_icon !== false
             ? html`<ha-icon part="sub-button-icon" .icon=${icon}></ha-icon>`
             : nothing}
           ${btn.show_label && label
-            ? html`<span part="sub-button-label" class="sub-button-label"
-                >${label}</span
-              >`
+            ? html`<span part="sub-button-label" class="sub-button-label">${label}</span>`
             : nothing}
           ${btn.show_state && entityState
-            ? html`<span part="sub-button-state" class="sub-button-state"
-                >${entityState.state}</span
-              >`
+            ? html`<span part="sub-button-state" class="sub-button-state">${entityState.state}</span>`
             : nothing}
         </div>
       `;
     });
 
-    const containerClasses = [
-      "sub-buttons",
-      `layout-${layout}`,
-      isAbsolute ? "absolute-layout" : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
+    const containerClasses = ["sub-buttons", `layout-${layout}`].filter(Boolean).join(" ");
 
-    return html`<div part="sub-buttons" class=${containerClasses}>
-      ${buttons}
-    </div>`;
+    return html`<div part="sub-buttons" class=${containerClasses}>${buttons}</div>`;
   }
 
   private _resolveTitle(): string | undefined {

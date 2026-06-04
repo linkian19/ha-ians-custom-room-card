@@ -111,6 +111,9 @@ export interface SubButtonConfig {
   show_label?: boolean;
   show_state?: boolean;
   background?: boolean;
+  icon_color?: string;
+  background_color?: string;
+  opacity?: number;
   position?: SubButtonPosition;
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
@@ -135,8 +138,9 @@ export interface GlobalAction {
 export type SubButtonsLayout =
   | "bottom-row"
   | "top-row"
+  | "left-column"
+  | "right-column"
   | "corners"
-  | "columns"
   | "grid"
   | "custom";
 
@@ -156,6 +160,10 @@ export type BadgePosition =
   | "bottom-left"
   | "bottom-right"
   | "custom";
+
+export type IconBackgroundShape = "circle" | "rounded-rect" | "squircle" | "square";
+
+export type TitleAlign = "left" | "center" | "right";
 
 export interface CardConfig {
   type: string;
@@ -186,6 +194,23 @@ export interface CardConfig {
   background_image?: string;
   border_color?: string;
   border_opacity?: number;
+  // Icon shape
+  icon_background_shape?: IconBackgroundShape;
+  icon_opacity?: number;
+  icon_background_opacity?: number;
+  // Badge
+  badge_opacity?: number;
+  // Title
+  title_align?: TitleAlign;
+  title_position?: IconPosition;  // absolute position on card; omit = inline with icon
+  title_position_x?: string;
+  title_position_y?: string;
+  title_font_size?: number;       // px
+  title_color?: string;
+  // Sub-button global styles
+  sub_button_icon_color?: string;
+  sub_button_background_color?: string;
+  sub_button_opacity?: number;
   // Layout
   grid_options?: GridOptions;
   sub_buttons_layout?: SubButtonsLayout;

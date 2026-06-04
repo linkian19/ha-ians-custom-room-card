@@ -11,22 +11,27 @@ export const cardStyles = css`
     --ians-card-border-opacity: 1;
     --ians-card-border-radius: var(--ha-card-border-radius, 12px);
     --ians-icon-color: var(--state-icon-color, var(--primary-text-color));
+    --ians-icon-opacity: 1;
     --ians-icon-background-color: transparent;
-    --ians-icon-background-size: 40px;  /* icon container / circle size */
-    --ians-icon-size: calc(var(--ians-icon-background-size) * 0.6); /* MDI glyph size */
+    --ians-icon-background-opacity: 1;
+    --ians-icon-background-size: 40px;
+    --ians-icon-background-border-radius: 50%;
+    --ians-icon-size: calc(var(--ians-icon-background-size) * 0.6);
     --ians-badge-color: #fff;
     --ians-badge-background-color: var(--error-color, #db4437);
     --ians-badge-size: 18px;
+    --ians-badge-opacity: 1;
     --ians-title-color: var(--primary-text-color);
     --ians-title-font-size: 14px;
+    --ians-title-align: left;
     --ians-sub-button-icon-color: var(--primary-text-color);
     --ians-sub-button-background-color: rgba(255, 255, 255, 0.1);
     --ians-sub-button-size: 32px;
     --ians-sub-button-gap: 6px;
+    --ians-sub-button-opacity: 1;
   }
 
   ha-card {
-    /* Transparent so our background layer fully controls the card color */
     --ha-card-background: transparent;
     position: relative;
     height: 100%;
@@ -40,8 +45,7 @@ export const cardStyles = css`
     );
   }
 
-  /* ── Background layers (absolute, behind content) ────────────────────────── */
-  /* Color layer: opacity from background_opacity applies here only */
+  /* ── Background layers ───────────────────────────────────────────────────── */
   .card-background-color {
     position: absolute;
     inset: 0;
@@ -52,7 +56,6 @@ export const cardStyles = css`
     z-index: 0;
   }
 
-  /* Image layer: always full opacity, stacked on top of color layer */
   .card-background-image {
     position: absolute;
     inset: 0;
@@ -64,7 +67,7 @@ export const cardStyles = css`
     z-index: 1;
   }
 
-  /* ── Content wrapper (above background layers) ───────────────────────────── */
+  /* ── Content wrapper ─────────────────────────────────────────────────────── */
   .card-inner {
     position: relative;
     z-index: 2;
@@ -76,23 +79,28 @@ export const cardStyles = css`
     gap: 8px;
   }
 
-  /* ── Header: icon + title ─────────────────────────────────────────────────── */
+  /* ── Header: icon + title ────────────────────────────────────────────────── */
   .card-header {
     display: flex;
     align-items: center;
     gap: 10px;
     flex: 1;
     min-width: 0;
+    order: 1;
   }
 
-  /* ── Icon ─────────────────────────────────────────────────────────────────── */
+  /* ── Icon ────────────────────────────────────────────────────────────────── */
   .icon-container {
     position: relative;
     width: var(--ians-icon-background-size);
     height: var(--ians-icon-background-size);
     flex-shrink: 0;
-    border-radius: 50%;
-    background-color: var(--ians-icon-background-color);
+    border-radius: var(--ians-icon-background-border-radius);
+    background-color: color-mix(
+      in srgb,
+      var(--ians-icon-background-color) calc(var(--ians-icon-background-opacity) * 100%),
+      transparent
+    );
     display: flex;
     align-items: center;
     justify-content: center;
@@ -101,13 +109,16 @@ export const cardStyles = css`
   .icon-container ha-icon {
     --mdc-icon-size: var(--ians-icon-size);
     color: var(--ians-icon-color);
+    opacity: var(--ians-icon-opacity);
     display: flex;
   }
 
-  /* Absolute positioning — rendered as direct child of ha-card */
+  /* Absolute positioning — z-index 2, same as card-inner.
+     Rendered BEFORE card-inner in DOM so card-inner (later sibling, same z-index)
+     paints on top, keeping sub-buttons above the icon. */
   .icon-container.icon-absolute {
     position: absolute;
-    z-index: 3;
+    z-index: 2;
     flex-shrink: 0;
   }
 
@@ -119,7 +130,7 @@ export const cardStyles = css`
   .icon-container.icon-pos-center-left { top: 50%; left: 12px; transform: translateY(-50%); }
   .icon-container.icon-pos-center-right { top: 50%; right: 12px; transform: translateY(-50%); }
 
-  /* ── Icon badge ───────────────────────────────────────────────────────────── */
+  /* ── Icon badge ──────────────────────────────────────────────────────────── */
   .badge {
     position: absolute;
     top: -4px;
@@ -128,6 +139,7 @@ export const cardStyles = css`
     height: var(--ians-badge-size);
     border-radius: 50%;
     background-color: var(--ians-badge-background-color);
+    opacity: var(--ians-badge-opacity);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -140,13 +152,12 @@ export const cardStyles = css`
     display: flex;
   }
 
-  /* Badge position relative to icon-container */
   .badge.badge-pos-top-left    { top: -4px;  left: -4px;  right: auto;  bottom: auto; }
   .badge.badge-pos-top-right   { top: -4px;  right: -4px; left: auto;   bottom: auto; }
   .badge.badge-pos-bottom-left { bottom: -4px; left: -4px;  top: auto; right: auto; }
   .badge.badge-pos-bottom-right { bottom: -4px; right: -4px; top: auto; left: auto; }
 
-  /* ── Title ────────────────────────────────────────────────────────────────── */
+  /* ── Title ───────────────────────────────────────────────────────────────── */
   .card-title {
     color: var(--ians-title-color);
     font-size: var(--ians-title-font-size);
@@ -157,9 +168,36 @@ export const cardStyles = css`
     white-space: nowrap;
     flex: 1;
     min-width: 0;
+    text-align: var(--ians-title-align);
   }
 
-  /* ── Interactive card (global_action active) ─────────────────────────────── */
+  /* Title with absolute position — rendered as direct child of ha-card, same
+     z-index 2 approach as icon-absolute but placed AFTER card-inner in DOM */
+  .card-title-absolute {
+    position: absolute;
+    z-index: 4;
+    color: var(--ians-title-color);
+    font-size: var(--ians-title-font-size);
+    font-weight: 500;
+    line-height: 1.3;
+    pointer-events: none;
+    max-width: calc(100% - 24px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-title-abs-top-left     { top: 12px;  left: 12px; }
+  .card-title-abs-top-right    { top: 12px;  right: 12px; text-align: right; }
+  .card-title-abs-top-center   { top: 12px;  left: 50%; transform: translateX(-50%); }
+  .card-title-abs-center-left  { top: 50%;   left: 12px; transform: translateY(-50%); }
+  .card-title-abs-center       { top: 50%;   left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .card-title-abs-center-right { top: 50%;   right: 12px; transform: translateY(-50%); text-align: right; }
+  .card-title-abs-bottom-left  { bottom: 12px; left: 12px; }
+  .card-title-abs-bottom-right { bottom: 12px; right: 12px; text-align: right; }
+  .card-title-abs-bottom-center { bottom: 12px; left: 50%; transform: translateX(-50%); }
+
+  /* ── Interactive card ────────────────────────────────────────────────────── */
   ha-card.interactive {
     cursor: pointer;
   }
@@ -173,40 +211,57 @@ export const cardStyles = css`
     display: flex;
     flex-wrap: wrap;
     gap: var(--ians-sub-button-gap);
-    order: 2; /* default: after header */
-  }
-
-  /* Top row: render sub-buttons before the header using flex order */
-  .card-header {
-    order: 1;
+    order: 2;
   }
 
   .sub-buttons.layout-top-row {
     order: 0;
   }
 
-  /* Columns layout */
-  .sub-buttons.layout-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  /* Grid layout */
   .sub-buttons.layout-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--ians-sub-button-size), 1fr));
   }
 
-  /* Corners and custom: absolute overlay, container doesn't capture pointer events */
+  /* Corners and custom: absolute overlay */
   .sub-buttons.layout-corners,
   .sub-buttons.layout-custom {
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: 3;
     pointer-events: none;
   }
 
-  /* ── Individual sub-button ────────────────────────────────────────────────── */
+  /* Column layouts: absolute, stacked vertically on a side */
+  .sub-buttons.layout-right-column {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: var(--ians-sub-button-gap);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .sub-buttons.layout-left-column {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: var(--ians-sub-button-gap);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* ── Individual sub-button ───────────────────────────────────────────────── */
   .sub-button {
     display: flex;
     align-items: center;
@@ -220,25 +275,25 @@ export const cardStyles = css`
     touch-action: none;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.15s;
+    opacity: var(--ians-sub-button-opacity);
   }
 
   .sub-button:hover {
-    opacity: 0.85;
+    filter: brightness(1.15);
   }
 
   .sub-button:active {
-    opacity: 0.65;
+    filter: brightness(0.85);
   }
 
   .sub-button.has-background {
     background-color: var(--ians-sub-button-background-color);
   }
 
-  /* display-only: sub-button rendered but non-interactive (global_action active) */
   .sub-button.display-only {
     pointer-events: none;
     cursor: default;
-    opacity: 0.65;
+    opacity: calc(var(--ians-sub-button-opacity) * 0.65);
   }
 
   .sub-button ha-icon {
@@ -263,46 +318,15 @@ export const cardStyles = css`
     opacity: 0.75;
   }
 
-  /* Absolute positions for corners and custom layouts */
-  .sub-button.pos-top-left {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-  }
+  /* Absolute positions for corners/custom layouts */
+  .sub-button.pos-top-left    { position: absolute; top: 8px;    left: 8px; }
+  .sub-button.pos-top-center  { position: absolute; top: 8px;    left: 50%; transform: translateX(-50%); }
+  .sub-button.pos-top-right   { position: absolute; top: 8px;    right: 8px; }
+  .sub-button.pos-bottom-left  { position: absolute; bottom: 8px; left: 8px; }
+  .sub-button.pos-bottom-center { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
+  .sub-button.pos-bottom-right { position: absolute; bottom: 8px; right: 8px; }
 
-  .sub-button.pos-top-center {
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .sub-button.pos-top-right {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-  }
-
-  .sub-button.pos-bottom-left {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-  }
-
-  .sub-button.pos-bottom-center {
-    position: absolute;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .sub-button.pos-bottom-right {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-  }
-
-  /* ── Template error state ─────────────────────────────────────────────────── */
+  /* ── Template error state ────────────────────────────────────────────────── */
   ha-card.has-template-error {
     border: 2px solid var(--error-color, #db4437);
   }
