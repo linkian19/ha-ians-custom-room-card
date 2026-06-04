@@ -6,7 +6,8 @@ import { loadHaComponents } from "./utils/loader";
 import { isTemplate } from "./utils/template-manager";
 
 const ICON_POSITION_OPTIONS = [
-  { value: "top-left",      label: "Top Left (default)" },
+  { value: "",              label: "Default (inline with title)" },
+  { value: "top-left",      label: "Top Left" },
   { value: "top-right",     label: "Top Right" },
   { value: "bottom-left",   label: "Bottom Left" },
   { value: "bottom-right",  label: "Bottom Right" },
@@ -331,7 +332,7 @@ export class IansCustomRoomCardEditor extends LitElement {
           .hass=${this.hass}
           .label=${"Icon Position"}
           .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${c.icon_position ?? "top-left"}
+          .value=${c.icon_position ?? ""}
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("icon_position", ev.detail.value as IconPosition || undefined)}
         ></ha-selector>
@@ -649,26 +650,16 @@ export class IansCustomRoomCardEditor extends LitElement {
                   ]}
                   .computeLabel=${(s: any) => s.label}
                   @value-changed=${(ev: CustomEvent) => {
-                    this._subButtonChanged(
-                      index,
-                      "show_icon",
-                      ev.detail.value.show_icon
-                    );
-                    this._subButtonChanged(
-                      index,
-                      "show_label",
-                      ev.detail.value.show_label
-                    );
-                    this._subButtonChanged(
-                      index,
-                      "show_state",
-                      ev.detail.value.show_state
-                    );
-                    this._subButtonChanged(
-                      index,
-                      "background",
-                      ev.detail.value.background
-                    );
+                    if (!this._config?.sub_buttons) return;
+                    const buttons = [...this._config.sub_buttons];
+                    buttons[index] = {
+                      ...buttons[index],
+                      show_icon: ev.detail.value.show_icon,
+                      show_label: ev.detail.value.show_label,
+                      show_state: ev.detail.value.show_state,
+                      background: ev.detail.value.background,
+                    };
+                    this._fieldChanged("sub_buttons", buttons);
                   }}
                 ></ha-form>
 

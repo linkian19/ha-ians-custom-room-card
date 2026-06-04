@@ -78,6 +78,12 @@ export class IansCustomRoomCard extends LitElement {
     };
   }
 
+  // HA calls getGridOptions() on the element instance (not as static) to drive
+  // the resize UI. Delegate to the static implementation.
+  getGridOptions() {
+    return IansCustomRoomCard.getGridOptions(this._config);
+  }
+
   static getConfigElement(): HTMLElement {
     return document.createElement(`${CARD_TYPE}-editor`);
   }

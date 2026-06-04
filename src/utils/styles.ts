@@ -3,6 +3,7 @@ import { css } from "lit";
 export const cardStyles = css`
   :host {
     display: block;
+    height: 100%;
     /* ── CSS custom property defaults (all overridable via card-mod or external CSS) ── */
     --ians-card-background-color: var(--ha-card-background, var(--card-background-color, #fff));
     --ians-card-background-opacity: 1;

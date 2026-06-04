@@ -615,6 +615,7 @@ const CARD_DESCRIPTION = "Customizable room card with icon, badge, sub-buttons, 
 const cardStyles = i$3`
   :host {
     display: block;
+    height: 100%;
     /* ── CSS custom property defaults (all overridable via card-mod or external CSS) ── */
     --ians-card-background-color: var(--ha-card-background, var(--card-background-color, #fff));
     --ians-card-background-opacity: 1;
@@ -1102,7 +1103,8 @@ var __decorateClass$1 = (decorators, target, key, kind) => {
   return result;
 };
 const ICON_POSITION_OPTIONS = [
-  { value: "top-left", label: "Top Left (default)" },
+  { value: "", label: "Default (inline with title)" },
+  { value: "top-left", label: "Top Left" },
   { value: "top-right", label: "Top Right" },
   { value: "bottom-left", label: "Bottom Left" },
   { value: "bottom-right", label: "Bottom Right" },
@@ -1390,7 +1392,7 @@ let IansCustomRoomCardEditor = class extends i {
           .hass=${this.hass}
           .label=${"Icon Position"}
           .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_e2 = c2.icon_position) != null ? _e2 : "top-left"}
+          .value=${(_e2 = c2.icon_position) != null ? _e2 : ""}
           @value-changed=${(ev) => this._fieldChanged("icon_position", ev.detail.value || void 0)}
         ></ha-selector>
         ${c2.icon_position === "custom" ? b`
@@ -1685,26 +1687,17 @@ let IansCustomRoomCardEditor = class extends i {
     ]}
                   .computeLabel=${(s2) => s2.label}
                   @value-changed=${(ev) => {
-      this._subButtonChanged(
-        index,
-        "show_icon",
-        ev.detail.value.show_icon
-      );
-      this._subButtonChanged(
-        index,
-        "show_label",
-        ev.detail.value.show_label
-      );
-      this._subButtonChanged(
-        index,
-        "show_state",
-        ev.detail.value.show_state
-      );
-      this._subButtonChanged(
-        index,
-        "background",
-        ev.detail.value.background
-      );
+      var _a3;
+      if (!((_a3 = this._config) == null ? void 0 : _a3.sub_buttons)) return;
+      const buttons = [...this._config.sub_buttons];
+      buttons[index] = {
+        ...buttons[index],
+        show_icon: ev.detail.value.show_icon,
+        show_label: ev.detail.value.show_label,
+        show_state: ev.detail.value.show_state,
+        background: ev.detail.value.background
+      };
+      this._fieldChanged("sub_buttons", buttons);
     }}
                 ></ha-form>
 
@@ -2044,6 +2037,11 @@ let IansCustomRoomCard = class extends i {
       ...g2.max_columns !== void 0 && { max_columns: g2.max_columns },
       ...g2.max_rows !== void 0 && { max_rows: g2.max_rows }
     };
+  }
+  // HA calls getGridOptions() on the element instance (not as static) to drive
+  // the resize UI. Delegate to the static implementation.
+  getGridOptions() {
+    return IansCustomRoomCard.getGridOptions(this._config);
   }
   static getConfigElement() {
     return document.createElement(`${CARD_TYPE}-editor`);
