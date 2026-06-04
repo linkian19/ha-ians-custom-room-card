@@ -15,6 +15,8 @@ export const cardStyles = css`
     --ians-icon-background-color: transparent;
     --ians-icon-background-opacity: 1;
     --ians-icon-background-size: 40px;
+    --ians-icon-background-width: var(--ians-icon-background-size);
+    --ians-icon-background-height: var(--ians-icon-background-size);
     --ians-icon-background-border-radius: 50%;
     --ians-icon-size: calc(var(--ians-icon-background-size) * 0.6);
     --ians-badge-color: #fff;
@@ -92,8 +94,8 @@ export const cardStyles = css`
   /* ── Icon ────────────────────────────────────────────────────────────────── */
   .icon-container {
     position: relative;
-    width: var(--ians-icon-background-size);
-    height: var(--ians-icon-background-size);
+    width: var(--ians-icon-background-width);
+    height: var(--ians-icon-background-height);
     flex-shrink: 0;
     border-radius: var(--ians-icon-background-border-radius);
     background-color: color-mix(
@@ -218,9 +220,30 @@ export const cardStyles = css`
     order: 0;
   }
 
+  /* Grid: auto-fill by default; overridden by --ians-sub-buttons-grid-template-columns */
   .sub-buttons.layout-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(var(--ians-sub-button-size), 1fr));
+    grid-template-columns: var(--ians-sub-buttons-grid-template-columns, repeat(auto-fill, minmax(56px, 1fr)));
+    align-content: start;
+  }
+
+  /* Grid cells stack icon + label/state vertically */
+  .sub-buttons.layout-grid .sub-button {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 4px;
+    min-height: 56px;
+    min-width: 0;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .sub-buttons.layout-grid .sub-button-label,
+  .sub-buttons.layout-grid .sub-button-state {
+    max-width: 100%;
+    text-align: center;
+    font-size: 10px;
   }
 
   /* Corners and custom: absolute overlay */

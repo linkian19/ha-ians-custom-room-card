@@ -22,6 +22,21 @@ const TEMPLATE_FIELDS = [
 
 type TemplateField = (typeof TEMPLATE_FIELDS)[number];
 
+// Entity states considered "active" for state-based coloring
+const ACTIVE_STATES = new Set(["on", "open", "home", "playing", "unlocked", "connected"]);
+
+// Default icon color when entity is in an active state, keyed by domain
+const DOMAIN_ACTIVE_COLORS: Record<string, string> = {
+  light:               "var(--state-light-active-color, #FDD835)",
+  switch:              "var(--state-switch-active-color, #FDD835)",
+  fan:                 "var(--state-fan-active-color, #26A69A)",
+  media_player:        "var(--state-media_player-active-color, #FDD835)",
+  cover:               "var(--state-cover-active-color, #FDD835)",
+  lock:                "var(--success-color, #4CAF50)",
+  binary_sensor:       "var(--state-binary_sensor-active-color, #FDD835)",
+  alarm_control_panel: "var(--error-color, #db4437)",
+};
+
 // Default icon per entity domain, used when no icon is configured or found in entity attributes
 const DOMAIN_ICONS: Record<string, string> = {
   light: "mdi:lightbulb",
@@ -158,6 +173,7 @@ export class IansCustomRoomCard extends LitElement {
 
     const configChanged = changedProps.has("_config");
     const templateResultsChanged = changedProps.has("_templateResults");
+    const hassChanged = changedProps.has("hass");
 
     if (configChanged) {
       this._subscribeTemplates();
@@ -165,9 +181,12 @@ export class IansCustomRoomCard extends LitElement {
       this._setupCardActionHandler();
     }
 
-    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults")) {
+    // Re-apply styles on hass change so state-based colors update live
+    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults") || hassChanged) {
       this._applyConfigStyles();
-      // Re-attach sub-button action handlers after re-render
+    }
+
+    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults")) {
       this._setupSubButtonHandlers();
     }
   }
@@ -299,12 +318,29 @@ export class IansCustomRoomCard extends LitElement {
     this._setCSSVar("--ians-card-border-color", resolve("border_color", c.border_color));
     this._setCSSVar("--ians-card-border-opacity", c.border_opacity !== undefined ? String(c.border_opacity) : undefined);
 
-    this._setCSSVar("--ians-icon-color", resolve("icon_color", c.icon_color));
+    // State-based icon color: resolves dynamically from entity state when enabled
+    let iconColor = resolve("icon_color", c.icon_color);
+    if (c.state_based_color && c.entity && this.hass) {
+      const es = this.hass.states[c.entity];
+      const domain = c.entity.split(".")[0];
+      if (es) {
+        const isActive = ACTIVE_STATES.has(es.state);
+        iconColor = isActive
+          ? (c.icon_color_on ?? DOMAIN_ACTIVE_COLORS[domain] ?? iconColor)
+          : (c.icon_color_off ?? iconColor);
+      }
+    }
+    this._setCSSVar("--ians-icon-color", iconColor);
     this._setCSSVar("--ians-icon-opacity", c.icon_opacity !== undefined ? String(c.icon_opacity) : undefined);
     this._setCSSVar("--ians-icon-background-color", c.icon_background_color);
     this._setCSSVar("--ians-icon-background-opacity", c.icon_background_opacity !== undefined ? String(c.icon_background_opacity) : undefined);
     this._setCSSVar("--ians-icon-background-size", c.icon_background_size !== undefined ? `${c.icon_background_size}px` : undefined);
-    this._setCSSVar("--ians-icon-background-border-radius", c.icon_background_shape ? SHAPE_BORDER_RADIUS[c.icon_background_shape] : undefined);
+    this._setCSSVar("--ians-icon-background-width", c.icon_background_width !== undefined ? `${c.icon_background_width}px` : undefined);
+    this._setCSSVar("--ians-icon-background-height", c.icon_background_height !== undefined ? `${c.icon_background_height}px` : undefined);
+    // Custom border-radius overrides shape preset
+    const borderRadius = c.icon_background_border_radius
+      || (c.icon_background_shape ? SHAPE_BORDER_RADIUS[c.icon_background_shape] : undefined);
+    this._setCSSVar("--ians-icon-background-border-radius", borderRadius);
     this._setCSSVar("--ians-icon-size", c.icon_size !== undefined ? `${c.icon_size}px` : undefined);
 
     this._setCSSVar("--ians-badge-color", resolve("badge_color", c.badge_color));
@@ -319,6 +355,20 @@ export class IansCustomRoomCard extends LitElement {
     this._setCSSVar("--ians-sub-button-icon-color", c.sub_button_icon_color);
     this._setCSSVar("--ians-sub-button-background-color", c.sub_button_background_color);
     this._setCSSVar("--ians-sub-button-opacity", c.sub_button_opacity !== undefined ? String(c.sub_button_opacity) : undefined);
+    this._setCSSVar("--ians-sub-button-gap", c.sub_button_gap !== undefined ? `${c.sub_button_gap}px` : undefined);
+
+    // Grid template columns — set as CSS variable for the grid layout to consume
+    if (c.sub_buttons_layout === "grid") {
+      if (c.sub_buttons_grid_columns) {
+        this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(${c.sub_buttons_grid_columns}, 1fr)`);
+      } else if (c.sub_buttons_grid_min_width) {
+        this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(auto-fill, minmax(${c.sub_buttons_grid_min_width}px, 1fr))`);
+      } else {
+        this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
+      }
+    } else {
+      this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
+    }
   }
 
   // ── Action handlers ────────────────────────────────────────────────────────
@@ -575,9 +625,18 @@ export class IansCustomRoomCard extends LitElement {
         posClass,
       ].filter(Boolean).join(" ");
 
+      // State-based icon color: auto-color by entity state when enabled
+      let btnIconColor = btn.icon_color;
+      if (btn.state_based_color && entityState) {
+        const isActive = ACTIVE_STATES.has(entityState.state);
+        btnIconColor = isActive
+          ? (btn.icon_color_on ?? DOMAIN_ACTIVE_COLORS[domain] ?? btn.icon_color)
+          : (btn.icon_color_off ?? btn.icon_color);
+      }
+
       // Per-button color overrides via inline style
       const btnStyle = [
-        btn.icon_color ? `--ians-sub-button-icon-color: ${btn.icon_color}` : "",
+        btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
         btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
         btn.opacity !== undefined ? `opacity: ${btn.opacity}` : "",
       ].filter(Boolean).join("; ");

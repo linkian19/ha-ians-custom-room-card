@@ -80,6 +80,98 @@ title: >
 
 ---
 
+## State-Based Icon Colors
+
+Instead of templates, you can use `state_based_color: true` to automatically color the icon based on entity state.
+
+```yaml
+entity: light.living_room
+state_based_color: true
+```
+
+When the entity is in an active state (`on`, `open`, `home`, `playing`, `unlocked`, `connected`), the icon gets a domain-appropriate color. The defaults are:
+
+| Domain | Active color |
+|---|---|
+| `light`, `switch`, `media_player`, `cover`, `binary_sensor` | Yellow (`--state-light-active-color`) |
+| `fan` | Teal (`--state-fan-active-color`) |
+| `lock` | Green (`--success-color`) |
+| `alarm_control_panel` | Red (`--error-color`) |
+
+To override the automatic colors:
+
+```yaml
+entity: light.living_room
+state_based_color: true
+icon_color_on: "#ffcc00"   # color when on
+icon_color_off: "#444444"  # color when off (falls back to icon_color if omitted)
+```
+
+The same `state_based_color`, `icon_color_on`, and `icon_color_off` fields work per sub-button.
+
+---
+
+## Icon Position
+
+By default the icon sits inline in the card header alongside the title. Set `icon_position` to place it anywhere on the card:
+
+```yaml
+icon_position: center       # centered in the card
+icon_position: top-right    # absolute top-right corner
+icon_position: bottom-left  # absolute bottom-left corner
+```
+
+Available values: `top-left`, `top-right`, `bottom-left`, `bottom-right`, `center`, `center-left`, `center-right`, `custom`
+
+For custom placement, provide CSS coordinates using `%` values so the position scales with card size:
+
+```yaml
+icon_position: custom
+icon_position_x: "25%"
+icon_position_y: "30%"
+```
+
+> **Tip:** Fixed `px` values for custom positions do not adapt when the card is resized in the sections view. Use `%` values whenever you want the icon to remain proportionally placed.
+
+### Non-square icon containers
+
+```yaml
+icon_background_width: 60    # px
+icon_background_height: 40   # px
+icon_background_border_radius: "8px"
+```
+
+Or use a shape preset:
+
+```yaml
+icon_background_shape: rounded-rect   # circle | rounded-rect | squircle | square
+```
+
+---
+
+## Title Position
+
+By default the title sits inline in the card header. Set `title_position` to place it anywhere:
+
+```yaml
+title_position: bottom-left    # absolute bottom-left
+title_position: center         # centered in the card
+title_position: top-center     # absolute top, horizontally centered
+```
+
+Available values mirror `icon_position`: `top-left`, `top-right`, `top-center`, `bottom-left`, `bottom-right`, `bottom-center`, `center-left`, `center`, `center-right`, `custom`
+
+Combined with position, you can also control alignment and size:
+
+```yaml
+title_position: bottom-left
+title_align: left
+title_font_size: 12
+title_color: "rgba(255,255,255,0.8)"
+```
+
+---
+
 ## Sub-Button Layouts
 
 ### `bottom-row` (default)
@@ -98,6 +190,22 @@ Same as `bottom-row` but pinned to the top, below any card content.
 sub_buttons_layout: top-row
 ```
 
+### `left-column`
+
+Sub-buttons stacked vertically, pinned to the left side.
+
+```yaml
+sub_buttons_layout: left-column
+```
+
+### `right-column`
+
+Sub-buttons stacked vertically, pinned to the right side.
+
+```yaml
+sub_buttons_layout: right-column
+```
+
 ### `corners`
 
 Up to 4 buttons, one per corner. Extra buttons beyond 4 are hidden. Buttons are placed top-left → top-right → bottom-left → bottom-right.
@@ -111,21 +219,24 @@ sub_buttons:
   - entity: lock.door         # bottom-right
 ```
 
-### `columns`
-
-Two-column grid. First button goes left column, second goes right, alternating.
-
-```yaml
-sub_buttons_layout: columns
-```
-
 ### `grid`
 
-Auto-fill grid. Each button gets equal width; the row wraps automatically.
+Auto-fill grid. Each button gets equal width; rows wrap automatically.
 
 ```yaml
 sub_buttons_layout: grid
 ```
+
+Control column sizing:
+
+```yaml
+sub_buttons_layout: grid
+sub_buttons_grid_columns: 3          # fixed 3-column grid
+# OR
+sub_buttons_grid_min_width: 64      # auto-fill; each column at least 64px wide
+```
+
+Grid cells stack the icon above the label/state and expand to fill their column.
 
 ### `custom`
 
@@ -198,11 +309,9 @@ card_mod:
   style: |
     ha-card {
       --ians-icon-background-color: rgba(255, 200, 50, 0.2);
+      --ians-icon-background-border-radius: 10px;
       --ians-icon-color: rgb(255, 200, 50);
-      --ians-icon-size: 48px;
-    }
-    ha-card::part(icon-container) {
-      border-radius: 10px;
+      --ians-icon-background-size: 48px;
     }
 ```
 

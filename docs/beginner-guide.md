@@ -32,11 +32,13 @@ The card appears with default placeholder content. It is now ready to configure.
 
 ## Step 3: Set a room icon and title
 
-In the visual editor:
+The visual editor is organized into tabs: **Basic**, **Icon**, **Card**, **Buttons**, and **Actions**.
+
+In the **Basic** tab:
 
 1. **Title** — type your room name, e.g. `Living Room`.
 2. **Icon** — click the icon field and search for an MDI icon. Try `sofa`, `bed`, `desk-lamp`, or `fridge`.
-3. **Icon color** — pick a color using the color picker, or leave it at the default.
+3. **Icon color** — click the color swatch to open a color picker, or type a CSS color directly.
 
 Click **Save** to preview your changes.
 
@@ -46,10 +48,9 @@ Click **Save** to preview your changes.
 
 To make the card navigate to a room-specific dashboard view when tapped:
 
-In the visual editor, scroll to **Global Action**:
-
-1. Set **Tap action** → **Navigate**.
-2. Set the **Navigation path** to the view you want, e.g. `/lovelace/living-room`.
+1. Switch to the **Actions** tab.
+2. Set **Tap action** → **Navigate**.
+3. Set the **Navigation path** to the view you want, e.g. `/lovelace/living-room`.
 
 > **Tip:** If you don't have a per-room view yet, you can set the action to **More info** and pick a primary entity for the room instead.
 
@@ -59,12 +60,11 @@ In the visual editor, scroll to **Global Action**:
 
 Sub-buttons are small icons inside the card for quick access to room entities.
 
-In the visual editor, scroll to **Sub-Buttons**:
-
-1. Click **+ Add sub-button**.
-2. Set the **Entity** to a light or switch in the room.
-3. Enable **Show icon**.
-4. Leave **Tap action** as `toggle` — tapping the sub-button will toggle the entity.
+1. Switch to the **Buttons** tab.
+2. Click **+ Add sub-button**.
+3. Set the **Entity** to a light or switch in the room.
+4. Enable **Show icon**.
+5. Leave **Tap action** as `toggle` — tapping the sub-button will toggle the entity.
 
 Click **Save**. The sub-button appears at the bottom of the card.
 
@@ -72,10 +72,9 @@ Click **Save**. The sub-button appears at the bottom of the card.
 
 ## Step 6: Try a background color
 
-In the visual editor, scroll to **Card Background & Border**:
-
-1. Set **Background color** using the color picker.
-2. Adjust **Background opacity** to control how transparent the background is (0 = invisible, 1 = solid).
+1. Switch to the **Card** tab.
+2. Set **Background color** using the color picker.
+3. Adjust **Background opacity** to control how transparent the background is (0 = invisible, 1 = solid).
 
 A dark semi-transparent background looks good on frosted glass dashboards:
 ```

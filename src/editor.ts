@@ -20,7 +20,7 @@ const ICON_POSITION_OPTIONS = [
   { value: "center",        label: "Center" },
   { value: "center-left",   label: "Center Left" },
   { value: "center-right",  label: "Center Right" },
-  { value: "custom",        label: "Custom (CSS coordinates)" },
+  { value: "custom",        label: "Custom (% recommended for responsive)" },
 ];
 
 const TITLE_POSITION_OPTIONS = [
@@ -34,7 +34,7 @@ const TITLE_POSITION_OPTIONS = [
   { value: "bottom-left",   label: "Bottom Left" },
   { value: "bottom-center", label: "Bottom Center" },
   { value: "bottom-right",  label: "Bottom Right" },
-  { value: "custom",        label: "Custom (CSS coordinates)" },
+  { value: "custom",        label: "Custom (% recommended for responsive)" },
 ];
 
 const TITLE_ALIGN_OPTIONS = [
@@ -48,7 +48,7 @@ const BADGE_POSITION_OPTIONS = [
   { value: "top-left",     label: "Top Left" },
   { value: "bottom-left",  label: "Bottom Left" },
   { value: "bottom-right", label: "Bottom Right" },
-  { value: "custom",       label: "Custom (CSS coordinates)" },
+  { value: "custom",       label: "Custom" },
 ];
 
 const ICON_SHAPE_OPTIONS = [
@@ -64,7 +64,7 @@ const SUB_BUTTON_LAYOUT_OPTIONS = [
   { value: "right-column", label: "Right Column" },
   { value: "left-column",  label: "Left Column" },
   { value: "corners",      label: "Corners (up to 4)" },
-  { value: "grid",         label: "Grid (auto-fill)" },
+  { value: "grid",         label: "Grid" },
   { value: "custom",       label: "Custom positions" },
 ];
 
@@ -84,10 +84,10 @@ const TEMPLATE_CAPABLE_FIELDS = new Set([
 
 const OPACITY_SELECTOR = { number: { min: 0, max: 1, step: 0.05, mode: "slider" } };
 
+type TabId = "basic" | "icon" | "card" | "buttons" | "actions";
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Best-effort: convert a CSS color string to a hex value for <input type="color">.
- *  Returns "#000000" for anything it can't parse (named colors, CSS vars, etc.). */
 function cssToHex(value: string): string {
   if (!value) return "#000000";
   if (/^#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase();
@@ -107,6 +107,7 @@ export class IansCustomRoomCardEditor extends LitElement {
   @state() private _loaded = false;
   @state() private _templateMode: Set<string> = new Set();
   @state() private _expandedSubButton: number | null = null;
+  @state() private _activeTab: TabId = "basic";
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -163,6 +164,7 @@ export class IansCustomRoomCardEditor extends LitElement {
     const buttons = [...(this._config?.sub_buttons ?? [])];
     buttons.push({
       show_icon: true, show_label: false, show_state: false, background: true,
+      state_based_color: false,
       tap_action: { action: "toggle" },
       hold_action: { action: "more-info" },
       double_tap_action: { action: "none" },
@@ -187,18 +189,24 @@ export class IansCustomRoomCardEditor extends LitElement {
 
   // ── Render helpers ────────────────────────────────────────────────────────────
 
-  /** Color field with visual swatch + native picker + text input. */
-  private _renderColorField(fieldKey: string, label: string) {
+  /** Color swatch + text input. The swatch is clickable and shows current color. */
+  private _renderColorField(
+    fieldKey: string,
+    label: string,
+    placeholder = "e.g. red, #ff0000, var(--primary-color)"
+  ) {
     const isTemplateCapable = TEMPLATE_CAPABLE_FIELDS.has(fieldKey);
     const currentValue = (this._config?.[fieldKey as keyof CardConfig] as string) ?? "";
 
     const colorWidget = () => html`
-      <div class="color-input-row">
-        <label class="color-swatch" title="Open color picker">
-          <div class="color-swatch-preview" style="background: ${currentValue || "transparent"}"></div>
+      <div class="color-row">
+        <label class="color-btn" title="Click to open color picker">
+          <div class="color-checker"></div>
+          <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+          <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
           <input
             type="color"
-            class="hidden-color-input"
+            class="color-native"
             .value=${cssToHex(currentValue)}
             @change=${(ev: Event) =>
               this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
@@ -209,7 +217,7 @@ export class IansCustomRoomCardEditor extends LitElement {
           .label=${label}
           .selector=${{ text: {} }}
           .value=${currentValue}
-          placeholder="e.g. red, #ff0000, var(--primary-color)"
+          .placeholder=${placeholder}
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged(fieldKey, ev.detail.value || undefined)}
         ></ha-selector>
@@ -220,17 +228,49 @@ export class IansCustomRoomCardEditor extends LitElement {
     return this._renderTemplateField(fieldKey, label, colorWidget);
   }
 
-  private _renderTemplateField(
-    fieldKey: string,
+  /** Same color field but reads from SubButtonConfig (not top-level CardConfig). */
+  private _renderSubBtnColorField(
+    btn: SubButtonConfig,
+    index: number,
+    field: "icon_color" | "icon_color_on" | "icon_color_off" | "background_color",
     label: string,
-    renderWidget: () => unknown
+    placeholder = "e.g. #ff9800, var(--primary-color)"
   ) {
+    const currentValue = (btn[field] as string | undefined) ?? "";
+    return html`
+      <div class="color-row">
+        <label class="color-btn" title="Click to open color picker">
+          <div class="color-checker"></div>
+          <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+          <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+          <input
+            type="color"
+            class="color-native"
+            .value=${cssToHex(currentValue)}
+            @change=${(ev: Event) =>
+              this._subButtonChanged(index, { [field]: (ev.target as HTMLInputElement).value || undefined })}
+          />
+        </label>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${label}
+          .selector=${{ text: {} }}
+          .value=${currentValue}
+          .placeholder=${placeholder}
+          @value-changed=${(ev: CustomEvent) =>
+            this._subButtonChanged(index, { [field]: ev.detail.value || undefined })}
+        ></ha-selector>
+      </div>
+    `;
+  }
+
+  private _renderTemplateField(fieldKey: string, label: string, renderWidget: () => unknown) {
     const inTemplateMode = this._templateMode.has(fieldKey);
     const currentValue = (this._config?.[fieldKey as keyof CardConfig] as string) ?? "";
 
     return html`
-      <div class="field-row">
-        <div class="field-input">
+      <div class="template-row">
+        <div class="template-input">
           ${inTemplateMode
             ? html`
                 <textarea
@@ -239,12 +279,12 @@ export class IansCustomRoomCardEditor extends LitElement {
                   @change=${(ev: Event) => this._fieldChanged(fieldKey, (ev.target as HTMLTextAreaElement).value)}
                   @input=${(ev: Event) => this._fieldChanged(fieldKey, (ev.target as HTMLTextAreaElement).value)}
                 ></textarea>
-                <div class="helper-text">Advanced: HA Template (Jinja2)</div>
+                <div class="hint">HA Jinja2 template</div>
               `
             : renderWidget()}
         </div>
         <button
-          class="template-toggle ${inTemplateMode ? "active" : ""}"
+          class="tmpl-btn ${inTemplateMode ? "active" : ""}"
           title="${inTemplateMode ? "Switch to simple input" : "Use HA template"}"
           @click=${() => this._toggleTemplateMode(fieldKey)}
         >T</button>
@@ -253,18 +293,20 @@ export class IansCustomRoomCardEditor extends LitElement {
   }
 
   private _renderOpacityField(fieldKey: string, label: string, defaultVal = 1) {
+    const hint = "Use this slider for element opacity. For color transparency, add alpha to the color value instead (e.g. rgba(255,0,0,0.5)).";
     return html`
       <ha-selector
         .hass=${this.hass}
         .label=${label}
         .selector=${OPACITY_SELECTOR}
         .value=${(this._config?.[fieldKey as keyof CardConfig] as number) ?? defaultVal}
+        title=${hint}
         @value-changed=${(ev: CustomEvent) => this._fieldChanged(fieldKey, ev.detail.value)}
       ></ha-selector>
     `;
   }
 
-  private _renderNumericField(fieldKey: string, label: string, min: number, max: number, step: number, defaultVal: number, suffix = "") {
+  private _renderNumField(fieldKey: string, label: string, min: number, max: number, step: number, defaultVal: number, suffix = "") {
     return html`
       <ha-selector
         .hass=${this.hass}
@@ -276,18 +318,59 @@ export class IansCustomRoomCardEditor extends LitElement {
     `;
   }
 
-  // ── Main render ──────────────────────────────────────────────────────────────
+  private _renderCoordFields(
+    xKey: keyof CardConfig, yKey: keyof CardConfig,
+    xLabel = "X (CSS)", yLabel = "Y (CSS)"
+  ) {
+    return html`
+      <div class="two-col">
+        <ha-selector .hass=${this.hass} .label=${xLabel}
+          .selector=${{ text: {} }}
+          .value=${(this._config?.[xKey] as string) ?? ""}
+          .placeholder=${"e.g. 10px, 25%"}
+          @value-changed=${(ev: CustomEvent) => this._fieldChanged(xKey as string, ev.detail.value || undefined)}
+        ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${yLabel}
+          .selector=${{ text: {} }}
+          .value=${(this._config?.[yKey] as string) ?? ""}
+          .placeholder=${"e.g. 10px, 25%"}
+          @value-changed=${(ev: CustomEvent) => this._fieldChanged(yKey as string, ev.detail.value || undefined)}
+        ></ha-selector>
+      </div>
+      <div class="hint">Tip: use <code>%</code> values (e.g. <code>25%</code>) for positions that adapt to card size. Fixed <code>px</code> values stay constant when the card is resized.</div>
+    `;
+  }
 
-  protected render() {
-    if (!this._loaded || !this._config) {
-      return html`<div class="loading">Loading editor…</div>`;
-    }
-    const c = this._config;
+  // ── Tab bar ──────────────────────────────────────────────────────────────────
+
+  private _renderTabBar() {
+    const tabs: Array<{ id: TabId; label: string }> = [
+      { id: "basic",   label: "Basic" },
+      { id: "icon",    label: "Icon" },
+      { id: "card",    label: "Card" },
+      { id: "buttons", label: "Buttons" },
+      { id: "actions", label: "Actions" },
+    ];
 
     return html`
-      <!-- ── Basic ─────────────────────────────────────────────────────── -->
-      <div class="section-header">Basic</div>
-      <div class="section-body">
+      <div class="tab-bar">
+        ${tabs.map(t => html`
+          <button
+            class="tab ${this._activeTab === t.id ? "active" : ""}"
+            @click=${() => { this._activeTab = t.id; }}
+          >${t.label}</button>
+        `)}
+      </div>
+    `;
+  }
+
+  // ── Tab content ───────────────────────────────────────────────────────────────
+
+  private _renderBasicTab() {
+    const c = this._config!;
+    return html`
+      <div class="section">
+        <div class="section-label">Entity</div>
         <ha-entity-picker
           .hass=${this.hass}
           .label=${"Entity (optional)"}
@@ -296,72 +379,35 @@ export class IansCustomRoomCardEditor extends LitElement {
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("entity", ev.detail.value || undefined)}
         ></ha-entity-picker>
+      </div>
 
+      <div class="section">
+        <div class="section-label">Title</div>
         ${this._renderTemplateField("title", "Title",
           () => html`
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Title"}
+            <ha-selector .hass=${this.hass} .label=${"Title"}
               .selector=${{ text: {} }}
               .value=${c.title ?? ""}
+              .placeholder=${"Room name, or leave blank to hide"}
               @value-changed=${(ev: CustomEvent) =>
                 this._fieldChanged("title", ev.detail.value || undefined)}
             ></ha-selector>
           `
         )}
 
-        ${this._renderTemplateField("icon", "Icon",
-          () => html`
-            <ha-icon-picker
-              .hass=${this.hass}
-              .label=${"Icon"}
-              .value=${c.icon ?? ""}
-              @value-changed=${(ev: CustomEvent) =>
-                this._fieldChanged("icon", ev.detail.value || undefined)}
-            ></ha-icon-picker>
-          `
-        )}
-      </div>
-
-      <!-- ── Title appearance ──────────────────────────────────────────── -->
-      <div class="section-header">Title</div>
-      <div class="section-body">
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Position"}
+        <ha-selector .hass=${this.hass} .label=${"Position"}
           .selector=${{ select: { options: TITLE_POSITION_OPTIONS, mode: "dropdown" } }}
           .value=${c.title_position ?? ""}
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("title_position", ev.detail.value as IconPosition || undefined)}
         ></ha-selector>
 
-        ${c.title_position === "custom" ? html`
-          <div class="two-col">
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"X position (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${c.title_position_x ?? ""}
-              placeholder="e.g. 10px, 50%"
-              @value-changed=${(ev: CustomEvent) =>
-                this._fieldChanged("title_position_x", ev.detail.value || undefined)}
-            ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Y position (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${c.title_position_y ?? ""}
-              placeholder="e.g. 10px, 50%"
-              @value-changed=${(ev: CustomEvent) =>
-                this._fieldChanged("title_position_y", ev.detail.value || undefined)}
-            ></ha-selector>
-          </div>
-        ` : nothing}
+        ${c.title_position === "custom"
+          ? this._renderCoordFields("title_position_x", "title_position_y", "X position", "Y position")
+          : nothing}
 
         ${!c.title_position ? html`
-          <ha-selector
-            .hass=${this.hass}
-            .label=${"Alignment (when inline)"}
+          <ha-selector .hass=${this.hass} .label=${"Text Alignment"}
             .selector=${{ select: { options: TITLE_ALIGN_OPTIONS, mode: "list" } }}
             .value=${c.title_align ?? "left"}
             @value-changed=${(ev: CustomEvent) =>
@@ -370,75 +416,112 @@ export class IansCustomRoomCardEditor extends LitElement {
         ` : nothing}
 
         <div class="two-col">
-          ${this._renderNumericField("title_font_size", "Font Size (px)", 8, 48, 1, 14, "px")}
-          ${this._renderColorField("title_color", "Title Color")}
+          ${this._renderNumField("title_font_size", "Font Size (px)", 8, 48, 1, 14, "px")}
+          ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
         </div>
       </div>
 
-      <!-- ── Icon appearance ───────────────────────────────────────────── -->
-      <div class="section-header">Icon</div>
-      <div class="section-body">
-        ${this._renderColorField("icon_color", "Icon Color")}
-        ${this._renderOpacityField("icon_opacity", "Icon Opacity")}
+      <div class="section">
+        <div class="section-label">Icon</div>
+        ${this._renderTemplateField("icon", "Icon",
+          () => html`
+            <ha-icon-picker .hass=${this.hass} .label=${"Icon"}
+              .value=${c.icon ?? ""}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("icon", ev.detail.value || undefined)}
+            ></ha-icon-picker>
+          `
+        )}
+      </div>
+    `;
+  }
 
-        <ha-selector
+  private _renderIconTab() {
+    const c = this._config!;
+    return html`
+      <!-- ── Icon color ── -->
+      <div class="section">
+        <div class="section-label">Icon Color</div>
+        ${this._renderColorField("icon_color", "Icon Color")}
+
+        <ha-form
           .hass=${this.hass}
-          .label=${"Background Shape"}
+          .data=${{ state_based_color: c.state_based_color ?? false }}
+          .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
+          .computeLabel=${(s: any) => s.label}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("state_based_color", ev.detail.value.state_based_color)}
+        ></ha-form>
+
+        ${c.state_based_color ? html`
+          <div class="hint">When active (on/open/playing/home): uses the color below or a domain default (yellow for lights). When inactive: uses the off-color or falls back to Icon Color.</div>
+          ${this._renderColorField("icon_color_on",  "Active Color (on/open/playing)", "e.g. #FDD835, yellow")}
+          ${this._renderColorField("icon_color_off", "Inactive Color (off/closed)",   "e.g. #888888, grey")}
+        ` : nothing}
+
+        <ha-selector .hass=${this.hass} .label=${"Icon Opacity"}
+          .selector=${OPACITY_SELECTOR} .value=${c.icon_opacity ?? 1}
+          @value-changed=${(ev: CustomEvent) => this._fieldChanged("icon_opacity", ev.detail.value)}
+        ></ha-selector>
+      </div>
+
+      <!-- ── Icon background ── -->
+      <div class="section">
+        <div class="section-label">Icon Background</div>
+        <ha-selector .hass=${this.hass} .label=${"Shape"}
           .selector=${{ select: { options: ICON_SHAPE_OPTIONS, mode: "dropdown" } }}
           .value=${c.icon_background_shape ?? "circle"}
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("icon_background_shape", ev.detail.value as IconBackgroundShape || undefined)}
         ></ha-selector>
 
+        <ha-selector .hass=${this.hass} .label=${"Custom Border Radius (CSS — overrides shape)"}
+          .selector=${{ text: {} }}
+          .value=${c.icon_background_border_radius ?? ""}
+          .placeholder=${"e.g. 10px 20px 30px 40px, 50% 0"}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("icon_background_border_radius", ev.detail.value || undefined)}
+        ></ha-selector>
+
         ${this._renderColorField("icon_background_color", "Background Color")}
-        ${this._renderOpacityField("icon_background_opacity", "Background Opacity")}
+
+        <ha-selector .hass=${this.hass} .label=${"Background Opacity"}
+          .selector=${OPACITY_SELECTOR} .value=${c.icon_background_opacity ?? 1}
+          @value-changed=${(ev: CustomEvent) => this._fieldChanged("icon_background_opacity", ev.detail.value)}
+        ></ha-selector>
 
         <div class="two-col">
-          ${this._renderNumericField("icon_size", "Icon Size (px)", 8, 120, 2, 24, "px")}
-          ${this._renderNumericField("icon_background_size", "Background Size (px)", 8, 160, 2, 40, "px")}
+          ${this._renderNumField("icon_size", "Icon Size (px)", 8, 120, 2, 24, "px")}
+          ${this._renderNumField("icon_background_size", "Background Size (px)", 8, 160, 2, 40, "px")}
         </div>
 
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Icon Position"}
+        <div class="hint">Width/Height override Background Size for non-square backgrounds.</div>
+        <div class="two-col">
+          ${this._renderNumField("icon_background_width",  "Width (px)",  8, 200, 2, c.icon_background_size ?? 40, "px")}
+          ${this._renderNumField("icon_background_height", "Height (px)", 8, 200, 2, c.icon_background_size ?? 40, "px")}
+        </div>
+      </div>
+
+      <!-- ── Icon position ── -->
+      <div class="section">
+        <div class="section-label">Icon Position</div>
+        <ha-selector .hass=${this.hass} .label=${"Position"}
           .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
           .value=${c.icon_position ?? ""}
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("icon_position", ev.detail.value as IconPosition || undefined)}
         ></ha-selector>
-
-        ${c.icon_position === "custom" ? html`
-          <div class="two-col">
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"X position (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${c.icon_position_x ?? ""}
-              placeholder="e.g. 10px, 50%"
-              @value-changed=${(ev: CustomEvent) =>
-                this._fieldChanged("icon_position_x", ev.detail.value || undefined)}
-            ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Y position (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${c.icon_position_y ?? ""}
-              placeholder="e.g. 10px, 50%"
-              @value-changed=${(ev: CustomEvent) =>
-                this._fieldChanged("icon_position_y", ev.detail.value || undefined)}
-            ></ha-selector>
-          </div>
-        ` : nothing}
+        ${c.icon_position === "custom"
+          ? this._renderCoordFields("icon_position_x", "icon_position_y", "X position", "Y position")
+          : nothing}
       </div>
 
-      <!-- ── Badge ─────────────────────────────────────────────────────── -->
-      <div class="section-header">Icon Badge</div>
-      <div class="section-body">
+      <!-- ── Badge ── -->
+      <div class="section">
+        <div class="section-label">Badge</div>
         ${this._renderTemplateField("badge_icon", "Badge Icon",
           () => html`
-            <ha-icon-picker
-              .hass=${this.hass}
-              .label=${"Badge Icon (leave blank to hide)"}
+            <ha-icon-picker .hass=${this.hass} .label=${"Badge Icon (blank to hide)"}
               .value=${c.badge_icon ?? ""}
               @value-changed=${(ev: CustomEvent) =>
                 this._fieldChanged("badge_icon", ev.detail.value || undefined)}
@@ -448,149 +531,175 @@ export class IansCustomRoomCardEditor extends LitElement {
 
         ${this._renderColorField("badge_color", "Badge Icon Color")}
         ${this._renderColorField("badge_background_color", "Badge Background Color")}
-        ${this._renderOpacityField("badge_opacity", "Badge Opacity")}
 
         <div class="two-col">
-          ${this._renderNumericField("badge_size", "Badge Size (px)", 8, 48, 1, 18, "px")}
-          <ha-selector
-            .hass=${this.hass}
-            .label=${"Badge Position"}
-            .selector=${{ select: { options: BADGE_POSITION_OPTIONS, mode: "dropdown" } }}
-            .value=${c.badge_position ?? "top-right"}
-            @value-changed=${(ev: CustomEvent) =>
-              this._fieldChanged("badge_position", ev.detail.value as BadgePosition || undefined)}
+          ${this._renderNumField("badge_size", "Badge Size (px)", 8, 48, 1, 18, "px")}
+          <ha-selector .hass=${this.hass} .label=${"Opacity"}
+            .selector=${OPACITY_SELECTOR} .value=${c.badge_opacity ?? 1}
+            @value-changed=${(ev: CustomEvent) => this._fieldChanged("badge_opacity", ev.detail.value)}
           ></ha-selector>
         </div>
 
+        <ha-selector .hass=${this.hass} .label=${"Badge Position"}
+          .selector=${{ select: { options: BADGE_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${c.badge_position ?? "top-right"}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("badge_position", ev.detail.value as BadgePosition || undefined)}
+        ></ha-selector>
         ${c.badge_position === "custom" ? html`
           <div class="two-col">
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Badge X (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${c.badge_position_x ?? ""}
-              placeholder="e.g. 10px"
-              @value-changed=${(ev: CustomEvent) =>
-                this._fieldChanged("badge_position_x", ev.detail.value || undefined)}
+            <ha-selector .hass=${this.hass} .label=${"X (CSS)"} .selector=${{ text: {} }}
+              .value=${c.badge_position_x ?? ""} .placeholder=${"e.g. 10px"}
+              @value-changed=${(ev: CustomEvent) => this._fieldChanged("badge_position_x", ev.detail.value || undefined)}
             ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Badge Y (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${c.badge_position_y ?? ""}
-              placeholder="e.g. 10px"
-              @value-changed=${(ev: CustomEvent) =>
-                this._fieldChanged("badge_position_y", ev.detail.value || undefined)}
+            <ha-selector .hass=${this.hass} .label=${"Y (CSS)"} .selector=${{ text: {} }}
+              .value=${c.badge_position_y ?? ""} .placeholder=${"e.g. 10px"}
+              @value-changed=${(ev: CustomEvent) => this._fieldChanged("badge_position_y", ev.detail.value || undefined)}
             ></ha-selector>
           </div>
         ` : nothing}
       </div>
+    `;
+  }
 
-      <!-- ── Card background & border ──────────────────────────────────── -->
-      <div class="section-header">Card Background &amp; Border</div>
-      <div class="section-body">
-        ${this._renderColorField("background_color", "Background Color")}
-        ${this._renderOpacityField("background_opacity", "Background Opacity")}
-
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Background Image URL (or type 'area' to use the room picture)"}
-          .selector=${{ text: {} }}
-          .value=${c.background_image ?? ""}
-          placeholder="e.g. /local/room.jpg  or  area"
+  private _renderCardTab() {
+    const c = this._config!;
+    return html`
+      <!-- ── Background ── -->
+      <div class="section">
+        <div class="section-label">Background</div>
+        ${this._renderColorField("background_color", "Color")}
+        <ha-selector .hass=${this.hass} .label=${"Opacity"}
+          .selector=${OPACITY_SELECTOR} .value=${c.background_opacity ?? 1}
+          @value-changed=${(ev: CustomEvent) => this._fieldChanged("background_opacity", ev.detail.value)}
+        ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${"Image URL (or type 'area' to use room picture)"}
+          .selector=${{ text: {} }} .value=${c.background_image ?? ""}
+          .placeholder=${"e.g. /local/room.jpg   or   area"}
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("background_image", ev.detail.value || undefined)}
         ></ha-selector>
-
-        ${this._renderColorField("border_color", "Border Color")}
-        ${this._renderOpacityField("border_opacity", "Border Opacity")}
       </div>
 
-      <!-- ── Grid sizing ────────────────────────────────────────────────── -->
-      <div class="section-header">Grid Sizing (Sections Dashboard)</div>
-      <div class="section-body">
+      <!-- ── Border ── -->
+      <div class="section">
+        <div class="section-label">Border</div>
+        ${this._renderColorField("border_color", "Color")}
+        <ha-selector .hass=${this.hass} .label=${"Opacity"}
+          .selector=${OPACITY_SELECTOR} .value=${c.border_opacity ?? 1}
+          @value-changed=${(ev: CustomEvent) => this._fieldChanged("border_opacity", ev.detail.value)}
+        ></ha-selector>
+      </div>
+
+      <!-- ── Grid sizing ── -->
+      <div class="section">
+        <div class="section-label">Grid Sizing (Sections Dashboard)</div>
         <div class="two-col">
-          <ha-selector
-            .hass=${this.hass}
-            .label=${"Columns"}
+          <ha-selector .hass=${this.hass} .label=${"Columns"}
             .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
             .value=${c.grid_options?.columns ?? 6}
             @value-changed=${(ev: CustomEvent) => this._gridFieldChanged("columns", ev.detail.value)}
           ></ha-selector>
-          <ha-selector
-            .hass=${this.hass}
-            .label=${"Rows"}
+          <ha-selector .hass=${this.hass} .label=${"Rows"}
             .selector=${{ number: { min: 1, max: 6, step: 1, mode: "box" } }}
             .value=${c.grid_options?.rows ?? 2}
             @value-changed=${(ev: CustomEvent) => this._gridFieldChanged("rows", ev.detail.value)}
           ></ha-selector>
         </div>
       </div>
+    `;
+  }
 
-      <!-- ── Sub-buttons ───────────────────────────────────────────────── -->
-      <div class="section-header">Sub-Buttons</div>
-      <div class="section-body">
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Layout"}
+  private _renderButtonsTab() {
+    const c = this._config!;
+    const layout = c.sub_buttons_layout ?? "bottom-row";
+
+    return html`
+      <!-- ── Layout ── -->
+      <div class="section">
+        <div class="section-label">Layout</div>
+        <ha-selector .hass=${this.hass} .label=${"Layout"}
           .selector=${{ select: { options: SUB_BUTTON_LAYOUT_OPTIONS, mode: "dropdown" } }}
-          .value=${c.sub_buttons_layout ?? "bottom-row"}
+          .value=${layout}
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("sub_buttons_layout", ev.detail.value as SubButtonsLayout)}
         ></ha-selector>
 
-        <div class="sub-section-label">Global Sub-Button Style</div>
-
-        ${this._renderColorField("sub_button_icon_color", "Icon Color (global)")}
-        ${this._renderColorField("sub_button_background_color", "Background Color (global)")}
-        ${this._renderOpacityField("sub_button_opacity", "Opacity (global)")}
-
-        <div class="sub-section-label">Buttons</div>
-
-        ${(c.sub_buttons ?? []).map((btn, i) => this._renderSubButtonRow(btn, i))}
-
-        <button class="add-button" @click=${this._addSubButton}>
-          + Add Sub-Button
-        </button>
+        ${layout === "grid" ? html`
+          <div class="two-col">
+            <ha-selector .hass=${this.hass} .label=${"Columns (0 = auto-fill)"}
+              .selector=${{ number: { min: 0, max: 8, step: 1, mode: "box" } }}
+              .value=${c.sub_buttons_grid_columns ?? 0}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("sub_buttons_grid_columns", ev.detail.value || undefined)}
+            ></ha-selector>
+            <ha-selector .hass=${this.hass} .label=${"Cell Min Width (px)"}
+              .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
+              .value=${c.sub_buttons_grid_min_width ?? 56}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("sub_buttons_grid_min_width", ev.detail.value)}
+            ></ha-selector>
+          </div>
+        ` : nothing}
       </div>
 
-      <!-- ── Global action ──────────────────────────────────────────────── -->
-      <div class="section-header">Global Action</div>
-      <div class="section-body">
+      <!-- ── Global style ── -->
+      <div class="section">
+        <div class="section-label">Global Button Style</div>
+        ${this._renderColorField("sub_button_icon_color", "Icon Color (default for all)")}
+        ${this._renderColorField("sub_button_background_color", "Background Color (default for all)")}
+        <div class="two-col">
+          <ha-selector .hass=${this.hass} .label=${"Opacity"}
+            .selector=${OPACITY_SELECTOR} .value=${c.sub_button_opacity ?? 1}
+            @value-changed=${(ev: CustomEvent) => this._fieldChanged("sub_button_opacity", ev.detail.value)}
+          ></ha-selector>
+          <ha-selector .hass=${this.hass} .label=${"Gap between buttons (px)"}
+            .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
+            .value=${c.sub_button_gap ?? 6}
+            @value-changed=${(ev: CustomEvent) => this._fieldChanged("sub_button_gap", ev.detail.value)}
+          ></ha-selector>
+        </div>
+      </div>
+
+      <!-- ── Individual buttons ── -->
+      <div class="section">
+        <div class="section-label">Buttons</div>
+        ${(c.sub_buttons ?? []).map((btn, i) => this._renderSubButtonRow(btn, i))}
+        <button class="add-btn" @click=${this._addSubButton}>+ Add Button</button>
+      </div>
+    `;
+  }
+
+  private _renderActionsTab() {
+    const c = this._config!;
+    return html`
+      <div class="section">
+        <div class="section-label">Global Action</div>
         <div class="warning-box">
-          When Global Action is set, sub-buttons become non-interactive decorations
-          and the entire card surface becomes a single tap target.
+          When a global action is set, all sub-button tap/hold/double-tap actions are disabled.
+          Sub-buttons become non-interactive decorations and the entire card is a single tap target.
         </div>
 
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Tap Action"}
+        <ha-selector .hass=${this.hass} .label=${"Tap Action"}
           .selector=${{ ui_action: {} }}
           .value=${c.global_action?.tap_action ?? { action: "none" }}
           @value-changed=${(ev: CustomEvent) =>
             this._globalActionFieldChanged("tap_action", ev.detail.value)}
         ></ha-selector>
-
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Hold Action"}
+        <ha-selector .hass=${this.hass} .label=${"Hold Action"}
           .selector=${{ ui_action: {} }}
           .value=${c.global_action?.hold_action ?? { action: "none" }}
           @value-changed=${(ev: CustomEvent) =>
             this._globalActionFieldChanged("hold_action", ev.detail.value)}
         ></ha-selector>
-
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Double-Tap Action"}
+        <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
           .selector=${{ ui_action: {} }}
           .value=${c.global_action?.double_tap_action ?? { action: "none" }}
           @value-changed=${(ev: CustomEvent) =>
             this._globalActionFieldChanged("double_tap_action", ev.detail.value)}
         ></ha-selector>
 
-        <button
-          class="clear-button"
+        <button class="clear-btn"
           @click=${() => {
             const cfg = { ...this._config! };
             delete cfg.global_action;
@@ -601,57 +710,53 @@ export class IansCustomRoomCardEditor extends LitElement {
     `;
   }
 
+  // ── Sub-button row ────────────────────────────────────────────────────────────
+
   private _renderSubButtonRow(btn: SubButtonConfig, index: number) {
     const isExpanded = this._expandedSubButton === index;
     const label = btn.entity ?? btn.label ?? btn.icon ?? `Sub-button ${index + 1}`;
-    const showPosition = (this._config?.sub_buttons_layout ?? "bottom-row") === "custom";
+    const layout = this._config?.sub_buttons_layout ?? "bottom-row";
+    const showPosition = layout === "custom";
 
     return html`
-      <div class="sub-button-row">
-        <div
-          class="sub-button-header"
+      <div class="sub-btn-row">
+        <div class="sub-btn-header"
           @click=${() => (this._expandedSubButton = isExpanded ? null : index)}
         >
           <ha-icon .icon=${btn.icon ?? "mdi:gesture-tap"}></ha-icon>
-          <span class="sub-button-label">${label}</span>
+          <span class="sub-btn-label">${label}</span>
           <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
-          <button
-            class="delete-button"
+          <button class="del-btn"
             @click=${(ev: Event) => { ev.stopPropagation(); this._deleteSubButton(index); }}
           >✕</button>
         </div>
 
         ${isExpanded ? html`
-          <div class="sub-button-body">
-            <ha-entity-picker
-              .hass=${this.hass}
-              .label=${"Entity"}
-              .value=${btn.entity ?? ""}
-              allow-custom-entity
+          <div class="sub-btn-body">
+            <!-- Entity & display -->
+            <div class="sub-group-label">Entity &amp; Display</div>
+
+            <ha-entity-picker .hass=${this.hass} .label=${"Entity"}
+              .value=${btn.entity ?? ""} allow-custom-entity
               @value-changed=${(ev: CustomEvent) =>
                 this._subButtonChanged(index, { entity: ev.detail.value || undefined })}
             ></ha-entity-picker>
 
-            <ha-icon-picker
-              .hass=${this.hass}
-              .label=${"Icon (leave blank to auto-pick from entity)"}
+            <ha-icon-picker .hass=${this.hass}
+              .label=${"Icon (blank = auto-pick from entity domain)"}
               .value=${btn.icon ?? ""}
               @value-changed=${(ev: CustomEvent) =>
                 this._subButtonChanged(index, { icon: ev.detail.value || undefined })}
             ></ha-icon-picker>
 
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Label (or type 'entity' for the entity name)"}
-              .selector=${{ text: {} }}
-              .value=${btn.label ?? ""}
+            <ha-selector .hass=${this.hass}
+              .label=${"Label (blank to hide, or type 'entity' for entity name)"}
+              .selector=${{ text: {} }} .value=${btn.label ?? ""}
               @value-changed=${(ev: CustomEvent) =>
                 this._subButtonChanged(index, { label: ev.detail.value || undefined })}
             ></ha-selector>
 
-            <ha-form
-              .hass=${this.hass}
-              .data=${btn}
+            <ha-form .hass=${this.hass} .data=${btn}
               .schema=${[
                 { name: "show_icon",  label: "Show Icon",       selector: { boolean: {} } },
                 { name: "show_label", label: "Show Label",      selector: { boolean: {} } },
@@ -669,66 +774,36 @@ export class IansCustomRoomCardEditor extends LitElement {
               }}
             ></ha-form>
 
-            <div class="sub-section-label">Colors &amp; Opacity</div>
+            <!-- Color & opacity -->
+            <div class="sub-group-label">Color &amp; Opacity</div>
 
-            <div class="color-input-row">
-              <label class="color-swatch" title="Open color picker">
-                <div class="color-swatch-preview" style="background: ${btn.icon_color || "transparent"}"></div>
-                <input
-                  type="color"
-                  class="hidden-color-input"
-                  .value=${cssToHex(btn.icon_color ?? "")}
-                  @change=${(ev: Event) =>
-                    this._subButtonChanged(index, { icon_color: (ev.target as HTMLInputElement).value || undefined })}
-                />
-              </label>
-              <ha-selector
-                .hass=${this.hass}
-                .label=${"Icon Color"}
-                .selector=${{ text: {} }}
-                .value=${btn.icon_color ?? ""}
-                placeholder="e.g. #ff9800, var(--primary-color)"
-                @value-changed=${(ev: CustomEvent) =>
-                  this._subButtonChanged(index, { icon_color: ev.detail.value || undefined })}
-              ></ha-selector>
-            </div>
+            <ha-form .hass=${this.hass}
+              .data=${{ state_based_color: btn.state_based_color ?? false }}
+              .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
+              .computeLabel=${(s: any) => s.label}
+              @value-changed=${(ev: CustomEvent) =>
+                this._subButtonChanged(index, { state_based_color: ev.detail.value.state_based_color })}
+            ></ha-form>
 
-            <div class="color-input-row">
-              <label class="color-swatch" title="Open color picker">
-                <div class="color-swatch-preview" style="background: ${btn.background_color || "transparent"}"></div>
-                <input
-                  type="color"
-                  class="hidden-color-input"
-                  .value=${cssToHex(btn.background_color ?? "")}
-                  @change=${(ev: Event) =>
-                    this._subButtonChanged(index, { background_color: (ev.target as HTMLInputElement).value || undefined })}
-                />
-              </label>
-              <ha-selector
-                .hass=${this.hass}
-                .label=${"Background Color"}
-                .selector=${{ text: {} }}
-                .value=${btn.background_color ?? ""}
-                placeholder="e.g. rgba(255,255,255,0.15)"
-                @value-changed=${(ev: CustomEvent) =>
-                  this._subButtonChanged(index, { background_color: ev.detail.value || undefined })}
-              ></ha-selector>
-            </div>
+            ${btn.state_based_color ? html`
+              <div class="hint">Active when entity is on/open/home/playing. Defaults to domain color (yellow for lights) if left blank.</div>
+              ${this._renderSubBtnColorField(btn, index, "icon_color_on",  "Active Icon Color")}
+              ${this._renderSubBtnColorField(btn, index, "icon_color_off", "Inactive Icon Color")}
+            ` : html`
+              ${this._renderSubBtnColorField(btn, index, "icon_color", "Icon Color")}
+            `}
 
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Button Opacity"}
-              .selector=${OPACITY_SELECTOR}
-              .value=${btn.opacity ?? 1}
+            ${this._renderSubBtnColorField(btn, index, "background_color", "Background Color", "e.g. rgba(255,255,255,0.15)")}
+
+            <ha-selector .hass=${this.hass} .label=${"Button Opacity"}
+              .selector=${OPACITY_SELECTOR} .value=${btn.opacity ?? 1}
               @value-changed=${(ev: CustomEvent) =>
                 this._subButtonChanged(index, { opacity: ev.detail.value })}
             ></ha-selector>
 
             ${showPosition ? html`
-              <div class="sub-section-label">Position</div>
-              <ha-selector
-                .hass=${this.hass}
-                .label=${"Position"}
+              <div class="sub-group-label">Position</div>
+              <ha-selector .hass=${this.hass} .label=${"Position"}
                 .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
                 .value=${btn.position ?? "bottom-left"}
                 @value-changed=${(ev: CustomEvent) =>
@@ -736,33 +811,44 @@ export class IansCustomRoomCardEditor extends LitElement {
               ></ha-selector>
             ` : nothing}
 
-            <div class="sub-section-label">Actions</div>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Tap Action"}
-              .selector=${{ ui_action: {} }}
-              .value=${btn.tap_action ?? { action: "toggle" }}
+            <!-- Actions -->
+            <div class="sub-group-label">Actions</div>
+            <ha-selector .hass=${this.hass} .label=${"Tap Action"}
+              .selector=${{ ui_action: {} }} .value=${btn.tap_action ?? { action: "toggle" }}
               @value-changed=${(ev: CustomEvent) =>
                 this._subButtonChanged(index, { tap_action: ev.detail.value })}
             ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Hold Action"}
-              .selector=${{ ui_action: {} }}
-              .value=${btn.hold_action ?? { action: "more-info" }}
+            <ha-selector .hass=${this.hass} .label=${"Hold Action"}
+              .selector=${{ ui_action: {} }} .value=${btn.hold_action ?? { action: "more-info" }}
               @value-changed=${(ev: CustomEvent) =>
                 this._subButtonChanged(index, { hold_action: ev.detail.value })}
             ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Double-Tap Action"}
-              .selector=${{ ui_action: {} }}
-              .value=${btn.double_tap_action ?? { action: "none" }}
+            <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
+              .selector=${{ ui_action: {} }} .value=${btn.double_tap_action ?? { action: "none" }}
               @value-changed=${(ev: CustomEvent) =>
                 this._subButtonChanged(index, { double_tap_action: ev.detail.value })}
             ></ha-selector>
           </div>
         ` : nothing}
+      </div>
+    `;
+  }
+
+  // ── Main render ───────────────────────────────────────────────────────────────
+
+  protected render() {
+    if (!this._loaded || !this._config) {
+      return html`<div class="loading">Loading editor…</div>`;
+    }
+
+    return html`
+      ${this._renderTabBar()}
+      <div class="tab-content">
+        ${this._activeTab === "basic"   ? this._renderBasicTab()   : nothing}
+        ${this._activeTab === "icon"    ? this._renderIconTab()    : nothing}
+        ${this._activeTab === "card"    ? this._renderCardTab()    : nothing}
+        ${this._activeTab === "buttons" ? this._renderButtonsTab() : nothing}
+        ${this._activeTab === "actions" ? this._renderActionsTab() : nothing}
       </div>
     `;
   }
@@ -773,32 +859,71 @@ export class IansCustomRoomCardEditor extends LitElement {
     return css`
       :host { display: block; }
 
-      .loading {
-        padding: 16px;
-        color: var(--secondary-text-color);
+      .loading { padding: 16px; color: var(--secondary-text-color); }
+
+      /* ── Tab bar ── */
+      .tab-bar {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        border-bottom: 2px solid var(--divider-color);
+        background: var(--card-background-color, #fff);
+        padding: 0 4px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
       }
 
-      .section-header {
+      .tab-bar::-webkit-scrollbar { display: none; }
+
+      .tab {
+        flex-shrink: 0;
+        padding: 10px 14px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
         font-size: 13px;
-        font-weight: 600;
-        color: var(--primary-text-color);
-        padding: 16px 16px 4px;
-        border-top: 1px solid var(--divider-color);
-        margin-top: 8px;
+        font-weight: 500;
+        color: var(--secondary-text-color);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        white-space: nowrap;
+        transition: color 0.15s, border-color 0.15s;
       }
 
-      .section-header:first-child {
-        border-top: none;
-        margin-top: 0;
+      .tab:hover { color: var(--primary-text-color); }
+
+      .tab.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
       }
 
-      .section-body {
-        padding: 4px 16px 8px;
+      /* ── Tab content ── */
+      .tab-content {
+        padding: 0 0 16px;
+      }
+
+      /* ── Section ── */
+      .section {
+        padding: 12px 16px 4px;
         display: flex;
         flex-direction: column;
         gap: 8px;
+        border-top: 1px solid var(--divider-color);
       }
 
+      .section:first-child { border-top: none; }
+
+      .section-label {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--secondary-text-color);
+        padding-bottom: 2px;
+      }
+
+      /* ── Layout helpers ── */
       .two-col {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -806,19 +931,29 @@ export class IansCustomRoomCardEditor extends LitElement {
         align-items: start;
       }
 
-      /* ── Template field row ── */
-      .field-row {
+      .hint {
+        font-size: 11px;
+        color: var(--secondary-text-color);
+        line-height: 1.4;
+      }
+
+      .hint code {
+        font-family: monospace;
+        background: var(--secondary-background-color, #f0f0f0);
+        padding: 1px 4px;
+        border-radius: 3px;
+      }
+
+      /* ── Template field ── */
+      .template-row {
         display: flex;
         align-items: flex-start;
         gap: 6px;
       }
 
-      .field-input {
-        flex: 1;
-        min-width: 0;
-      }
+      .template-input { flex: 1; min-width: 0; }
 
-      .field-input textarea {
+      .template-input textarea {
         width: 100%;
         min-height: 56px;
         padding: 8px;
@@ -832,15 +967,9 @@ export class IansCustomRoomCardEditor extends LitElement {
         box-sizing: border-box;
       }
 
-      .helper-text {
-        font-size: 10px;
-        color: var(--secondary-text-color);
-        margin-top: 2px;
-      }
-
-      .template-toggle {
+      .tmpl-btn {
         margin-top: 8px;
-        padding: 2px 6px;
+        padding: 2px 7px;
         font-size: 11px;
         font-weight: 700;
         cursor: pointer;
@@ -851,60 +980,77 @@ export class IansCustomRoomCardEditor extends LitElement {
         flex-shrink: 0;
       }
 
-      .template-toggle.active {
+      .tmpl-btn.active {
         background: var(--primary-color);
         color: white;
         border-color: var(--primary-color);
       }
 
-      /* ── Color swatch + input ── */
-      .color-input-row {
+      /* ── Color swatch button ── */
+      .color-row {
         display: flex;
         align-items: center;
         gap: 8px;
       }
 
-      .color-input-row ha-selector {
-        flex: 1;
-        min-width: 0;
-      }
+      .color-row ha-selector { flex: 1; min-width: 0; }
 
-      .color-swatch {
-        width: 40px;
-        height: 40px;
-        border-radius: 6px;
-        border: 1px solid var(--divider-color);
-        overflow: hidden;
-        flex-shrink: 0;
-        cursor: pointer;
-        display: block;
+      .color-btn {
         position: relative;
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        border: 2px solid var(--divider-color);
+        cursor: pointer;
+        overflow: hidden;
+        display: block;
+        flex-shrink: 0;
+        transition: border-color 0.15s, box-shadow 0.15s;
       }
 
-      /* Checkerboard behind the swatch so transparent shows clearly */
-      .color-swatch::before {
-        content: "";
+      .color-btn:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 25%, transparent);
+      }
+
+      /* Checkerboard base (shows for transparent/empty) */
+      .color-checker {
         position: absolute;
         inset: 0;
-        background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
-                          linear-gradient(-45deg, #ccc 25%, transparent 25%),
-                          linear-gradient(45deg, transparent 75%, #ccc 75%),
-                          linear-gradient(-45deg, transparent 75%, #ccc 75%);
+        background-image:
+          linear-gradient(45deg, #ccc 25%, transparent 25%),
+          linear-gradient(-45deg, #ccc 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #ccc 75%),
+          linear-gradient(-45deg, transparent 75%, #ccc 75%);
         background-size: 8px 8px;
         background-position: 0 0, 0 4px, 4px -4px, -4px 0;
         background-color: #fff;
       }
 
-      .color-swatch-preview {
+      /* Actual color fill on top of checkerboard */
+      .color-fill {
         position: absolute;
         inset: 0;
         z-index: 1;
       }
 
-      .hidden-color-input {
+      /* Eyedropper icon as affordance hint */
+      .color-icon {
+        position: absolute;
+        bottom: 3px;
+        right: 3px;
+        z-index: 2;
+        --mdc-icon-size: 12px;
+        color: rgba(255, 255, 255, 0.95);
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+        pointer-events: none;
+      }
+
+      /* Transparent native color input covers the whole button */
+      .color-native {
         position: absolute;
         inset: 0;
-        z-index: 2;
+        z-index: 3;
         opacity: 0;
         width: 100%;
         height: 100%;
@@ -915,7 +1061,7 @@ export class IansCustomRoomCardEditor extends LitElement {
 
       /* ── Warning ── */
       .warning-box {
-        background: color-mix(in srgb, var(--warning-color, #ff9800) 20%, transparent);
+        background: color-mix(in srgb, var(--warning-color, #ff9800) 15%, transparent);
         border: 1px solid var(--warning-color, #ff9800);
         color: var(--primary-text-color);
         padding: 8px 12px;
@@ -924,27 +1070,26 @@ export class IansCustomRoomCardEditor extends LitElement {
         line-height: 1.4;
       }
 
-      /* ── Sub-button editor ── */
-      .sub-button-row {
+      /* ── Sub-button accordion ── */
+      .sub-btn-row {
         border: 1px solid var(--divider-color);
         border-radius: 8px;
         overflow: hidden;
       }
 
-      .sub-button-header {
+      .sub-btn-header {
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 8px 10px;
         cursor: pointer;
         background: var(--secondary-background-color, #f5f5f5);
+        user-select: none;
       }
 
-      .sub-button-header:hover {
-        background: var(--primary-background-color, #fff);
-      }
+      .sub-btn-header:hover { background: var(--primary-background-color, #fff); }
 
-      .sub-button-header .sub-button-label {
+      .sub-btn-label {
         flex: 1;
         font-size: 13px;
         overflow: hidden;
@@ -952,7 +1097,7 @@ export class IansCustomRoomCardEditor extends LitElement {
         white-space: nowrap;
       }
 
-      .sub-button-body {
+      .sub-btn-body {
         padding: 8px;
         display: flex;
         flex-direction: column;
@@ -960,43 +1105,49 @@ export class IansCustomRoomCardEditor extends LitElement {
         background: var(--primary-background-color, #fff);
       }
 
-      .sub-section-label {
+      .sub-group-label {
         font-size: 11px;
         font-weight: 600;
-        color: var(--secondary-text-color);
-        margin-top: 4px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        color: var(--secondary-text-color);
+        margin-top: 4px;
+        padding-top: 4px;
+        border-top: 1px solid var(--divider-color);
       }
 
       /* ── Buttons ── */
-      .delete-button,
-      .add-button,
-      .clear-button {
-        cursor: pointer;
-        border: 1px solid var(--divider-color);
-        border-radius: 4px;
-        padding: 4px 10px;
-        font-size: 12px;
-        background: transparent;
-        color: var(--primary-text-color);
-      }
-
-      .delete-button {
+      .del-btn {
         color: var(--error-color, #db4437);
-        border-color: var(--error-color, #db4437);
+        border: 1px solid var(--error-color, #db4437);
+        border-radius: 4px;
         padding: 2px 6px;
+        cursor: pointer;
+        background: transparent;
+        font-size: 12px;
+        flex-shrink: 0;
       }
 
-      .add-button {
+      .add-btn {
         align-self: flex-start;
         background: var(--primary-color);
         color: white;
-        border-color: var(--primary-color);
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 13px;
+        cursor: pointer;
       }
 
-      .clear-button {
+      .clear-btn {
         align-self: flex-start;
+        background: transparent;
+        border: 1px solid var(--divider-color);
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        color: var(--primary-text-color);
       }
     `;
   }

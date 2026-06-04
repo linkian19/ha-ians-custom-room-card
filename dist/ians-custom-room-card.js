@@ -627,6 +627,8 @@ const cardStyles = i$3`
     --ians-icon-background-color: transparent;
     --ians-icon-background-opacity: 1;
     --ians-icon-background-size: 40px;
+    --ians-icon-background-width: var(--ians-icon-background-size);
+    --ians-icon-background-height: var(--ians-icon-background-size);
     --ians-icon-background-border-radius: 50%;
     --ians-icon-size: calc(var(--ians-icon-background-size) * 0.6);
     --ians-badge-color: #fff;
@@ -704,8 +706,8 @@ const cardStyles = i$3`
   /* ── Icon ────────────────────────────────────────────────────────────────── */
   .icon-container {
     position: relative;
-    width: var(--ians-icon-background-size);
-    height: var(--ians-icon-background-size);
+    width: var(--ians-icon-background-width);
+    height: var(--ians-icon-background-height);
     flex-shrink: 0;
     border-radius: var(--ians-icon-background-border-radius);
     background-color: color-mix(
@@ -830,9 +832,30 @@ const cardStyles = i$3`
     order: 0;
   }
 
+  /* Grid: auto-fill by default; overridden by --ians-sub-buttons-grid-template-columns */
   .sub-buttons.layout-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(var(--ians-sub-button-size), 1fr));
+    grid-template-columns: var(--ians-sub-buttons-grid-template-columns, repeat(auto-fill, minmax(56px, 1fr)));
+    align-content: start;
+  }
+
+  /* Grid cells stack icon + label/state vertically */
+  .sub-buttons.layout-grid .sub-button {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 4px;
+    min-height: 56px;
+    min-width: 0;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .sub-buttons.layout-grid .sub-button-label,
+  .sub-buttons.layout-grid .sub-button-state {
+    max-width: 100%;
+    text-align: center;
+    font-size: 10px;
   }
 
   /* Corners and custom: absolute overlay */
@@ -1135,7 +1158,7 @@ const ICON_POSITION_OPTIONS = [
   { value: "center", label: "Center" },
   { value: "center-left", label: "Center Left" },
   { value: "center-right", label: "Center Right" },
-  { value: "custom", label: "Custom (CSS coordinates)" }
+  { value: "custom", label: "Custom (% recommended for responsive)" }
 ];
 const TITLE_POSITION_OPTIONS = [
   { value: "", label: "Default (inline with icon)" },
@@ -1148,7 +1171,7 @@ const TITLE_POSITION_OPTIONS = [
   { value: "bottom-left", label: "Bottom Left" },
   { value: "bottom-center", label: "Bottom Center" },
   { value: "bottom-right", label: "Bottom Right" },
-  { value: "custom", label: "Custom (CSS coordinates)" }
+  { value: "custom", label: "Custom (% recommended for responsive)" }
 ];
 const TITLE_ALIGN_OPTIONS = [
   { value: "left", label: "Left" },
@@ -1160,7 +1183,7 @@ const BADGE_POSITION_OPTIONS = [
   { value: "top-left", label: "Top Left" },
   { value: "bottom-left", label: "Bottom Left" },
   { value: "bottom-right", label: "Bottom Right" },
-  { value: "custom", label: "Custom (CSS coordinates)" }
+  { value: "custom", label: "Custom" }
 ];
 const ICON_SHAPE_OPTIONS = [
   { value: "circle", label: "Circle (default)" },
@@ -1174,7 +1197,7 @@ const SUB_BUTTON_LAYOUT_OPTIONS = [
   { value: "right-column", label: "Right Column" },
   { value: "left-column", label: "Left Column" },
   { value: "corners", label: "Corners (up to 4)" },
-  { value: "grid", label: "Grid (auto-fill)" },
+  { value: "grid", label: "Grid" },
   { value: "custom", label: "Custom positions" }
 ];
 const SUB_BUTTON_POSITION_OPTIONS = [
@@ -1210,6 +1233,7 @@ let IansCustomRoomCardEditor = class extends i {
     this._loaded = false;
     this._templateMode = /* @__PURE__ */ new Set();
     this._expandedSubButton = null;
+    this._activeTab = "basic";
   }
   connectedCallback() {
     super.connectedCallback();
@@ -1269,6 +1293,7 @@ let IansCustomRoomCardEditor = class extends i {
       show_label: false,
       show_state: false,
       background: true,
+      state_based_color: false,
       tap_action: { action: "toggle" },
       hold_action: { action: "more-info" },
       double_tap_action: { action: "none" }
@@ -1290,18 +1315,20 @@ let IansCustomRoomCardEditor = class extends i {
     this._templateMode = next;
   }
   // ── Render helpers ────────────────────────────────────────────────────────────
-  /** Color field with visual swatch + native picker + text input. */
-  _renderColorField(fieldKey, label) {
+  /** Color swatch + text input. The swatch is clickable and shows current color. */
+  _renderColorField(fieldKey, label, placeholder = "e.g. red, #ff0000, var(--primary-color)") {
     var _a2, _b2;
     const isTemplateCapable = TEMPLATE_CAPABLE_FIELDS.has(fieldKey);
     const currentValue = (_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : "";
     const colorWidget = () => b`
-      <div class="color-input-row">
-        <label class="color-swatch" title="Open color picker">
-          <div class="color-swatch-preview" style="background: ${currentValue || "transparent"}"></div>
+      <div class="color-row">
+        <label class="color-btn" title="Click to open color picker">
+          <div class="color-checker"></div>
+          <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+          <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
           <input
             type="color"
-            class="hidden-color-input"
+            class="color-native"
             .value=${cssToHex(currentValue)}
             @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
           />
@@ -1311,7 +1338,7 @@ let IansCustomRoomCardEditor = class extends i {
           .label=${label}
           .selector=${{ text: {} }}
           .value=${currentValue}
-          placeholder="e.g. red, #ff0000, var(--primary-color)"
+          .placeholder=${placeholder}
           @value-changed=${(ev) => this._fieldChanged(fieldKey, ev.detail.value || void 0)}
         ></ha-selector>
       </div>
@@ -1319,13 +1346,41 @@ let IansCustomRoomCardEditor = class extends i {
     if (!isTemplateCapable) return colorWidget();
     return this._renderTemplateField(fieldKey, label, colorWidget);
   }
+  /** Same color field but reads from SubButtonConfig (not top-level CardConfig). */
+  _renderSubBtnColorField(btn, index, field, label, placeholder = "e.g. #ff9800, var(--primary-color)") {
+    var _a2;
+    const currentValue = (_a2 = btn[field]) != null ? _a2 : "";
+    return b`
+      <div class="color-row">
+        <label class="color-btn" title="Click to open color picker">
+          <div class="color-checker"></div>
+          <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+          <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+          <input
+            type="color"
+            class="color-native"
+            .value=${cssToHex(currentValue)}
+            @change=${(ev) => this._subButtonChanged(index, { [field]: ev.target.value || void 0 })}
+          />
+        </label>
+        <ha-selector
+          .hass=${this.hass}
+          .label=${label}
+          .selector=${{ text: {} }}
+          .value=${currentValue}
+          .placeholder=${placeholder}
+          @value-changed=${(ev) => this._subButtonChanged(index, { [field]: ev.detail.value || void 0 })}
+        ></ha-selector>
+      </div>
+    `;
+  }
   _renderTemplateField(fieldKey, label, renderWidget) {
     var _a2, _b2;
     const inTemplateMode = this._templateMode.has(fieldKey);
     const currentValue = (_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : "";
     return b`
-      <div class="field-row">
-        <div class="field-input">
+      <div class="template-row">
+        <div class="template-input">
           ${inTemplateMode ? b`
                 <textarea
                   .value=${currentValue}
@@ -1333,11 +1388,11 @@ let IansCustomRoomCardEditor = class extends i {
                   @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value)}
                   @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value)}
                 ></textarea>
-                <div class="helper-text">Advanced: HA Template (Jinja2)</div>
+                <div class="hint">HA Jinja2 template</div>
               ` : renderWidget()}
         </div>
         <button
-          class="template-toggle ${inTemplateMode ? "active" : ""}"
+          class="tmpl-btn ${inTemplateMode ? "active" : ""}"
           title="${inTemplateMode ? "Switch to simple input" : "Use HA template"}"
           @click=${() => this._toggleTemplateMode(fieldKey)}
         >T</button>
@@ -1346,17 +1401,19 @@ let IansCustomRoomCardEditor = class extends i {
   }
   _renderOpacityField(fieldKey, label, defaultVal = 1) {
     var _a2, _b2;
+    const hint = "Use this slider for element opacity. For color transparency, add alpha to the color value instead (e.g. rgba(255,0,0,0.5)).";
     return b`
       <ha-selector
         .hass=${this.hass}
         .label=${label}
         .selector=${OPACITY_SELECTOR}
         .value=${(_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : defaultVal}
+        title=${hint}
         @value-changed=${(ev) => this._fieldChanged(fieldKey, ev.detail.value)}
       ></ha-selector>
     `;
   }
-  _renderNumericField(fieldKey, label, min, max, step, defaultVal, suffix = "") {
+  _renderNumField(fieldKey, label, min, max, step, defaultVal, suffix = "") {
     var _a2, _b2;
     return b`
       <ha-selector
@@ -1368,17 +1425,55 @@ let IansCustomRoomCardEditor = class extends i {
       ></ha-selector>
     `;
   }
-  // ── Main render ──────────────────────────────────────────────────────────────
-  render() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y;
-    if (!this._loaded || !this._config) {
-      return b`<div class="loading">Loading editor…</div>`;
-    }
+  _renderCoordFields(xKey, yKey, xLabel = "X (CSS)", yLabel = "Y (CSS)") {
+    var _a2, _b2, _c2, _d2;
+    return b`
+      <div class="two-col">
+        <ha-selector .hass=${this.hass} .label=${xLabel}
+          .selector=${{ text: {} }}
+          .value=${(_b2 = (_a2 = this._config) == null ? void 0 : _a2[xKey]) != null ? _b2 : ""}
+          .placeholder=${"e.g. 10px, 25%"}
+          @value-changed=${(ev) => this._fieldChanged(xKey, ev.detail.value || void 0)}
+        ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${yLabel}
+          .selector=${{ text: {} }}
+          .value=${(_d2 = (_c2 = this._config) == null ? void 0 : _c2[yKey]) != null ? _d2 : ""}
+          .placeholder=${"e.g. 10px, 25%"}
+          @value-changed=${(ev) => this._fieldChanged(yKey, ev.detail.value || void 0)}
+        ></ha-selector>
+      </div>
+      <div class="hint">Tip: use <code>%</code> values (e.g. <code>25%</code>) for positions that adapt to card size. Fixed <code>px</code> values stay constant when the card is resized.</div>
+    `;
+  }
+  // ── Tab bar ──────────────────────────────────────────────────────────────────
+  _renderTabBar() {
+    const tabs = [
+      { id: "basic", label: "Basic" },
+      { id: "icon", label: "Icon" },
+      { id: "card", label: "Card" },
+      { id: "buttons", label: "Buttons" },
+      { id: "actions", label: "Actions" }
+    ];
+    return b`
+      <div class="tab-bar">
+        ${tabs.map((t2) => b`
+          <button
+            class="tab ${this._activeTab === t2.id ? "active" : ""}"
+            @click=${() => {
+      this._activeTab = t2.id;
+    }}
+          >${t2.label}</button>
+        `)}
+      </div>
+    `;
+  }
+  // ── Tab content ───────────────────────────────────────────────────────────────
+  _renderBasicTab() {
+    var _a2, _b2, _c2;
     const c2 = this._config;
     return b`
-      <!-- ── Basic ─────────────────────────────────────────────────────── -->
-      <div class="section-header">Basic</div>
-      <div class="section-body">
+      <div class="section">
+        <div class="section-label">Entity</div>
         <ha-entity-picker
           .hass=${this.hass}
           .label=${"Entity (optional)"}
@@ -1386,33 +1481,57 @@ let IansCustomRoomCardEditor = class extends i {
           allow-custom-entity
           @value-changed=${(ev) => this._fieldChanged("entity", ev.detail.value || void 0)}
         ></ha-entity-picker>
+      </div>
 
+      <div class="section">
+        <div class="section-label">Title</div>
         ${this._renderTemplateField(
       "title",
       "Title",
       () => {
         var _a3;
         return b`
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Title"}
+            <ha-selector .hass=${this.hass} .label=${"Title"}
               .selector=${{ text: {} }}
               .value=${(_a3 = c2.title) != null ? _a3 : ""}
+              .placeholder=${"Room name, or leave blank to hide"}
               @value-changed=${(ev) => this._fieldChanged("title", ev.detail.value || void 0)}
             ></ha-selector>
           `;
       }
     )}
 
+        <ha-selector .hass=${this.hass} .label=${"Position"}
+          .selector=${{ select: { options: TITLE_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${(_b2 = c2.title_position) != null ? _b2 : ""}
+          @value-changed=${(ev) => this._fieldChanged("title_position", ev.detail.value || void 0)}
+        ></ha-selector>
+
+        ${c2.title_position === "custom" ? this._renderCoordFields("title_position_x", "title_position_y", "X position", "Y position") : A}
+
+        ${!c2.title_position ? b`
+          <ha-selector .hass=${this.hass} .label=${"Text Alignment"}
+            .selector=${{ select: { options: TITLE_ALIGN_OPTIONS, mode: "list" } }}
+            .value=${(_c2 = c2.title_align) != null ? _c2 : "left"}
+            @value-changed=${(ev) => this._fieldChanged("title_align", ev.detail.value || void 0)}
+          ></ha-selector>
+        ` : A}
+
+        <div class="two-col">
+          ${this._renderNumField("title_font_size", "Font Size (px)", 8, 48, 1, 14, "px")}
+          ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Icon</div>
         ${this._renderTemplateField(
       "icon",
       "Icon",
       () => {
         var _a3;
         return b`
-            <ha-icon-picker
-              .hass=${this.hass}
-              .label=${"Icon"}
+            <ha-icon-picker .hass=${this.hass} .label=${"Icon"}
               .value=${(_a3 = c2.icon) != null ? _a3 : ""}
               @value-changed=${(ev) => this._fieldChanged("icon", ev.detail.value || void 0)}
             ></ha-icon-picker>
@@ -1420,119 +1539,93 @@ let IansCustomRoomCardEditor = class extends i {
       }
     )}
       </div>
+    `;
+  }
+  _renderIconTab() {
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l;
+    const c2 = this._config;
+    return b`
+      <!-- ── Icon color ── -->
+      <div class="section">
+        <div class="section-label">Icon Color</div>
+        ${this._renderColorField("icon_color", "Icon Color")}
 
-      <!-- ── Title appearance ──────────────────────────────────────────── -->
-      <div class="section-header">Title</div>
-      <div class="section-body">
-        <ha-selector
+        <ha-form
           .hass=${this.hass}
-          .label=${"Position"}
-          .selector=${{ select: { options: TITLE_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_b2 = c2.title_position) != null ? _b2 : ""}
-          @value-changed=${(ev) => this._fieldChanged("title_position", ev.detail.value || void 0)}
+          .data=${{ state_based_color: (_a2 = c2.state_based_color) != null ? _a2 : false }}
+          .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
+          .computeLabel=${(s2) => s2.label}
+          @value-changed=${(ev) => this._fieldChanged("state_based_color", ev.detail.value.state_based_color)}
+        ></ha-form>
+
+        ${c2.state_based_color ? b`
+          <div class="hint">When active (on/open/playing/home): uses the color below or a domain default (yellow for lights). When inactive: uses the off-color or falls back to Icon Color.</div>
+          ${this._renderColorField("icon_color_on", "Active Color (on/open/playing)", "e.g. #FDD835, yellow")}
+          ${this._renderColorField("icon_color_off", "Inactive Color (off/closed)", "e.g. #888888, grey")}
+        ` : A}
+
+        <ha-selector .hass=${this.hass} .label=${"Icon Opacity"}
+          .selector=${OPACITY_SELECTOR} .value=${(_b2 = c2.icon_opacity) != null ? _b2 : 1}
+          @value-changed=${(ev) => this._fieldChanged("icon_opacity", ev.detail.value)}
         ></ha-selector>
-
-        ${c2.title_position === "custom" ? b`
-          <div class="two-col">
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"X position (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${(_c2 = c2.title_position_x) != null ? _c2 : ""}
-              placeholder="e.g. 10px, 50%"
-              @value-changed=${(ev) => this._fieldChanged("title_position_x", ev.detail.value || void 0)}
-            ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Y position (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${(_d2 = c2.title_position_y) != null ? _d2 : ""}
-              placeholder="e.g. 10px, 50%"
-              @value-changed=${(ev) => this._fieldChanged("title_position_y", ev.detail.value || void 0)}
-            ></ha-selector>
-          </div>
-        ` : A}
-
-        ${!c2.title_position ? b`
-          <ha-selector
-            .hass=${this.hass}
-            .label=${"Alignment (when inline)"}
-            .selector=${{ select: { options: TITLE_ALIGN_OPTIONS, mode: "list" } }}
-            .value=${(_e2 = c2.title_align) != null ? _e2 : "left"}
-            @value-changed=${(ev) => this._fieldChanged("title_align", ev.detail.value || void 0)}
-          ></ha-selector>
-        ` : A}
-
-        <div class="two-col">
-          ${this._renderNumericField("title_font_size", "Font Size (px)", 8, 48, 1, 14, "px")}
-          ${this._renderColorField("title_color", "Title Color")}
-        </div>
       </div>
 
-      <!-- ── Icon appearance ───────────────────────────────────────────── -->
-      <div class="section-header">Icon</div>
-      <div class="section-body">
-        ${this._renderColorField("icon_color", "Icon Color")}
-        ${this._renderOpacityField("icon_opacity", "Icon Opacity")}
-
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Background Shape"}
+      <!-- ── Icon background ── -->
+      <div class="section">
+        <div class="section-label">Icon Background</div>
+        <ha-selector .hass=${this.hass} .label=${"Shape"}
           .selector=${{ select: { options: ICON_SHAPE_OPTIONS, mode: "dropdown" } }}
-          .value=${(_f2 = c2.icon_background_shape) != null ? _f2 : "circle"}
+          .value=${(_c2 = c2.icon_background_shape) != null ? _c2 : "circle"}
           @value-changed=${(ev) => this._fieldChanged("icon_background_shape", ev.detail.value || void 0)}
         ></ha-selector>
 
-        ${this._renderColorField("icon_background_color", "Background Color")}
-        ${this._renderOpacityField("icon_background_opacity", "Background Opacity")}
-
-        <div class="two-col">
-          ${this._renderNumericField("icon_size", "Icon Size (px)", 8, 120, 2, 24, "px")}
-          ${this._renderNumericField("icon_background_size", "Background Size (px)", 8, 160, 2, 40, "px")}
-        </div>
-
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Icon Position"}
-          .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_g = c2.icon_position) != null ? _g : ""}
-          @value-changed=${(ev) => this._fieldChanged("icon_position", ev.detail.value || void 0)}
+        <ha-selector .hass=${this.hass} .label=${"Custom Border Radius (CSS — overrides shape)"}
+          .selector=${{ text: {} }}
+          .value=${(_d2 = c2.icon_background_border_radius) != null ? _d2 : ""}
+          .placeholder=${"e.g. 10px 20px 30px 40px, 50% 0"}
+          @value-changed=${(ev) => this._fieldChanged("icon_background_border_radius", ev.detail.value || void 0)}
         ></ha-selector>
 
-        ${c2.icon_position === "custom" ? b`
-          <div class="two-col">
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"X position (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${(_h = c2.icon_position_x) != null ? _h : ""}
-              placeholder="e.g. 10px, 50%"
-              @value-changed=${(ev) => this._fieldChanged("icon_position_x", ev.detail.value || void 0)}
-            ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Y position (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${(_i = c2.icon_position_y) != null ? _i : ""}
-              placeholder="e.g. 10px, 50%"
-              @value-changed=${(ev) => this._fieldChanged("icon_position_y", ev.detail.value || void 0)}
-            ></ha-selector>
-          </div>
-        ` : A}
+        ${this._renderColorField("icon_background_color", "Background Color")}
+
+        <ha-selector .hass=${this.hass} .label=${"Background Opacity"}
+          .selector=${OPACITY_SELECTOR} .value=${(_e2 = c2.icon_background_opacity) != null ? _e2 : 1}
+          @value-changed=${(ev) => this._fieldChanged("icon_background_opacity", ev.detail.value)}
+        ></ha-selector>
+
+        <div class="two-col">
+          ${this._renderNumField("icon_size", "Icon Size (px)", 8, 120, 2, 24, "px")}
+          ${this._renderNumField("icon_background_size", "Background Size (px)", 8, 160, 2, 40, "px")}
+        </div>
+
+        <div class="hint">Width/Height override Background Size for non-square backgrounds.</div>
+        <div class="two-col">
+          ${this._renderNumField("icon_background_width", "Width (px)", 8, 200, 2, (_f2 = c2.icon_background_size) != null ? _f2 : 40, "px")}
+          ${this._renderNumField("icon_background_height", "Height (px)", 8, 200, 2, (_g = c2.icon_background_size) != null ? _g : 40, "px")}
+        </div>
       </div>
 
-      <!-- ── Badge ─────────────────────────────────────────────────────── -->
-      <div class="section-header">Icon Badge</div>
-      <div class="section-body">
+      <!-- ── Icon position ── -->
+      <div class="section">
+        <div class="section-label">Icon Position</div>
+        <ha-selector .hass=${this.hass} .label=${"Position"}
+          .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${(_h = c2.icon_position) != null ? _h : ""}
+          @value-changed=${(ev) => this._fieldChanged("icon_position", ev.detail.value || void 0)}
+        ></ha-selector>
+        ${c2.icon_position === "custom" ? this._renderCoordFields("icon_position_x", "icon_position_y", "X position", "Y position") : A}
+      </div>
+
+      <!-- ── Badge ── -->
+      <div class="section">
+        <div class="section-label">Badge</div>
         ${this._renderTemplateField(
       "badge_icon",
       "Badge Icon",
       () => {
         var _a3;
         return b`
-            <ha-icon-picker
-              .hass=${this.hass}
-              .label=${"Badge Icon (leave blank to hide)"}
+            <ha-icon-picker .hass=${this.hass} .label=${"Badge Icon (blank to hide)"}
               .value=${(_a3 = c2.badge_icon) != null ? _a3 : ""}
               @value-changed=${(ev) => this._fieldChanged("badge_icon", ev.detail.value || void 0)}
             ></ha-icon-picker>
@@ -1542,141 +1635,166 @@ let IansCustomRoomCardEditor = class extends i {
 
         ${this._renderColorField("badge_color", "Badge Icon Color")}
         ${this._renderColorField("badge_background_color", "Badge Background Color")}
-        ${this._renderOpacityField("badge_opacity", "Badge Opacity")}
 
         <div class="two-col">
-          ${this._renderNumericField("badge_size", "Badge Size (px)", 8, 48, 1, 18, "px")}
-          <ha-selector
-            .hass=${this.hass}
-            .label=${"Badge Position"}
-            .selector=${{ select: { options: BADGE_POSITION_OPTIONS, mode: "dropdown" } }}
-            .value=${(_j = c2.badge_position) != null ? _j : "top-right"}
-            @value-changed=${(ev) => this._fieldChanged("badge_position", ev.detail.value || void 0)}
+          ${this._renderNumField("badge_size", "Badge Size (px)", 8, 48, 1, 18, "px")}
+          <ha-selector .hass=${this.hass} .label=${"Opacity"}
+            .selector=${OPACITY_SELECTOR} .value=${(_i = c2.badge_opacity) != null ? _i : 1}
+            @value-changed=${(ev) => this._fieldChanged("badge_opacity", ev.detail.value)}
           ></ha-selector>
         </div>
 
+        <ha-selector .hass=${this.hass} .label=${"Badge Position"}
+          .selector=${{ select: { options: BADGE_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${(_j = c2.badge_position) != null ? _j : "top-right"}
+          @value-changed=${(ev) => this._fieldChanged("badge_position", ev.detail.value || void 0)}
+        ></ha-selector>
         ${c2.badge_position === "custom" ? b`
           <div class="two-col">
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Badge X (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${(_k = c2.badge_position_x) != null ? _k : ""}
-              placeholder="e.g. 10px"
+            <ha-selector .hass=${this.hass} .label=${"X (CSS)"} .selector=${{ text: {} }}
+              .value=${(_k = c2.badge_position_x) != null ? _k : ""} .placeholder=${"e.g. 10px"}
               @value-changed=${(ev) => this._fieldChanged("badge_position_x", ev.detail.value || void 0)}
             ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Badge Y (CSS)"}
-              .selector=${{ text: {} }}
-              .value=${(_l = c2.badge_position_y) != null ? _l : ""}
-              placeholder="e.g. 10px"
+            <ha-selector .hass=${this.hass} .label=${"Y (CSS)"} .selector=${{ text: {} }}
+              .value=${(_l = c2.badge_position_y) != null ? _l : ""} .placeholder=${"e.g. 10px"}
               @value-changed=${(ev) => this._fieldChanged("badge_position_y", ev.detail.value || void 0)}
             ></ha-selector>
           </div>
         ` : A}
       </div>
-
-      <!-- ── Card background & border ──────────────────────────────────── -->
-      <div class="section-header">Card Background &amp; Border</div>
-      <div class="section-body">
-        ${this._renderColorField("background_color", "Background Color")}
-        ${this._renderOpacityField("background_opacity", "Background Opacity")}
-
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Background Image URL (or type 'area' to use the room picture)"}
-          .selector=${{ text: {} }}
-          .value=${(_m = c2.background_image) != null ? _m : ""}
-          placeholder="e.g. /local/room.jpg  or  area"
+    `;
+  }
+  _renderCardTab() {
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g;
+    const c2 = this._config;
+    return b`
+      <!-- ── Background ── -->
+      <div class="section">
+        <div class="section-label">Background</div>
+        ${this._renderColorField("background_color", "Color")}
+        <ha-selector .hass=${this.hass} .label=${"Opacity"}
+          .selector=${OPACITY_SELECTOR} .value=${(_a2 = c2.background_opacity) != null ? _a2 : 1}
+          @value-changed=${(ev) => this._fieldChanged("background_opacity", ev.detail.value)}
+        ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${"Image URL (or type 'area' to use room picture)"}
+          .selector=${{ text: {} }} .value=${(_b2 = c2.background_image) != null ? _b2 : ""}
+          .placeholder=${"e.g. /local/room.jpg   or   area"}
           @value-changed=${(ev) => this._fieldChanged("background_image", ev.detail.value || void 0)}
         ></ha-selector>
-
-        ${this._renderColorField("border_color", "Border Color")}
-        ${this._renderOpacityField("border_opacity", "Border Opacity")}
       </div>
 
-      <!-- ── Grid sizing ────────────────────────────────────────────────── -->
-      <div class="section-header">Grid Sizing (Sections Dashboard)</div>
-      <div class="section-body">
+      <!-- ── Border ── -->
+      <div class="section">
+        <div class="section-label">Border</div>
+        ${this._renderColorField("border_color", "Color")}
+        <ha-selector .hass=${this.hass} .label=${"Opacity"}
+          .selector=${OPACITY_SELECTOR} .value=${(_c2 = c2.border_opacity) != null ? _c2 : 1}
+          @value-changed=${(ev) => this._fieldChanged("border_opacity", ev.detail.value)}
+        ></ha-selector>
+      </div>
+
+      <!-- ── Grid sizing ── -->
+      <div class="section">
+        <div class="section-label">Grid Sizing (Sections Dashboard)</div>
         <div class="two-col">
-          <ha-selector
-            .hass=${this.hass}
-            .label=${"Columns"}
+          <ha-selector .hass=${this.hass} .label=${"Columns"}
             .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
-            .value=${(_o = (_n = c2.grid_options) == null ? void 0 : _n.columns) != null ? _o : 6}
+            .value=${(_e2 = (_d2 = c2.grid_options) == null ? void 0 : _d2.columns) != null ? _e2 : 6}
             @value-changed=${(ev) => this._gridFieldChanged("columns", ev.detail.value)}
           ></ha-selector>
-          <ha-selector
-            .hass=${this.hass}
-            .label=${"Rows"}
+          <ha-selector .hass=${this.hass} .label=${"Rows"}
             .selector=${{ number: { min: 1, max: 6, step: 1, mode: "box" } }}
-            .value=${(_q = (_p = c2.grid_options) == null ? void 0 : _p.rows) != null ? _q : 2}
+            .value=${(_g = (_f2 = c2.grid_options) == null ? void 0 : _f2.rows) != null ? _g : 2}
             @value-changed=${(ev) => this._gridFieldChanged("rows", ev.detail.value)}
           ></ha-selector>
         </div>
       </div>
-
-      <!-- ── Sub-buttons ───────────────────────────────────────────────── -->
-      <div class="section-header">Sub-Buttons</div>
-      <div class="section-body">
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Layout"}
+    `;
+  }
+  _renderButtonsTab() {
+    var _a2, _b2, _c2, _d2, _e2, _f2;
+    const c2 = this._config;
+    const layout = (_a2 = c2.sub_buttons_layout) != null ? _a2 : "bottom-row";
+    return b`
+      <!-- ── Layout ── -->
+      <div class="section">
+        <div class="section-label">Layout</div>
+        <ha-selector .hass=${this.hass} .label=${"Layout"}
           .selector=${{ select: { options: SUB_BUTTON_LAYOUT_OPTIONS, mode: "dropdown" } }}
-          .value=${(_r = c2.sub_buttons_layout) != null ? _r : "bottom-row"}
+          .value=${layout}
           @value-changed=${(ev) => this._fieldChanged("sub_buttons_layout", ev.detail.value)}
         ></ha-selector>
 
-        <div class="sub-section-label">Global Sub-Button Style</div>
-
-        ${this._renderColorField("sub_button_icon_color", "Icon Color (global)")}
-        ${this._renderColorField("sub_button_background_color", "Background Color (global)")}
-        ${this._renderOpacityField("sub_button_opacity", "Opacity (global)")}
-
-        <div class="sub-section-label">Buttons</div>
-
-        ${((_s = c2.sub_buttons) != null ? _s : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
-
-        <button class="add-button" @click=${this._addSubButton}>
-          + Add Sub-Button
-        </button>
+        ${layout === "grid" ? b`
+          <div class="two-col">
+            <ha-selector .hass=${this.hass} .label=${"Columns (0 = auto-fill)"}
+              .selector=${{ number: { min: 0, max: 8, step: 1, mode: "box" } }}
+              .value=${(_b2 = c2.sub_buttons_grid_columns) != null ? _b2 : 0}
+              @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_columns", ev.detail.value || void 0)}
+            ></ha-selector>
+            <ha-selector .hass=${this.hass} .label=${"Cell Min Width (px)"}
+              .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
+              .value=${(_c2 = c2.sub_buttons_grid_min_width) != null ? _c2 : 56}
+              @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_min_width", ev.detail.value)}
+            ></ha-selector>
+          </div>
+        ` : A}
       </div>
 
-      <!-- ── Global action ──────────────────────────────────────────────── -->
-      <div class="section-header">Global Action</div>
-      <div class="section-body">
+      <!-- ── Global style ── -->
+      <div class="section">
+        <div class="section-label">Global Button Style</div>
+        ${this._renderColorField("sub_button_icon_color", "Icon Color (default for all)")}
+        ${this._renderColorField("sub_button_background_color", "Background Color (default for all)")}
+        <div class="two-col">
+          <ha-selector .hass=${this.hass} .label=${"Opacity"}
+            .selector=${OPACITY_SELECTOR} .value=${(_d2 = c2.sub_button_opacity) != null ? _d2 : 1}
+            @value-changed=${(ev) => this._fieldChanged("sub_button_opacity", ev.detail.value)}
+          ></ha-selector>
+          <ha-selector .hass=${this.hass} .label=${"Gap between buttons (px)"}
+            .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
+            .value=${(_e2 = c2.sub_button_gap) != null ? _e2 : 6}
+            @value-changed=${(ev) => this._fieldChanged("sub_button_gap", ev.detail.value)}
+          ></ha-selector>
+        </div>
+      </div>
+
+      <!-- ── Individual buttons ── -->
+      <div class="section">
+        <div class="section-label">Buttons</div>
+        ${((_f2 = c2.sub_buttons) != null ? _f2 : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
+        <button class="add-btn" @click=${this._addSubButton}>+ Add Button</button>
+      </div>
+    `;
+  }
+  _renderActionsTab() {
+    var _a2, _b2, _c2, _d2, _e2, _f2;
+    const c2 = this._config;
+    return b`
+      <div class="section">
+        <div class="section-label">Global Action</div>
         <div class="warning-box">
-          When Global Action is set, sub-buttons become non-interactive decorations
-          and the entire card surface becomes a single tap target.
+          When a global action is set, all sub-button tap/hold/double-tap actions are disabled.
+          Sub-buttons become non-interactive decorations and the entire card is a single tap target.
         </div>
 
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Tap Action"}
+        <ha-selector .hass=${this.hass} .label=${"Tap Action"}
           .selector=${{ ui_action: {} }}
-          .value=${(_u = (_t = c2.global_action) == null ? void 0 : _t.tap_action) != null ? _u : { action: "none" }}
+          .value=${(_b2 = (_a2 = c2.global_action) == null ? void 0 : _a2.tap_action) != null ? _b2 : { action: "none" }}
           @value-changed=${(ev) => this._globalActionFieldChanged("tap_action", ev.detail.value)}
         ></ha-selector>
-
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Hold Action"}
+        <ha-selector .hass=${this.hass} .label=${"Hold Action"}
           .selector=${{ ui_action: {} }}
-          .value=${(_w = (_v = c2.global_action) == null ? void 0 : _v.hold_action) != null ? _w : { action: "none" }}
+          .value=${(_d2 = (_c2 = c2.global_action) == null ? void 0 : _c2.hold_action) != null ? _d2 : { action: "none" }}
           @value-changed=${(ev) => this._globalActionFieldChanged("hold_action", ev.detail.value)}
         ></ha-selector>
-
-        <ha-selector
-          .hass=${this.hass}
-          .label=${"Double-Tap Action"}
+        <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
           .selector=${{ ui_action: {} }}
-          .value=${(_y = (_x = c2.global_action) == null ? void 0 : _x.double_tap_action) != null ? _y : { action: "none" }}
+          .value=${(_f2 = (_e2 = c2.global_action) == null ? void 0 : _e2.double_tap_action) != null ? _f2 : { action: "none" }}
           @value-changed=${(ev) => this._globalActionFieldChanged("double_tap_action", ev.detail.value)}
         ></ha-selector>
 
-        <button
-          class="clear-button"
+        <button class="clear-btn"
           @click=${() => {
       const cfg = { ...this._config };
       delete cfg.global_action;
@@ -1686,22 +1804,22 @@ let IansCustomRoomCardEditor = class extends i {
       </div>
     `;
   }
+  // ── Sub-button row ────────────────────────────────────────────────────────────
   _renderSubButtonRow(btn, index) {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o;
     const isExpanded = this._expandedSubButton === index;
     const label = (_c2 = (_b2 = (_a2 = btn.entity) != null ? _a2 : btn.label) != null ? _b2 : btn.icon) != null ? _c2 : `Sub-button ${index + 1}`;
-    const showPosition = ((_e2 = (_d2 = this._config) == null ? void 0 : _d2.sub_buttons_layout) != null ? _e2 : "bottom-row") === "custom";
+    const layout = (_e2 = (_d2 = this._config) == null ? void 0 : _d2.sub_buttons_layout) != null ? _e2 : "bottom-row";
+    const showPosition = layout === "custom";
     return b`
-      <div class="sub-button-row">
-        <div
-          class="sub-button-header"
+      <div class="sub-btn-row">
+        <div class="sub-btn-header"
           @click=${() => this._expandedSubButton = isExpanded ? null : index}
         >
           <ha-icon .icon=${(_f2 = btn.icon) != null ? _f2 : "mdi:gesture-tap"}></ha-icon>
-          <span class="sub-button-label">${label}</span>
+          <span class="sub-btn-label">${label}</span>
           <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
-          <button
-            class="delete-button"
+          <button class="del-btn"
             @click=${(ev) => {
       ev.stopPropagation();
       this._deleteSubButton(index);
@@ -1710,33 +1828,28 @@ let IansCustomRoomCardEditor = class extends i {
         </div>
 
         ${isExpanded ? b`
-          <div class="sub-button-body">
-            <ha-entity-picker
-              .hass=${this.hass}
-              .label=${"Entity"}
-              .value=${(_g = btn.entity) != null ? _g : ""}
-              allow-custom-entity
+          <div class="sub-btn-body">
+            <!-- Entity & display -->
+            <div class="sub-group-label">Entity &amp; Display</div>
+
+            <ha-entity-picker .hass=${this.hass} .label=${"Entity"}
+              .value=${(_g = btn.entity) != null ? _g : ""} allow-custom-entity
               @value-changed=${(ev) => this._subButtonChanged(index, { entity: ev.detail.value || void 0 })}
             ></ha-entity-picker>
 
-            <ha-icon-picker
-              .hass=${this.hass}
-              .label=${"Icon (leave blank to auto-pick from entity)"}
+            <ha-icon-picker .hass=${this.hass}
+              .label=${"Icon (blank = auto-pick from entity domain)"}
               .value=${(_h = btn.icon) != null ? _h : ""}
               @value-changed=${(ev) => this._subButtonChanged(index, { icon: ev.detail.value || void 0 })}
             ></ha-icon-picker>
 
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Label (or type 'entity' for the entity name)"}
-              .selector=${{ text: {} }}
-              .value=${(_i = btn.label) != null ? _i : ""}
+            <ha-selector .hass=${this.hass}
+              .label=${"Label (blank to hide, or type 'entity' for entity name)"}
+              .selector=${{ text: {} }} .value=${(_i = btn.label) != null ? _i : ""}
               @value-changed=${(ev) => this._subButtonChanged(index, { label: ev.detail.value || void 0 })}
             ></ha-selector>
 
-            <ha-form
-              .hass=${this.hass}
-              .data=${btn}
+            <ha-form .hass=${this.hass} .data=${btn}
               .schema=${[
       { name: "show_icon", label: "Show Icon", selector: { boolean: {} } },
       { name: "show_label", label: "Show Label", selector: { boolean: {} } },
@@ -1754,91 +1867,72 @@ let IansCustomRoomCardEditor = class extends i {
     }}
             ></ha-form>
 
-            <div class="sub-section-label">Colors &amp; Opacity</div>
+            <!-- Color & opacity -->
+            <div class="sub-group-label">Color &amp; Opacity</div>
 
-            <div class="color-input-row">
-              <label class="color-swatch" title="Open color picker">
-                <div class="color-swatch-preview" style="background: ${btn.icon_color || "transparent"}"></div>
-                <input
-                  type="color"
-                  class="hidden-color-input"
-                  .value=${cssToHex((_j = btn.icon_color) != null ? _j : "")}
-                  @change=${(ev) => this._subButtonChanged(index, { icon_color: ev.target.value || void 0 })}
-                />
-              </label>
-              <ha-selector
-                .hass=${this.hass}
-                .label=${"Icon Color"}
-                .selector=${{ text: {} }}
-                .value=${(_k = btn.icon_color) != null ? _k : ""}
-                placeholder="e.g. #ff9800, var(--primary-color)"
-                @value-changed=${(ev) => this._subButtonChanged(index, { icon_color: ev.detail.value || void 0 })}
-              ></ha-selector>
-            </div>
+            <ha-form .hass=${this.hass}
+              .data=${{ state_based_color: (_j = btn.state_based_color) != null ? _j : false }}
+              .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
+              .computeLabel=${(s2) => s2.label}
+              @value-changed=${(ev) => this._subButtonChanged(index, { state_based_color: ev.detail.value.state_based_color })}
+            ></ha-form>
 
-            <div class="color-input-row">
-              <label class="color-swatch" title="Open color picker">
-                <div class="color-swatch-preview" style="background: ${btn.background_color || "transparent"}"></div>
-                <input
-                  type="color"
-                  class="hidden-color-input"
-                  .value=${cssToHex((_l = btn.background_color) != null ? _l : "")}
-                  @change=${(ev) => this._subButtonChanged(index, { background_color: ev.target.value || void 0 })}
-                />
-              </label>
-              <ha-selector
-                .hass=${this.hass}
-                .label=${"Background Color"}
-                .selector=${{ text: {} }}
-                .value=${(_m = btn.background_color) != null ? _m : ""}
-                placeholder="e.g. rgba(255,255,255,0.15)"
-                @value-changed=${(ev) => this._subButtonChanged(index, { background_color: ev.detail.value || void 0 })}
-              ></ha-selector>
-            </div>
+            ${btn.state_based_color ? b`
+              <div class="hint">Active when entity is on/open/home/playing. Defaults to domain color (yellow for lights) if left blank.</div>
+              ${this._renderSubBtnColorField(btn, index, "icon_color_on", "Active Icon Color")}
+              ${this._renderSubBtnColorField(btn, index, "icon_color_off", "Inactive Icon Color")}
+            ` : b`
+              ${this._renderSubBtnColorField(btn, index, "icon_color", "Icon Color")}
+            `}
 
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Button Opacity"}
-              .selector=${OPACITY_SELECTOR}
-              .value=${(_n = btn.opacity) != null ? _n : 1}
+            ${this._renderSubBtnColorField(btn, index, "background_color", "Background Color", "e.g. rgba(255,255,255,0.15)")}
+
+            <ha-selector .hass=${this.hass} .label=${"Button Opacity"}
+              .selector=${OPACITY_SELECTOR} .value=${(_k = btn.opacity) != null ? _k : 1}
               @value-changed=${(ev) => this._subButtonChanged(index, { opacity: ev.detail.value })}
             ></ha-selector>
 
             ${showPosition ? b`
-              <div class="sub-section-label">Position</div>
-              <ha-selector
-                .hass=${this.hass}
-                .label=${"Position"}
+              <div class="sub-group-label">Position</div>
+              <ha-selector .hass=${this.hass} .label=${"Position"}
                 .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
-                .value=${(_o = btn.position) != null ? _o : "bottom-left"}
+                .value=${(_l = btn.position) != null ? _l : "bottom-left"}
                 @value-changed=${(ev) => this._subButtonChanged(index, { position: ev.detail.value })}
               ></ha-selector>
             ` : A}
 
-            <div class="sub-section-label">Actions</div>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Tap Action"}
-              .selector=${{ ui_action: {} }}
-              .value=${(_p = btn.tap_action) != null ? _p : { action: "toggle" }}
+            <!-- Actions -->
+            <div class="sub-group-label">Actions</div>
+            <ha-selector .hass=${this.hass} .label=${"Tap Action"}
+              .selector=${{ ui_action: {} }} .value=${(_m = btn.tap_action) != null ? _m : { action: "toggle" }}
               @value-changed=${(ev) => this._subButtonChanged(index, { tap_action: ev.detail.value })}
             ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Hold Action"}
-              .selector=${{ ui_action: {} }}
-              .value=${(_q = btn.hold_action) != null ? _q : { action: "more-info" }}
+            <ha-selector .hass=${this.hass} .label=${"Hold Action"}
+              .selector=${{ ui_action: {} }} .value=${(_n = btn.hold_action) != null ? _n : { action: "more-info" }}
               @value-changed=${(ev) => this._subButtonChanged(index, { hold_action: ev.detail.value })}
             ></ha-selector>
-            <ha-selector
-              .hass=${this.hass}
-              .label=${"Double-Tap Action"}
-              .selector=${{ ui_action: {} }}
-              .value=${(_r = btn.double_tap_action) != null ? _r : { action: "none" }}
+            <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
+              .selector=${{ ui_action: {} }} .value=${(_o = btn.double_tap_action) != null ? _o : { action: "none" }}
               @value-changed=${(ev) => this._subButtonChanged(index, { double_tap_action: ev.detail.value })}
             ></ha-selector>
           </div>
         ` : A}
+      </div>
+    `;
+  }
+  // ── Main render ───────────────────────────────────────────────────────────────
+  render() {
+    if (!this._loaded || !this._config) {
+      return b`<div class="loading">Loading editor…</div>`;
+    }
+    return b`
+      ${this._renderTabBar()}
+      <div class="tab-content">
+        ${this._activeTab === "basic" ? this._renderBasicTab() : A}
+        ${this._activeTab === "icon" ? this._renderIconTab() : A}
+        ${this._activeTab === "card" ? this._renderCardTab() : A}
+        ${this._activeTab === "buttons" ? this._renderButtonsTab() : A}
+        ${this._activeTab === "actions" ? this._renderActionsTab() : A}
       </div>
     `;
   }
@@ -1847,32 +1941,71 @@ let IansCustomRoomCardEditor = class extends i {
     return i$3`
       :host { display: block; }
 
-      .loading {
-        padding: 16px;
-        color: var(--secondary-text-color);
+      .loading { padding: 16px; color: var(--secondary-text-color); }
+
+      /* ── Tab bar ── */
+      .tab-bar {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        border-bottom: 2px solid var(--divider-color);
+        background: var(--card-background-color, #fff);
+        padding: 0 4px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
       }
 
-      .section-header {
+      .tab-bar::-webkit-scrollbar { display: none; }
+
+      .tab {
+        flex-shrink: 0;
+        padding: 10px 14px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
         font-size: 13px;
-        font-weight: 600;
-        color: var(--primary-text-color);
-        padding: 16px 16px 4px;
-        border-top: 1px solid var(--divider-color);
-        margin-top: 8px;
+        font-weight: 500;
+        color: var(--secondary-text-color);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        white-space: nowrap;
+        transition: color 0.15s, border-color 0.15s;
       }
 
-      .section-header:first-child {
-        border-top: none;
-        margin-top: 0;
+      .tab:hover { color: var(--primary-text-color); }
+
+      .tab.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
       }
 
-      .section-body {
-        padding: 4px 16px 8px;
+      /* ── Tab content ── */
+      .tab-content {
+        padding: 0 0 16px;
+      }
+
+      /* ── Section ── */
+      .section {
+        padding: 12px 16px 4px;
         display: flex;
         flex-direction: column;
         gap: 8px;
+        border-top: 1px solid var(--divider-color);
       }
 
+      .section:first-child { border-top: none; }
+
+      .section-label {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--secondary-text-color);
+        padding-bottom: 2px;
+      }
+
+      /* ── Layout helpers ── */
       .two-col {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1880,19 +2013,29 @@ let IansCustomRoomCardEditor = class extends i {
         align-items: start;
       }
 
-      /* ── Template field row ── */
-      .field-row {
+      .hint {
+        font-size: 11px;
+        color: var(--secondary-text-color);
+        line-height: 1.4;
+      }
+
+      .hint code {
+        font-family: monospace;
+        background: var(--secondary-background-color, #f0f0f0);
+        padding: 1px 4px;
+        border-radius: 3px;
+      }
+
+      /* ── Template field ── */
+      .template-row {
         display: flex;
         align-items: flex-start;
         gap: 6px;
       }
 
-      .field-input {
-        flex: 1;
-        min-width: 0;
-      }
+      .template-input { flex: 1; min-width: 0; }
 
-      .field-input textarea {
+      .template-input textarea {
         width: 100%;
         min-height: 56px;
         padding: 8px;
@@ -1906,15 +2049,9 @@ let IansCustomRoomCardEditor = class extends i {
         box-sizing: border-box;
       }
 
-      .helper-text {
-        font-size: 10px;
-        color: var(--secondary-text-color);
-        margin-top: 2px;
-      }
-
-      .template-toggle {
+      .tmpl-btn {
         margin-top: 8px;
-        padding: 2px 6px;
+        padding: 2px 7px;
         font-size: 11px;
         font-weight: 700;
         cursor: pointer;
@@ -1925,60 +2062,77 @@ let IansCustomRoomCardEditor = class extends i {
         flex-shrink: 0;
       }
 
-      .template-toggle.active {
+      .tmpl-btn.active {
         background: var(--primary-color);
         color: white;
         border-color: var(--primary-color);
       }
 
-      /* ── Color swatch + input ── */
-      .color-input-row {
+      /* ── Color swatch button ── */
+      .color-row {
         display: flex;
         align-items: center;
         gap: 8px;
       }
 
-      .color-input-row ha-selector {
-        flex: 1;
-        min-width: 0;
-      }
+      .color-row ha-selector { flex: 1; min-width: 0; }
 
-      .color-swatch {
-        width: 40px;
-        height: 40px;
-        border-radius: 6px;
-        border: 1px solid var(--divider-color);
-        overflow: hidden;
-        flex-shrink: 0;
-        cursor: pointer;
-        display: block;
+      .color-btn {
         position: relative;
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        border: 2px solid var(--divider-color);
+        cursor: pointer;
+        overflow: hidden;
+        display: block;
+        flex-shrink: 0;
+        transition: border-color 0.15s, box-shadow 0.15s;
       }
 
-      /* Checkerboard behind the swatch so transparent shows clearly */
-      .color-swatch::before {
-        content: "";
+      .color-btn:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 25%, transparent);
+      }
+
+      /* Checkerboard base (shows for transparent/empty) */
+      .color-checker {
         position: absolute;
         inset: 0;
-        background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
-                          linear-gradient(-45deg, #ccc 25%, transparent 25%),
-                          linear-gradient(45deg, transparent 75%, #ccc 75%),
-                          linear-gradient(-45deg, transparent 75%, #ccc 75%);
+        background-image:
+          linear-gradient(45deg, #ccc 25%, transparent 25%),
+          linear-gradient(-45deg, #ccc 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #ccc 75%),
+          linear-gradient(-45deg, transparent 75%, #ccc 75%);
         background-size: 8px 8px;
         background-position: 0 0, 0 4px, 4px -4px, -4px 0;
         background-color: #fff;
       }
 
-      .color-swatch-preview {
+      /* Actual color fill on top of checkerboard */
+      .color-fill {
         position: absolute;
         inset: 0;
         z-index: 1;
       }
 
-      .hidden-color-input {
+      /* Eyedropper icon as affordance hint */
+      .color-icon {
+        position: absolute;
+        bottom: 3px;
+        right: 3px;
+        z-index: 2;
+        --mdc-icon-size: 12px;
+        color: rgba(255, 255, 255, 0.95);
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+        pointer-events: none;
+      }
+
+      /* Transparent native color input covers the whole button */
+      .color-native {
         position: absolute;
         inset: 0;
-        z-index: 2;
+        z-index: 3;
         opacity: 0;
         width: 100%;
         height: 100%;
@@ -1989,7 +2143,7 @@ let IansCustomRoomCardEditor = class extends i {
 
       /* ── Warning ── */
       .warning-box {
-        background: color-mix(in srgb, var(--warning-color, #ff9800) 20%, transparent);
+        background: color-mix(in srgb, var(--warning-color, #ff9800) 15%, transparent);
         border: 1px solid var(--warning-color, #ff9800);
         color: var(--primary-text-color);
         padding: 8px 12px;
@@ -1998,27 +2152,26 @@ let IansCustomRoomCardEditor = class extends i {
         line-height: 1.4;
       }
 
-      /* ── Sub-button editor ── */
-      .sub-button-row {
+      /* ── Sub-button accordion ── */
+      .sub-btn-row {
         border: 1px solid var(--divider-color);
         border-radius: 8px;
         overflow: hidden;
       }
 
-      .sub-button-header {
+      .sub-btn-header {
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 8px 10px;
         cursor: pointer;
         background: var(--secondary-background-color, #f5f5f5);
+        user-select: none;
       }
 
-      .sub-button-header:hover {
-        background: var(--primary-background-color, #fff);
-      }
+      .sub-btn-header:hover { background: var(--primary-background-color, #fff); }
 
-      .sub-button-header .sub-button-label {
+      .sub-btn-label {
         flex: 1;
         font-size: 13px;
         overflow: hidden;
@@ -2026,7 +2179,7 @@ let IansCustomRoomCardEditor = class extends i {
         white-space: nowrap;
       }
 
-      .sub-button-body {
+      .sub-btn-body {
         padding: 8px;
         display: flex;
         flex-direction: column;
@@ -2034,43 +2187,49 @@ let IansCustomRoomCardEditor = class extends i {
         background: var(--primary-background-color, #fff);
       }
 
-      .sub-section-label {
+      .sub-group-label {
         font-size: 11px;
         font-weight: 600;
-        color: var(--secondary-text-color);
-        margin-top: 4px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        color: var(--secondary-text-color);
+        margin-top: 4px;
+        padding-top: 4px;
+        border-top: 1px solid var(--divider-color);
       }
 
       /* ── Buttons ── */
-      .delete-button,
-      .add-button,
-      .clear-button {
-        cursor: pointer;
-        border: 1px solid var(--divider-color);
-        border-radius: 4px;
-        padding: 4px 10px;
-        font-size: 12px;
-        background: transparent;
-        color: var(--primary-text-color);
-      }
-
-      .delete-button {
+      .del-btn {
         color: var(--error-color, #db4437);
-        border-color: var(--error-color, #db4437);
+        border: 1px solid var(--error-color, #db4437);
+        border-radius: 4px;
         padding: 2px 6px;
+        cursor: pointer;
+        background: transparent;
+        font-size: 12px;
+        flex-shrink: 0;
       }
 
-      .add-button {
+      .add-btn {
         align-self: flex-start;
         background: var(--primary-color);
         color: white;
-        border-color: var(--primary-color);
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 13px;
+        cursor: pointer;
       }
 
-      .clear-button {
+      .clear-btn {
         align-self: flex-start;
+        background: transparent;
+        border: 1px solid var(--divider-color);
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        color: var(--primary-text-color);
       }
     `;
   }
@@ -2090,6 +2249,9 @@ __decorateClass$1([
 __decorateClass$1([
   r()
 ], IansCustomRoomCardEditor.prototype, "_expandedSubButton", 2);
+__decorateClass$1([
+  r()
+], IansCustomRoomCardEditor.prototype, "_activeTab", 2);
 IansCustomRoomCardEditor = __decorateClass$1([
   t(`${CARD_TYPE}-editor`)
 ], IansCustomRoomCardEditor);
@@ -2112,6 +2274,17 @@ const TEMPLATE_FIELDS = [
   "border_color",
   "title"
 ];
+const ACTIVE_STATES = /* @__PURE__ */ new Set(["on", "open", "home", "playing", "unlocked", "connected"]);
+const DOMAIN_ACTIVE_COLORS = {
+  light: "var(--state-light-active-color, #FDD835)",
+  switch: "var(--state-switch-active-color, #FDD835)",
+  fan: "var(--state-fan-active-color, #26A69A)",
+  media_player: "var(--state-media_player-active-color, #FDD835)",
+  cover: "var(--state-cover-active-color, #FDD835)",
+  lock: "var(--success-color, #4CAF50)",
+  binary_sensor: "var(--state-binary_sensor-active-color, #FDD835)",
+  alarm_control_panel: "var(--error-color, #db4437)"
+};
 const DOMAIN_ICONS = {
   light: "mdi:lightbulb",
   switch: "mdi:toggle-switch",
@@ -2227,13 +2400,16 @@ let IansCustomRoomCard = class extends i {
     super.updated(changedProps);
     const configChanged = changedProps.has("_config");
     const templateResultsChanged = changedProps.has("_templateResults");
+    const hassChanged = changedProps.has("hass");
     if (configChanged) {
       this._subscribeTemplates();
       this._subscribeSubButtonTemplates();
       this._setupCardActionHandler();
     }
-    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults")) {
+    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults") || hassChanged) {
       this._applyConfigStyles();
+    }
+    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults")) {
       this._setupSubButtonHandlers();
     }
   }
@@ -2335,22 +2511,35 @@ let IansCustomRoomCard = class extends i {
   }
   // ── CSS variable application ───────────────────────────────────────────────
   _applyConfigStyles() {
+    var _a2, _b2, _c2;
     const c2 = this._config;
     if (!c2) return;
     const resolve = (field, configValue) => {
-      var _a2;
-      return (_a2 = this._templateResults[field]) != null ? _a2 : configValue;
+      var _a3;
+      return (_a3 = this._templateResults[field]) != null ? _a3 : configValue;
     };
     this._setCSSVar("--ians-card-background-color", resolve("background_color", c2.background_color));
     this._setCSSVar("--ians-card-background-opacity", c2.background_opacity !== void 0 ? String(c2.background_opacity) : void 0);
     this._setCSSVar("--ians-card-border-color", resolve("border_color", c2.border_color));
     this._setCSSVar("--ians-card-border-opacity", c2.border_opacity !== void 0 ? String(c2.border_opacity) : void 0);
-    this._setCSSVar("--ians-icon-color", resolve("icon_color", c2.icon_color));
+    let iconColor = resolve("icon_color", c2.icon_color);
+    if (c2.state_based_color && c2.entity && this.hass) {
+      const es = this.hass.states[c2.entity];
+      const domain = c2.entity.split(".")[0];
+      if (es) {
+        const isActive = ACTIVE_STATES.has(es.state);
+        iconColor = isActive ? (_b2 = (_a2 = c2.icon_color_on) != null ? _a2 : DOMAIN_ACTIVE_COLORS[domain]) != null ? _b2 : iconColor : (_c2 = c2.icon_color_off) != null ? _c2 : iconColor;
+      }
+    }
+    this._setCSSVar("--ians-icon-color", iconColor);
     this._setCSSVar("--ians-icon-opacity", c2.icon_opacity !== void 0 ? String(c2.icon_opacity) : void 0);
     this._setCSSVar("--ians-icon-background-color", c2.icon_background_color);
     this._setCSSVar("--ians-icon-background-opacity", c2.icon_background_opacity !== void 0 ? String(c2.icon_background_opacity) : void 0);
     this._setCSSVar("--ians-icon-background-size", c2.icon_background_size !== void 0 ? `${c2.icon_background_size}px` : void 0);
-    this._setCSSVar("--ians-icon-background-border-radius", c2.icon_background_shape ? SHAPE_BORDER_RADIUS[c2.icon_background_shape] : void 0);
+    this._setCSSVar("--ians-icon-background-width", c2.icon_background_width !== void 0 ? `${c2.icon_background_width}px` : void 0);
+    this._setCSSVar("--ians-icon-background-height", c2.icon_background_height !== void 0 ? `${c2.icon_background_height}px` : void 0);
+    const borderRadius = c2.icon_background_border_radius || (c2.icon_background_shape ? SHAPE_BORDER_RADIUS[c2.icon_background_shape] : void 0);
+    this._setCSSVar("--ians-icon-background-border-radius", borderRadius);
     this._setCSSVar("--ians-icon-size", c2.icon_size !== void 0 ? `${c2.icon_size}px` : void 0);
     this._setCSSVar("--ians-badge-color", resolve("badge_color", c2.badge_color));
     this._setCSSVar("--ians-badge-background-color", c2.badge_background_color);
@@ -2362,6 +2551,18 @@ let IansCustomRoomCard = class extends i {
     this._setCSSVar("--ians-sub-button-icon-color", c2.sub_button_icon_color);
     this._setCSSVar("--ians-sub-button-background-color", c2.sub_button_background_color);
     this._setCSSVar("--ians-sub-button-opacity", c2.sub_button_opacity !== void 0 ? String(c2.sub_button_opacity) : void 0);
+    this._setCSSVar("--ians-sub-button-gap", c2.sub_button_gap !== void 0 ? `${c2.sub_button_gap}px` : void 0);
+    if (c2.sub_buttons_layout === "grid") {
+      if (c2.sub_buttons_grid_columns) {
+        this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(${c2.sub_buttons_grid_columns}, 1fr)`);
+      } else if (c2.sub_buttons_grid_min_width) {
+        this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(auto-fill, minmax(${c2.sub_buttons_grid_min_width}px, 1fr))`);
+      } else {
+        this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
+      }
+    } else {
+      this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
+    }
   }
   // ── Action handlers ────────────────────────────────────────────────────────
   _setupSubButtonHandlers() {
@@ -2523,7 +2724,7 @@ let IansCustomRoomCard = class extends i {
     const layout = (_b2 = c2.sub_buttons_layout) != null ? _b2 : "bottom-row";
     const isGlobal = !!c2.global_action;
     const buttons = c2.sub_buttons.map((btn, i2) => {
-      var _a3, _b3, _c2, _d2, _e2, _f2, _g, _h, _i, _j;
+      var _a3, _b3, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
       const entityState = btn.entity ? (_a3 = this.hass) == null ? void 0 : _a3.states[btn.entity] : void 0;
       const domain = (_c2 = (_b3 = btn.entity) == null ? void 0 : _b3.split(".")[0]) != null ? _c2 : "";
       const domainIcon = domain ? (_d2 = DOMAIN_ICONS[domain]) != null ? _d2 : "mdi:circle" : "mdi:circle";
@@ -2548,8 +2749,13 @@ let IansCustomRoomCard = class extends i {
         isGlobal ? "display-only" : "",
         posClass
       ].filter(Boolean).join(" ");
+      let btnIconColor = btn.icon_color;
+      if (btn.state_based_color && entityState) {
+        const isActive = ACTIVE_STATES.has(entityState.state);
+        btnIconColor = isActive ? (_l = (_k = btn.icon_color_on) != null ? _k : DOMAIN_ACTIVE_COLORS[domain]) != null ? _l : btn.icon_color : (_m = btn.icon_color_off) != null ? _m : btn.icon_color;
+      }
       const btnStyle = [
-        btn.icon_color ? `--ians-sub-button-icon-color: ${btn.icon_color}` : "",
+        btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
         btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
         btn.opacity !== void 0 ? `opacity: ${btn.opacity}` : ""
       ].filter(Boolean).join("; ");

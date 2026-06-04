@@ -112,6 +112,9 @@ export interface SubButtonConfig {
   show_state?: boolean;
   background?: boolean;
   icon_color?: string;
+  icon_color_on?: string;   // icon color when entity is active (on/open/home/playing)
+  icon_color_off?: string;  // icon color when entity is inactive
+  state_based_color?: boolean; // auto-color icon by entity state
   background_color?: string;
   opacity?: number;
   position?: SubButtonPosition;
@@ -194,15 +197,22 @@ export interface CardConfig {
   background_image?: string;
   border_color?: string;
   border_opacity?: number;
-  // Icon shape
+  // Icon shape & dimensions
   icon_background_shape?: IconBackgroundShape;
+  icon_background_border_radius?: string; // custom CSS value — overrides shape preset
+  icon_background_width?: number;         // px; defaults to icon_background_size
+  icon_background_height?: number;        // px; defaults to icon_background_size
   icon_opacity?: number;
   icon_background_opacity?: number;
+  // State-based main icon color
+  state_based_color?: boolean;
+  icon_color_on?: string;
+  icon_color_off?: string;
   // Badge
   badge_opacity?: number;
   // Title
   title_align?: TitleAlign;
-  title_position?: IconPosition;  // absolute position on card; omit = inline with icon
+  title_position?: IconPosition;
   title_position_x?: string;
   title_position_y?: string;
   title_font_size?: number;       // px
@@ -211,6 +221,10 @@ export interface CardConfig {
   sub_button_icon_color?: string;
   sub_button_background_color?: string;
   sub_button_opacity?: number;
+  sub_button_gap?: number;              // px between buttons
+  // Grid sub-button layout options
+  sub_buttons_grid_columns?: number;    // fixed column count for grid layout
+  sub_buttons_grid_min_width?: number;  // px min cell width for auto-fill grid
   // Layout
   grid_options?: GridOptions;
   sub_buttons_layout?: SubButtonsLayout;
