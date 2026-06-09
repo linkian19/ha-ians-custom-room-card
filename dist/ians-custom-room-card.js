@@ -1358,32 +1358,36 @@ let IansCustomRoomCardEditor = class extends i {
     this._templateMode = next;
   }
   // ── Render helpers ────────────────────────────────────────────────────────────
-  /** Color swatch + text input. The swatch is clickable and shows current color. */
+  /** Color swatch + text input. Uses a native input so both elements share the same
+   *  explicit height, making vertical alignment with align-items:center exact. */
   _renderColorField(fieldKey, label, placeholder = "e.g. red, #ff0000, var(--primary-color)") {
     var _a2, _b2;
     const isTemplateCapable = TEMPLATE_CAPABLE_FIELDS.has(fieldKey);
     const currentValue = (_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : "";
     const colorWidget = () => b`
-      <div class="color-row">
-        <label class="color-btn" title="Click to open color picker">
-          <div class="color-checker"></div>
-          <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
-          <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+      <div class="color-field">
+        <span class="color-field-label">${label}</span>
+        <div class="color-row">
+          <label class="color-btn" title="Click to open color picker">
+            <div class="color-checker"></div>
+            <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+            <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+            <input
+              type="color"
+              class="color-native"
+              .value=${cssToHex(currentValue)}
+              @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
+            />
+          </label>
           <input
-            type="color"
-            class="color-native"
-            .value=${cssToHex(currentValue)}
+            type="text"
+            class="color-text-input"
+            .value=${currentValue}
+            placeholder=${placeholder}
             @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
+            @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
           />
-        </label>
-        <ha-selector
-          .hass=${this.hass}
-          .label=${label}
-          .selector=${{ text: {} }}
-          .value=${currentValue}
-          .placeholder=${placeholder}
-          @value-changed=${(ev) => this._fieldChanged(fieldKey, ev.detail.value || void 0)}
-        ></ha-selector>
+        </div>
       </div>
     `;
     if (!isTemplateCapable) return colorWidget();
@@ -1394,26 +1398,29 @@ let IansCustomRoomCardEditor = class extends i {
     var _a2;
     const currentValue = (_a2 = btn[field]) != null ? _a2 : "";
     return b`
-      <div class="color-row">
-        <label class="color-btn" title="Click to open color picker">
-          <div class="color-checker"></div>
-          <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
-          <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+      <div class="color-field">
+        <span class="color-field-label">${label}</span>
+        <div class="color-row">
+          <label class="color-btn" title="Click to open color picker">
+            <div class="color-checker"></div>
+            <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+            <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+            <input
+              type="color"
+              class="color-native"
+              .value=${cssToHex(currentValue)}
+              @change=${(ev) => this._subButtonChanged(index, { [field]: ev.target.value || void 0 })}
+            />
+          </label>
           <input
-            type="color"
-            class="color-native"
-            .value=${cssToHex(currentValue)}
+            type="text"
+            class="color-text-input"
+            .value=${currentValue}
+            placeholder=${placeholder}
             @change=${(ev) => this._subButtonChanged(index, { [field]: ev.target.value || void 0 })}
+            @input=${(ev) => this._subButtonChanged(index, { [field]: ev.target.value || void 0 })}
           />
-        </label>
-        <ha-selector
-          .hass=${this.hass}
-          .label=${label}
-          .selector=${{ text: {} }}
-          .value=${currentValue}
-          .placeholder=${placeholder}
-          @value-changed=${(ev) => this._subButtonChanged(index, { [field]: ev.detail.value || void 0 })}
-        ></ha-selector>
+        </div>
       </div>
     `;
   }
@@ -2130,7 +2137,6 @@ let IansCustomRoomCardEditor = class extends i {
 
       .tmpl-btn {
         align-self: flex-end;
-        margin-bottom: 4px;
         width: 36px;
         height: 36px;
         display: flex;
@@ -2160,26 +2166,63 @@ let IansCustomRoomCardEditor = class extends i {
         --mdc-icon-size: 18px;
       }
 
-      /* ── Color swatch button ── */
+      /* ── Color field: label above, swatch + native input below ── */
+      .color-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .color-field-label {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        padding-left: 2px;
+        line-height: 1;
+      }
+
       .color-row {
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         gap: 8px;
       }
 
-      .color-row ha-selector { flex: 1; min-width: 0; }
+      /* Native text input styled to match HA filled-variant text fields */
+      .color-text-input {
+        flex: 1;
+        min-width: 0;
+        height: 48px;
+        padding: 0 12px;
+        border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+        border-radius: 4px;
+        background: var(--input-fill-color, var(--secondary-background-color, rgba(0,0,0,0.06)));
+        color: var(--primary-text-color);
+        font-family: inherit;
+        font-size: 14px;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+
+      .color-text-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent);
+      }
+
+      .color-text-input::placeholder {
+        color: var(--secondary-text-color);
+        opacity: 0.6;
+      }
 
       .color-btn {
         position: relative;
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
         border-radius: 8px;
         border: 2px solid var(--divider-color);
         cursor: pointer;
         overflow: hidden;
         display: block;
         flex-shrink: 0;
-        margin-bottom: 4px; /* aligns with ha-textfield input area above its helper-text gap */
         transition: border-color 0.15s, box-shadow 0.15s;
       }
 
