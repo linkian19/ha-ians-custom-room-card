@@ -78,7 +78,8 @@ const SUB_BUTTON_POSITION_OPTIONS = [
 ];
 
 const TEMPLATE_CAPABLE_FIELDS = new Set([
-  "title", "icon", "icon_color", "badge_icon", "badge_color",
+  "title", "icon", "icon_color",
+  "badge_icon", "badge_color", "badge_background_color",
   "background_color", "border_color",
 ]);
 
@@ -217,7 +218,7 @@ export class IansCustomRoomCardEditor extends LitElement {
       ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
     ` : nothing;
 
-    // Template-active state: textarea + button side-by-side
+    // Template-active state: label (optional) + textarea row + hint
     if (inTemplateMode) {
       return html`
         <div class="color-field">
@@ -236,14 +237,11 @@ export class IansCustomRoomCardEditor extends LitElement {
       `;
     }
 
+    // Normal state: the template button always lives INSIDE the color-row so it
+    // is vertically centered with the swatch and text input (align-items:center).
     return html`
       <div class="color-field">
-        ${showLabel ? html`
-          <div class="color-field-header">
-            <span class="color-field-label">${label}</span>
-            ${tmplBtn}
-          </div>
-        ` : nothing}
+        ${showLabel ? html`<span class="color-field-label">${label}</span>` : nothing}
         <div class="color-row">
           <label class="color-btn" title="Click to open color picker">
             <div class="color-checker"></div>
@@ -267,7 +265,7 @@ export class IansCustomRoomCardEditor extends LitElement {
             @input=${(ev: Event) =>
               this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
           />
-          ${!showLabel ? tmplBtn : nothing}
+          ${tmplBtn}
         </div>
       </div>
     `;
@@ -1105,14 +1103,6 @@ export class IansCustomRoomCardEditor extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 6px;
-      }
-
-      /* Header row: label on left, template button on right */
-      .color-field-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 20px;
       }
 
       .color-field-label {

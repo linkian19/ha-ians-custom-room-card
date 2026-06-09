@@ -81,6 +81,9 @@ sub_buttons:
 | `icon_background_height` | number | — | — | px height of icon container (overrides `icon_background_size`) |
 | `icon_background_shape` | string | `circle` | — | Icon container shape preset: `circle`, `rounded-rect`, `squircle`, `square` |
 | `icon_background_border_radius` | string | — | — | Custom CSS border-radius (overrides `icon_background_shape`) |
+| `icon_background_position` | string | — | — | Position preset for the background shape, independent of `icon_position`; uses same values as `icon_position` |
+| `icon_background_position_x` | string | — | — | CSS offset for `icon_background_position: custom` |
+| `icon_background_position_y` | string | — | — | CSS offset for `icon_background_position: custom` |
 | `icon_opacity` | float | `1` | — | Opacity of icon glyph (0–1) |
 | `icon_background_opacity` | float | `1` | — | Opacity of icon container background (0–1) |
 | `state_based_color` | boolean | `false` | — | Auto-color icon based on entity state |
@@ -91,7 +94,7 @@ sub_buttons:
 | `icon_position_y` | string | — | — | CSS top/bottom value for `icon_position: custom` (e.g. `25%`, `50px`) |
 | `badge_icon` | string | — | ✓ | MDI icon for small badge on icon; omit to hide |
 | `badge_color` | string | `#fff` | ✓ | CSS color for badge icon |
-| `badge_background_color` | string | `var(--error-color)` | — | CSS color for badge background |
+| `badge_background_color` | string | `var(--error-color)` | ✓ | CSS color for badge background |
 | `badge_size` | number | `18` | — | Badge circle size in px |
 | `badge_opacity` | float | `1` | — | Opacity of badge (0–1) |
 | `badge_position` | string | `top-right` | — | Badge position relative to icon: `top-left`, `top-right`, `bottom-left`, `bottom-right`, `custom` |
@@ -100,8 +103,10 @@ sub_buttons:
 | `background_color` | string | HA card bg | ✓ | CSS color for card background |
 | `background_opacity` | float | `1` | — | Opacity of background color layer (0–1) |
 | `background_image` | string | — | — | URL string, or `"area"` to use HA area image |
+| `background_image_position` | string | `center` | — | CSS `background-position` value for the background image (e.g. `top right`, `75% 25%`) |
 | `border_color` | string | HA divider | ✓ | CSS color for card border |
 | `border_opacity` | float | `1` | — | Opacity of border (0–1) |
+| `hover_highlight` | boolean | `true`* | — | Show a subtle white ripple overlay on hover (*default `true` when `global_action` is set, `false` otherwise) |
 | `title_align` | string | `left` | — | Title text alignment: `left`, `center`, `right` |
 | `title_color` | string | — | — | CSS color for title text |
 | `title_font_size` | number | `14` | — | Title font size in px |

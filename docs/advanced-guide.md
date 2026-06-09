@@ -147,6 +147,18 @@ Or use a shape preset:
 icon_background_shape: rounded-rect   # circle | rounded-rect | squircle | square
 ```
 
+### Independent icon background position
+
+By default the background shape moves with the icon. Set `icon_background_position` to render the background at a completely different location — useful for large decorative blobs:
+
+```yaml
+icon_position: top-right          # icon glyph at top-right
+icon_background_position: center  # large background shape centered in card
+icon_background_size: 80          # make the background larger
+```
+
+When `icon_background_position` is set, the icon container no longer shows a background — only the independently positioned `.icon-bg-only` div does.
+
 ---
 
 ## Title Position
@@ -272,6 +284,44 @@ global_action:
 > **Warning:** Sub-button `tap_action`, `hold_action`, and `double_tap_action` are completely ignored when `global_action` is set. Sub-buttons become `pointer-events: none` and show slightly dimmed.
 
 To restore sub-button interactivity, remove the `global_action` key entirely.
+
+---
+
+## Hover Highlight
+
+When `global_action` is configured, a subtle white ripple overlay appears on mouse-over to signal the card is tappable. Enable or disable it explicitly:
+
+```yaml
+global_action:
+  tap_action:
+    action: navigate
+    navigation_path: /lovelace/room
+hover_highlight: true   # default when global_action is set
+```
+
+```yaml
+hover_highlight: false  # disable the overlay even with global_action
+```
+
+```yaml
+hover_highlight: true   # enable on a card without global_action (pure decoration)
+```
+
+---
+
+## Background Image Position
+
+When using `background_image`, the image defaults to `background-position: center`. Override with any valid CSS `background-position` value:
+
+```yaml
+background_image: "/local/rooms/kitchen.jpg"
+background_image_position: "top center"   # show the top of the image
+```
+
+```yaml
+background_image: "area"
+background_image_position: "75% 25%"     # show the upper-right area of the image
+```
 
 ---
 

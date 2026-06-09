@@ -40,6 +40,8 @@ All properties are declared on `:host` inside the card's shadow DOM. Set them on
 | `--ians-card-border-opacity` | `1` | Opacity of the border (0–1) |
 | `--ians-card-border-radius` | `var(--ha-card-border-radius, 12px)` | Card corner radius |
 
+> **Minimum height:** `:host` and `ha-card` both have `min-height: 64px` so the card never collapses in containers (vertical-stack, grid card, horizontal-stack) that do not assign explicit heights.
+
 ### Icon
 
 | Property | Default | Description |
@@ -114,7 +116,8 @@ These classes appear on elements inside the shadow DOM. They are set programmati
 | Class | Applied To | When |
 |---|---|---|
 | `has-template-error` | `ha-card` | A Jinja2 template failed to evaluate |
-| `interactive` | `ha-card` | `global_action` is configured |
+| `interactive` | `ha-card` | `global_action` is configured (also adds `touch-action: none`) |
+| `highlight-on-hover` | `ha-card` | Hover highlight enabled (default when `global_action` is set, or `hover_highlight: true`) |
 
 ### Sub-button layouts
 
@@ -145,6 +148,22 @@ These classes appear on elements inside the shadow DOM. They are set programmati
 | `pos-bottom-left` | `.sub-button` | `position: bottom-left` in custom layout |
 | `pos-bottom-center` | `.sub-button` | `position: bottom-center` in custom layout |
 | `pos-bottom-right` | `.sub-button` | `position: bottom-right` in custom layout |
+
+### Independent icon background
+
+When `icon_background_position` is set, the background shape is rendered as a standalone element separate from the icon.
+
+| Class | Applied To | When |
+|---|---|---|
+| `icon-bg-only` | background div | `icon_background_position` is set |
+| `icon-no-bg` | `.icon-container` | `icon_background_position` is set (removes background from icon container) |
+| `icon-bg-pos-top-left` | `.icon-bg-only` | `icon_background_position: top-left` |
+| `icon-bg-pos-top-right` | `.icon-bg-only` | `icon_background_position: top-right` |
+| `icon-bg-pos-bottom-left` | `.icon-bg-only` | `icon_background_position: bottom-left` |
+| `icon-bg-pos-bottom-right` | `.icon-bg-only` | `icon_background_position: bottom-right` |
+| `icon-bg-pos-center` | `.icon-bg-only` | `icon_background_position: center` |
+| `icon-bg-pos-center-left` | `.icon-bg-only` | `icon_background_position: center-left` |
+| `icon-bg-pos-center-right` | `.icon-bg-only` | `icon_background_position: center-right` |
 
 ### Icon absolute positions
 
@@ -189,6 +208,18 @@ These classes are added to `.card-title-absolute` when `title_position` is set.
 ---
 
 ## Examples
+
+### Hover highlight (disable or customise)
+
+The hover ripple is a semi-transparent white overlay that appears on mouse-over for interactive cards. Disable it in config with `hover_highlight: false`, or override the overlay colour via card-mod:
+
+```yaml
+card_mod:
+  style: |
+    ha-card .hover-ripple {
+      background: rgba(100, 200, 255, 0.12); /* custom tint instead of white */
+    }
+```
 
 ### Frosted glass card
 

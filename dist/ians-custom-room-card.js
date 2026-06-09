@@ -1257,6 +1257,7 @@ const TEMPLATE_CAPABLE_FIELDS = /* @__PURE__ */ new Set([
   "icon_color",
   "badge_icon",
   "badge_color",
+  "badge_background_color",
   "background_color",
   "border_color"
 ]);
@@ -1397,12 +1398,7 @@ let IansCustomRoomCardEditor = class extends i {
     }
     return b`
       <div class="color-field">
-        ${showLabel ? b`
-          <div class="color-field-header">
-            <span class="color-field-label">${label}</span>
-            ${tmplBtn}
-          </div>
-        ` : A}
+        ${showLabel ? b`<span class="color-field-label">${label}</span>` : A}
         <div class="color-row">
           <label class="color-btn" title="Click to open color picker">
             <div class="color-checker"></div>
@@ -1423,7 +1419,7 @@ let IansCustomRoomCardEditor = class extends i {
             @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
             @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
           />
-          ${!showLabel ? tmplBtn : A}
+          ${tmplBtn}
         </div>
       </div>
     `;
@@ -2217,14 +2213,6 @@ let IansCustomRoomCardEditor = class extends i {
         gap: 6px;
       }
 
-      /* Header row: label on left, template button on right */
-      .color-field-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 20px;
-      }
-
       .color-field-label {
         flex: 1;
         font-size: 12px;
@@ -2487,6 +2475,7 @@ const TEMPLATE_FIELDS = [
   "icon_color",
   "badge_icon",
   "badge_color",
+  "badge_background_color",
   "background_color",
   "border_color",
   "title"

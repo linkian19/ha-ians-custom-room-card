@@ -15,6 +15,7 @@ const TEMPLATE_FIELDS = [
   "icon_color",
   "badge_icon",
   "badge_color",
+  "badge_background_color",
   "background_color",
   "border_color",
   "title",
