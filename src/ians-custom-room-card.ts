@@ -470,6 +470,8 @@ export class IansCustomRoomCard extends LitElement {
       : "";
 
     const iconPosition: IconPosition | undefined = c.icon_position;
+    const iconBgPosition: IconPosition | undefined = c.icon_background_position;
+    const hasIndependentBg = !!iconBgPosition;
     const badgePosition = c.badge_position ?? "top-right";
     const titlePosition: IconPosition | undefined = c.title_position;
     const showHighlight = isInteractive
@@ -496,6 +498,22 @@ export class IansCustomRoomCard extends LitElement {
         `
       : nothing;
 
+    // Background-only div — rendered when icon_background_position is set independently
+    const iconBgOnlyEl = hasIndependentBg
+      ? html`
+          <div
+            class=${[
+              "icon-bg-only",
+              "icon-absolute",
+              iconBgPosition !== "custom" ? `icon-pos-${iconBgPosition}` : "",
+            ].filter(Boolean).join(" ")}
+            style=${iconBgPosition === "custom"
+              ? `top: ${c.icon_background_position_y ?? "auto"}; left: ${c.icon_background_position_x ?? "auto"};`
+              : ""}
+          ></div>
+        `
+      : nothing;
+
     // Icon container — rendered in header flow (default) or absolutely positioned
     const iconEl =
       icon !== undefined
@@ -506,6 +524,7 @@ export class IansCustomRoomCard extends LitElement {
                 class=${[
                   "icon-container",
                   "icon-absolute",
+                  hasIndependentBg ? "icon-no-bg" : "",
                   iconPosition !== "custom" ? `icon-pos-${iconPosition}` : "",
                 ]
                   .filter(Boolean)
@@ -519,7 +538,10 @@ export class IansCustomRoomCard extends LitElement {
               </div>
             `
           : html`
-              <div part="icon-container" class="icon-container">
+              <div
+                part="icon-container"
+                class=${["icon-container", hasIndependentBg ? "icon-no-bg" : ""].filter(Boolean).join(" ")}
+              >
                 <ha-icon part="icon" .icon=${icon}></ha-icon>
                 ${badgeEl}
               </div>
@@ -557,6 +579,9 @@ export class IansCustomRoomCard extends LitElement {
           ? html`<div class="card-background-image" style=${bgImageStyle}></div>`
           : nothing}
         ${showHighlight ? html`<div class="hover-ripple"></div>` : nothing}
+
+        <!-- Independent icon background (before card-inner so it's below content) -->
+        ${iconBgOnlyEl}
 
         <!-- Absolutely positioned icon — z-index 2, BEFORE card-inner so card-inner (same z-index, later in DOM) renders on top -->
         ${iconPosition ? iconEl : nothing}

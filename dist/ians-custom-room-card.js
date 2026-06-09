@@ -616,6 +616,7 @@ const cardStyles = i$3`
   :host {
     display: block;
     height: 100%;
+    min-height: 64px;
     /* ── CSS custom property defaults (all overridable via card-mod or external CSS) ── */
     --ians-card-background-color: var(--ha-card-background, var(--card-background-color, #fff));
     --ians-card-background-opacity: 1;
@@ -649,9 +650,9 @@ const cardStyles = i$3`
     --ha-card-background: transparent;
     position: relative;
     height: 100%;
+    min-height: 64px;
     overflow: hidden;
     cursor: default;
-    touch-action: none;
     border-color: color-mix(
       in srgb,
       var(--ians-card-border-color) calc(var(--ians-card-border-opacity) * 100%),
@@ -744,6 +745,36 @@ const cardStyles = i$3`
   .icon-container.icon-pos-center-left { top: 50%; left: 12px; transform: translateY(-50%); }
   .icon-container.icon-pos-center-right { top: 50%; right: 12px; transform: translateY(-50%); }
 
+  /* When background has its own position, strip background from icon container */
+  .icon-container.icon-no-bg {
+    background-color: transparent !important;
+  }
+
+  /* ── Independent icon background (background shape without icon) ─────────── */
+  .icon-bg-only {
+    position: absolute;
+    z-index: 1;
+    width: var(--ians-icon-background-width);
+    height: var(--ians-icon-background-height);
+    border-radius: var(--ians-icon-background-border-radius);
+    background-color: color-mix(
+      in srgb,
+      var(--ians-icon-background-color) calc(var(--ians-icon-background-opacity) * 100%),
+      transparent
+    );
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+
+  /* Shares position classes with icon-container */
+  .icon-bg-only.icon-pos-top-left    { top: 12px; left: 12px; }
+  .icon-bg-only.icon-pos-top-right   { top: 12px; right: 12px; }
+  .icon-bg-only.icon-pos-bottom-left { bottom: 12px; left: 12px; }
+  .icon-bg-only.icon-pos-bottom-right { bottom: 12px; right: 12px; }
+  .icon-bg-only.icon-pos-center      { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .icon-bg-only.icon-pos-center-left { top: 50%; left: 12px; transform: translateY(-50%); }
+  .icon-bg-only.icon-pos-center-right { top: 50%; right: 12px; transform: translateY(-50%); }
+
   /* ── Icon badge ──────────────────────────────────────────────────────────── */
   .badge {
     position: absolute;
@@ -814,6 +845,7 @@ const cardStyles = i$3`
   /* ── Interactive card ────────────────────────────────────────────────────── */
   ha-card.interactive {
     cursor: pointer;
+    touch-action: none; /* prevent scroll interference during global-action gesture detection */
   }
 
   /* ── Hover highlight ripple ──────────────────────────────────────────────── */
@@ -1518,7 +1550,7 @@ let IansCustomRoomCardEditor = class extends i {
           @value-changed=${(ev) => this._fieldChanged("title_position", ev.detail.value || void 0)}
         ></ha-selector>
 
-        ${c2.title_position === "custom" ? this._renderCoordFields("title_position_x", "title_position_y", "X position", "Y position") : A}
+        ${c2.title_position === "custom" ? this._renderCoordFields("title_position_x", "title_position_y", "X offset", "Y offset") : A}
 
         ${!c2.title_position ? b`
           <ha-selector .hass=${this.hass} .label=${"Text Alignment"}
@@ -1529,7 +1561,7 @@ let IansCustomRoomCardEditor = class extends i {
         ` : A}
 
         <div class="two-col">
-          ${this._renderNumField("title_font_size", "Font Size (px)", 8, 48, 1, 14, "px")}
+          ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
           ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
         </div>
       </div>
@@ -1553,7 +1585,7 @@ let IansCustomRoomCardEditor = class extends i {
     `;
   }
   _renderIconTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
     const c2 = this._config;
     return b`
       <!-- ── Icon color ── -->
@@ -1605,15 +1637,25 @@ let IansCustomRoomCardEditor = class extends i {
         ></ha-selector>
 
         <div class="two-col">
-          ${this._renderNumField("icon_size", "Icon Size (px)", 8, 120, 2, 24, "px")}
-          ${this._renderNumField("icon_background_size", "Background Size (px)", 8, 160, 2, 40, "px")}
+          ${this._renderNumField("icon_size", "Icon Size", 8, 120, 2, 24, "px")}
+          ${this._renderNumField("icon_background_size", "Background Size", 8, 160, 2, 40, "px")}
         </div>
 
         <div class="hint">Width/Height override Background Size for non-square backgrounds.</div>
         <div class="two-col">
-          ${this._renderNumField("icon_background_width", "Width (px)", 8, 200, 2, (_f2 = c2.icon_background_size) != null ? _f2 : 40, "px")}
-          ${this._renderNumField("icon_background_height", "Height (px)", 8, 200, 2, (_g = c2.icon_background_size) != null ? _g : 40, "px")}
+          ${this._renderNumField("icon_background_width", "Width", 8, 200, 2, (_f2 = c2.icon_background_size) != null ? _f2 : 40, "px")}
+          ${this._renderNumField("icon_background_height", "Height", 8, 200, 2, (_g = c2.icon_background_size) != null ? _g : 40, "px")}
         </div>
+
+        <ha-selector .hass=${this.hass} .label=${"Background Position (independent of icon)"}
+          .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${(_h = c2.icon_background_position) != null ? _h : ""}
+          @value-changed=${(ev) => this._fieldChanged("icon_background_position", ev.detail.value || void 0)}
+        ></ha-selector>
+        ${c2.icon_background_position === "custom" ? this._renderCoordFields("icon_background_position_x", "icon_background_position_y", "X offset", "Y offset") : A}
+        ${c2.icon_background_position ? b`
+          <div class="hint">The background shape renders at this position; the icon renders at its own position below with no background behind it.</div>
+        ` : A}
       </div>
 
       <!-- ── Icon position ── -->
@@ -1621,10 +1663,11 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="section-label">Icon Position</div>
         <ha-selector .hass=${this.hass} .label=${"Position"}
           .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_h = c2.icon_position) != null ? _h : ""}
+          .value=${(_i = c2.icon_position) != null ? _i : ""}
           @value-changed=${(ev) => this._fieldChanged("icon_position", ev.detail.value || void 0)}
         ></ha-selector>
-        ${c2.icon_position === "custom" ? this._renderCoordFields("icon_position_x", "icon_position_y", "X position", "Y position") : A}
+        ${c2.icon_position === "custom" ? this._renderCoordFields("icon_position_x", "icon_position_y", "X offset", "Y offset") : A}
+        <div class="hint">Size fields accept whole numbers (px applied automatically). Coordinate fields accept any CSS value — use <code>%</code> for responsive positioning or <code>px</code> for fixed.</div>
       </div>
 
       <!-- ── Badge ── -->
@@ -1648,26 +1691,26 @@ let IansCustomRoomCardEditor = class extends i {
         ${this._renderColorField("badge_background_color", "Badge Background Color")}
 
         <div class="two-col">
-          ${this._renderNumField("badge_size", "Badge Size (px)", 8, 48, 1, 18, "px")}
+          ${this._renderNumField("badge_size", "Badge Size", 8, 48, 1, 18, "px")}
           <ha-selector .hass=${this.hass} .label=${"Opacity"}
-            .selector=${OPACITY_SELECTOR} .value=${(_i = c2.badge_opacity) != null ? _i : 1}
+            .selector=${OPACITY_SELECTOR} .value=${(_j = c2.badge_opacity) != null ? _j : 1}
             @value-changed=${(ev) => this._fieldChanged("badge_opacity", ev.detail.value)}
           ></ha-selector>
         </div>
 
         <ha-selector .hass=${this.hass} .label=${"Badge Position"}
           .selector=${{ select: { options: BADGE_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_j = c2.badge_position) != null ? _j : "top-right"}
+          .value=${(_k = c2.badge_position) != null ? _k : "top-right"}
           @value-changed=${(ev) => this._fieldChanged("badge_position", ev.detail.value || void 0)}
         ></ha-selector>
         ${c2.badge_position === "custom" ? b`
           <div class="two-col">
             <ha-selector .hass=${this.hass} .label=${"X (CSS)"} .selector=${{ text: {} }}
-              .value=${(_k = c2.badge_position_x) != null ? _k : ""} .placeholder=${"e.g. 10px"}
+              .value=${(_l = c2.badge_position_x) != null ? _l : ""} .placeholder=${"e.g. 10px"}
               @value-changed=${(ev) => this._fieldChanged("badge_position_x", ev.detail.value || void 0)}
             ></ha-selector>
             <ha-selector .hass=${this.hass} .label=${"Y (CSS)"} .selector=${{ text: {} }}
-              .value=${(_l = c2.badge_position_y) != null ? _l : ""} .placeholder=${"e.g. 10px"}
+              .value=${(_m = c2.badge_position_y) != null ? _m : ""} .placeholder=${"e.g. 10px"}
               @value-changed=${(ev) => this._fieldChanged("badge_position_y", ev.detail.value || void 0)}
             ></ha-selector>
           </div>
@@ -1768,7 +1811,7 @@ let IansCustomRoomCardEditor = class extends i {
               .value=${(_b2 = c2.sub_buttons_grid_columns) != null ? _b2 : 0}
               @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_columns", ev.detail.value || void 0)}
             ></ha-selector>
-            <ha-selector .hass=${this.hass} .label=${"Cell Min Width (px)"}
+            <ha-selector .hass=${this.hass} .label=${"Cell Min Width"}
               .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
               .value=${(_c2 = c2.sub_buttons_grid_min_width) != null ? _c2 : 56}
               @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_min_width", ev.detail.value)}
@@ -1787,7 +1830,7 @@ let IansCustomRoomCardEditor = class extends i {
             .selector=${OPACITY_SELECTOR} .value=${(_d2 = c2.sub_button_opacity) != null ? _d2 : 1}
             @value-changed=${(ev) => this._fieldChanged("sub_button_opacity", ev.detail.value)}
           ></ha-selector>
-          <ha-selector .hass=${this.hass} .label=${"Gap between buttons (px)"}
+          <ha-selector .hass=${this.hass} .label=${"Button Gap"}
             .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
             .value=${(_e2 = c2.sub_button_gap) != null ? _e2 : 6}
             @value-changed=${(ev) => this._fieldChanged("sub_button_gap", ev.detail.value)}
@@ -2678,7 +2721,7 @@ let IansCustomRoomCard = class extends i {
   }
   // ── Render ─────────────────────────────────────────────────────────────────
   render() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l;
     if (!this._config) return A;
     const c2 = this._config;
     const hasErrors = Object.keys(this._templateErrors).length > 0;
@@ -2694,6 +2737,8 @@ let IansCustomRoomCard = class extends i {
     }
     const bgImageStyle = bgImageUrl ? `background-image: url('${bgImageUrl}'); background-position: ${(_c2 = c2.background_image_position) != null ? _c2 : "center"};` : "";
     const iconPosition = c2.icon_position;
+    const iconBgPosition = c2.icon_background_position;
+    const hasIndependentBg = !!iconBgPosition;
     const badgePosition = (_d2 = c2.badge_position) != null ? _d2 : "top-right";
     const titlePosition = c2.title_position;
     const showHighlight = isInteractive ? c2.hover_highlight !== false : c2.hover_highlight === true;
@@ -2709,21 +2754,35 @@ let IansCustomRoomCard = class extends i {
             <ha-icon part="badge-icon" .icon=${badgeIcon}></ha-icon>
           </div>
         ` : A;
+    const iconBgOnlyEl = hasIndependentBg ? b`
+          <div
+            class=${[
+      "icon-bg-only",
+      "icon-absolute",
+      iconBgPosition !== "custom" ? `icon-pos-${iconBgPosition}` : ""
+    ].filter(Boolean).join(" ")}
+            style=${iconBgPosition === "custom" ? `top: ${(_g = c2.icon_background_position_y) != null ? _g : "auto"}; left: ${(_h = c2.icon_background_position_x) != null ? _h : "auto"};` : ""}
+          ></div>
+        ` : A;
     const iconEl = icon !== void 0 ? iconPosition ? b`
               <div
                 part="icon-container"
                 class=${[
       "icon-container",
       "icon-absolute",
+      hasIndependentBg ? "icon-no-bg" : "",
       iconPosition !== "custom" ? `icon-pos-${iconPosition}` : ""
     ].filter(Boolean).join(" ")}
-                style=${iconPosition === "custom" ? `top: ${(_g = c2.icon_position_y) != null ? _g : "auto"}; left: ${(_h = c2.icon_position_x) != null ? _h : "auto"};` : ""}
+                style=${iconPosition === "custom" ? `top: ${(_i = c2.icon_position_y) != null ? _i : "auto"}; left: ${(_j = c2.icon_position_x) != null ? _j : "auto"};` : ""}
               >
                 <ha-icon part="icon" .icon=${icon}></ha-icon>
                 ${badgeEl}
               </div>
             ` : b`
-              <div part="icon-container" class="icon-container">
+              <div
+                part="icon-container"
+                class=${["icon-container", hasIndependentBg ? "icon-no-bg" : ""].filter(Boolean).join(" ")}
+              >
                 <ha-icon part="icon" .icon=${icon}></ha-icon>
                 ${badgeEl}
               </div>
@@ -2735,7 +2794,7 @@ let IansCustomRoomCard = class extends i {
       "card-title-absolute",
       titlePosition !== "custom" ? `card-title-abs-${titlePosition}` : ""
     ].filter(Boolean).join(" ")}
-            style=${titlePosition === "custom" ? `top: ${(_i = c2.title_position_y) != null ? _i : "auto"}; left: ${(_j = c2.title_position_x) != null ? _j : "auto"};` : ""}
+            style=${titlePosition === "custom" ? `top: ${(_k = c2.title_position_y) != null ? _k : "auto"}; left: ${(_l = c2.title_position_x) != null ? _l : "auto"};` : ""}
           >${title}</span>` : A;
     return b`
       <ha-card
@@ -2749,6 +2808,9 @@ let IansCustomRoomCard = class extends i {
         <div part="background" class="card-background-color"></div>
         ${bgImageStyle ? b`<div class="card-background-image" style=${bgImageStyle}></div>` : A}
         ${showHighlight ? b`<div class="hover-ripple"></div>` : A}
+
+        <!-- Independent icon background (before card-inner so it's below content) -->
+        ${iconBgOnlyEl}
 
         <!-- Absolutely positioned icon — z-index 2, BEFORE card-inner so card-inner (same z-index, later in DOM) renders on top -->
         ${iconPosition ? iconEl : A}

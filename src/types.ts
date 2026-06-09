@@ -205,6 +205,10 @@ export interface CardConfig {
   icon_background_border_radius?: string; // custom CSS value — overrides shape preset
   icon_background_width?: number;         // px; defaults to icon_background_size
   icon_background_height?: number;        // px; defaults to icon_background_size
+  // Icon background independent position (renders background shape separately from icon)
+  icon_background_position?: IconPosition;
+  icon_background_position_x?: string;   // CSS value; used when icon_background_position: "custom"
+  icon_background_position_y?: string;   // CSS value; used when icon_background_position: "custom"
   icon_opacity?: number;
   icon_background_opacity?: number;
   // State-based main icon color

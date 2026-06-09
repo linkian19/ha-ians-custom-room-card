@@ -4,6 +4,7 @@ export const cardStyles = css`
   :host {
     display: block;
     height: 100%;
+    min-height: 64px;
     /* ── CSS custom property defaults (all overridable via card-mod or external CSS) ── */
     --ians-card-background-color: var(--ha-card-background, var(--card-background-color, #fff));
     --ians-card-background-opacity: 1;
@@ -37,9 +38,9 @@ export const cardStyles = css`
     --ha-card-background: transparent;
     position: relative;
     height: 100%;
+    min-height: 64px;
     overflow: hidden;
     cursor: default;
-    touch-action: none;
     border-color: color-mix(
       in srgb,
       var(--ians-card-border-color) calc(var(--ians-card-border-opacity) * 100%),
@@ -132,6 +133,36 @@ export const cardStyles = css`
   .icon-container.icon-pos-center-left { top: 50%; left: 12px; transform: translateY(-50%); }
   .icon-container.icon-pos-center-right { top: 50%; right: 12px; transform: translateY(-50%); }
 
+  /* When background has its own position, strip background from icon container */
+  .icon-container.icon-no-bg {
+    background-color: transparent !important;
+  }
+
+  /* ── Independent icon background (background shape without icon) ─────────── */
+  .icon-bg-only {
+    position: absolute;
+    z-index: 1;
+    width: var(--ians-icon-background-width);
+    height: var(--ians-icon-background-height);
+    border-radius: var(--ians-icon-background-border-radius);
+    background-color: color-mix(
+      in srgb,
+      var(--ians-icon-background-color) calc(var(--ians-icon-background-opacity) * 100%),
+      transparent
+    );
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+
+  /* Shares position classes with icon-container */
+  .icon-bg-only.icon-pos-top-left    { top: 12px; left: 12px; }
+  .icon-bg-only.icon-pos-top-right   { top: 12px; right: 12px; }
+  .icon-bg-only.icon-pos-bottom-left { bottom: 12px; left: 12px; }
+  .icon-bg-only.icon-pos-bottom-right { bottom: 12px; right: 12px; }
+  .icon-bg-only.icon-pos-center      { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .icon-bg-only.icon-pos-center-left { top: 50%; left: 12px; transform: translateY(-50%); }
+  .icon-bg-only.icon-pos-center-right { top: 50%; right: 12px; transform: translateY(-50%); }
+
   /* ── Icon badge ──────────────────────────────────────────────────────────── */
   .badge {
     position: absolute;
@@ -202,6 +233,7 @@ export const cardStyles = css`
   /* ── Interactive card ────────────────────────────────────────────────────── */
   ha-card.interactive {
     cursor: pointer;
+    touch-action: none; /* prevent scroll interference during global-action gesture detection */
   }
 
   /* ── Hover highlight ripple ──────────────────────────────────────────────── */

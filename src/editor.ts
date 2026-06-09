@@ -405,7 +405,7 @@ export class IansCustomRoomCardEditor extends LitElement {
         ></ha-selector>
 
         ${c.title_position === "custom"
-          ? this._renderCoordFields("title_position_x", "title_position_y", "X position", "Y position")
+          ? this._renderCoordFields("title_position_x", "title_position_y", "X offset", "Y offset")
           : nothing}
 
         ${!c.title_position ? html`
@@ -418,7 +418,7 @@ export class IansCustomRoomCardEditor extends LitElement {
         ` : nothing}
 
         <div class="two-col">
-          ${this._renderNumField("title_font_size", "Font Size (px)", 8, 48, 1, 14, "px")}
+          ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
           ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
         </div>
       </div>
@@ -493,15 +493,28 @@ export class IansCustomRoomCardEditor extends LitElement {
         ></ha-selector>
 
         <div class="two-col">
-          ${this._renderNumField("icon_size", "Icon Size (px)", 8, 120, 2, 24, "px")}
-          ${this._renderNumField("icon_background_size", "Background Size (px)", 8, 160, 2, 40, "px")}
+          ${this._renderNumField("icon_size", "Icon Size", 8, 120, 2, 24, "px")}
+          ${this._renderNumField("icon_background_size", "Background Size", 8, 160, 2, 40, "px")}
         </div>
 
         <div class="hint">Width/Height override Background Size for non-square backgrounds.</div>
         <div class="two-col">
-          ${this._renderNumField("icon_background_width",  "Width (px)",  8, 200, 2, c.icon_background_size ?? 40, "px")}
-          ${this._renderNumField("icon_background_height", "Height (px)", 8, 200, 2, c.icon_background_size ?? 40, "px")}
+          ${this._renderNumField("icon_background_width",  "Width",  8, 200, 2, c.icon_background_size ?? 40, "px")}
+          ${this._renderNumField("icon_background_height", "Height", 8, 200, 2, c.icon_background_size ?? 40, "px")}
         </div>
+
+        <ha-selector .hass=${this.hass} .label=${"Background Position (independent of icon)"}
+          .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${c.icon_background_position ?? ""}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("icon_background_position", ev.detail.value as IconPosition || undefined)}
+        ></ha-selector>
+        ${c.icon_background_position === "custom"
+          ? this._renderCoordFields("icon_background_position_x", "icon_background_position_y", "X offset", "Y offset")
+          : nothing}
+        ${c.icon_background_position ? html`
+          <div class="hint">The background shape renders at this position; the icon renders at its own position below with no background behind it.</div>
+        ` : nothing}
       </div>
 
       <!-- ── Icon position ── -->
@@ -514,8 +527,9 @@ export class IansCustomRoomCardEditor extends LitElement {
             this._fieldChanged("icon_position", ev.detail.value as IconPosition || undefined)}
         ></ha-selector>
         ${c.icon_position === "custom"
-          ? this._renderCoordFields("icon_position_x", "icon_position_y", "X position", "Y position")
+          ? this._renderCoordFields("icon_position_x", "icon_position_y", "X offset", "Y offset")
           : nothing}
+        <div class="hint">Size fields accept whole numbers (px applied automatically). Coordinate fields accept any CSS value — use <code>%</code> for responsive positioning or <code>px</code> for fixed.</div>
       </div>
 
       <!-- ── Badge ── -->
@@ -535,7 +549,7 @@ export class IansCustomRoomCardEditor extends LitElement {
         ${this._renderColorField("badge_background_color", "Badge Background Color")}
 
         <div class="two-col">
-          ${this._renderNumField("badge_size", "Badge Size (px)", 8, 48, 1, 18, "px")}
+          ${this._renderNumField("badge_size", "Badge Size", 8, 48, 1, 18, "px")}
           <ha-selector .hass=${this.hass} .label=${"Opacity"}
             .selector=${OPACITY_SELECTOR} .value=${c.badge_opacity ?? 1}
             @value-changed=${(ev: CustomEvent) => this._fieldChanged("badge_opacity", ev.detail.value)}
@@ -662,7 +676,7 @@ export class IansCustomRoomCardEditor extends LitElement {
               @value-changed=${(ev: CustomEvent) =>
                 this._fieldChanged("sub_buttons_grid_columns", ev.detail.value || undefined)}
             ></ha-selector>
-            <ha-selector .hass=${this.hass} .label=${"Cell Min Width (px)"}
+            <ha-selector .hass=${this.hass} .label=${"Cell Min Width"}
               .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
               .value=${c.sub_buttons_grid_min_width ?? 56}
               @value-changed=${(ev: CustomEvent) =>
@@ -682,7 +696,7 @@ export class IansCustomRoomCardEditor extends LitElement {
             .selector=${OPACITY_SELECTOR} .value=${c.sub_button_opacity ?? 1}
             @value-changed=${(ev: CustomEvent) => this._fieldChanged("sub_button_opacity", ev.detail.value)}
           ></ha-selector>
-          <ha-selector .hass=${this.hass} .label=${"Gap between buttons (px)"}
+          <ha-selector .hass=${this.hass} .label=${"Button Gap"}
             .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
             .value=${c.sub_button_gap ?? 6}
             @value-changed=${(ev: CustomEvent) => this._fieldChanged("sub_button_gap", ev.detail.value)}

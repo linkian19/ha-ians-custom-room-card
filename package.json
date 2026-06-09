@@ -1,6 +1,6 @@
 {
   "name": "ians-custom-room-card",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Custom Home Assistant Lovelace room card with icon, badge, sub-buttons, and navigable actions",
   "keywords": ["home-assistant", "lovelace", "custom-card", "hacs"],
   "license": "MIT",
