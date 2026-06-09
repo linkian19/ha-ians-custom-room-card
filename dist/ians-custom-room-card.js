@@ -1358,40 +1358,63 @@ let IansCustomRoomCardEditor = class extends i {
     this._templateMode = next;
   }
   // ── Render helpers ────────────────────────────────────────────────────────────
-  /** Color swatch + text input. Uses a native input so both elements share the same
-   *  explicit height, making vertical alignment with align-items:center exact. */
-  _renderColorField(fieldKey, label, placeholder = "e.g. red, #ff0000, var(--primary-color)") {
+  /** Color swatch + text input.
+   *  Template button lives in the header row next to the label so it aligns with
+   *  the label text, not the bottom of the composite field.
+   *  Pass showLabel=false when a section-label already provides the same context. */
+  _renderColorField(fieldKey, label, placeholder = "e.g. red, #ff0000, var(--primary-color)", showLabel = true) {
     var _a2, _b2;
     const isTemplateCapable = TEMPLATE_CAPABLE_FIELDS.has(fieldKey);
     const currentValue = (_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : "";
-    const colorWidget = () => b`
+    const inTemplateMode = isTemplateCapable && this._templateMode.has(fieldKey);
+    return b`
       <div class="color-field">
-        <span class="color-field-label">${label}</span>
-        <div class="color-row">
-          <label class="color-btn" title="Click to open color picker">
-            <div class="color-checker"></div>
-            <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
-            <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
-            <input
-              type="color"
-              class="color-native"
-              .value=${cssToHex(currentValue)}
-              @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
-            />
-          </label>
-          <input
-            type="text"
-            class="color-text-input"
-            .value=${currentValue}
-            placeholder=${placeholder}
-            @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
-            @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
-          />
-        </div>
+        ${showLabel || isTemplateCapable ? b`
+          <div class="color-field-header">
+            ${showLabel ? b`<span class="color-field-label">${label}</span>` : A}
+            ${isTemplateCapable ? b`
+              <button
+                class="tmpl-btn ${inTemplateMode ? "active" : ""}"
+                title="${inTemplateMode ? "Jinja2 template active — click to switch back to simple input" : "Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
+                @click=${() => this._toggleTemplateMode(fieldKey)}
+              ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
+            ` : A}
+          </div>
+        ` : A}
+
+        ${inTemplateMode ? b`
+              <textarea
+                .value=${currentValue}
+                placeholder="{{ states('sensor.example') }}"
+                @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value)}
+                @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value)}
+              ></textarea>
+              <div class="hint">HA Jinja2 template</div>
+            ` : b`
+              <div class="color-row">
+                <label class="color-btn" title="Click to open color picker">
+                  <div class="color-checker"></div>
+                  <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+                  <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+                  <input
+                    type="color"
+                    class="color-native"
+                    .value=${cssToHex(currentValue)}
+                    @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
+                  />
+                </label>
+                <input
+                  type="text"
+                  class="color-text-input"
+                  .value=${currentValue}
+                  placeholder=${placeholder}
+                  @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
+                  @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
+                />
+              </div>
+            `}
       </div>
     `;
-    if (!isTemplateCapable) return colorWidget();
-    return this._renderTemplateField(fieldKey, label, colorWidget);
   }
   /** Same color field but reads from SubButtonConfig (not top-level CardConfig). */
   _renderSubBtnColorField(btn, index, field, label, placeholder = "e.g. #ff9800, var(--primary-color)") {
@@ -1598,7 +1621,7 @@ let IansCustomRoomCardEditor = class extends i {
       <!-- ── Icon color ── -->
       <div class="section">
         <div class="section-label">Icon Color</div>
-        ${this._renderColorField("icon_color", "Icon Color")}
+        ${this._renderColorField("icon_color", "Icon Color", void 0, false)}
 
         <ha-form
           .hass=${this.hass}
@@ -1732,7 +1755,7 @@ let IansCustomRoomCardEditor = class extends i {
       <!-- ── Background ── -->
       <div class="section">
         <div class="section-label">Background</div>
-        ${this._renderColorField("background_color", "Color")}
+        ${this._renderColorField("background_color", "Background Color", void 0, false)}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
           .selector=${OPACITY_SELECTOR} .value=${(_a2 = c2.background_opacity) != null ? _a2 : 1}
           @value-changed=${(ev) => this._fieldChanged("background_opacity", ev.detail.value)}
@@ -1772,7 +1795,7 @@ let IansCustomRoomCardEditor = class extends i {
       <!-- ── Border ── -->
       <div class="section">
         <div class="section-label">Border</div>
-        ${this._renderColorField("border_color", "Color")}
+        ${this._renderColorField("border_color", "Border Color", void 0, false)}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
           .selector=${OPACITY_SELECTOR} .value=${(_e2 = c2.border_opacity) != null ? _e2 : 1}
           @value-changed=${(ev) => this._fieldChanged("border_opacity", ev.detail.value)}
@@ -2073,7 +2096,7 @@ let IansCustomRoomCardEditor = class extends i {
 
       /* ── Section ── */
       .section {
-        padding: 12px 16px 4px;
+        padding: 12px 16px 10px;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -2136,9 +2159,8 @@ let IansCustomRoomCardEditor = class extends i {
       }
 
       .tmpl-btn {
-        align-self: flex-end;
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2149,6 +2171,16 @@ let IansCustomRoomCardEditor = class extends i {
         color: var(--secondary-text-color);
         flex-shrink: 0;
         transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+
+      /* In a plain template-row (non-color fields), align to the bottom of the input */
+      .template-row .tmpl-btn {
+        align-self: flex-end;
+      }
+
+      /* Inside color-field-header, natural flow alignment is correct */
+      .color-field-header .tmpl-btn {
+        align-self: center;
       }
 
       .tmpl-btn:hover {
@@ -2163,7 +2195,7 @@ let IansCustomRoomCardEditor = class extends i {
       }
 
       .tmpl-icon {
-        --mdc-icon-size: 18px;
+        --mdc-icon-size: 16px;
       }
 
       /* ── Color field: label above, swatch + native input below ── */
@@ -2173,7 +2205,16 @@ let IansCustomRoomCardEditor = class extends i {
         gap: 6px;
       }
 
+      /* Header row: label on left, template button on right */
+      .color-field-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 20px;
+      }
+
       .color-field-label {
+        flex: 1;
         font-size: 12px;
         color: var(--secondary-text-color);
         padding-left: 2px;

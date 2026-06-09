@@ -189,48 +189,75 @@ export class IansCustomRoomCardEditor extends LitElement {
 
   // ── Render helpers ────────────────────────────────────────────────────────────
 
-  /** Color swatch + text input. Uses a native input so both elements share the same
-   *  explicit height, making vertical alignment with align-items:center exact. */
+  /** Color swatch + text input.
+   *  Template button lives in the header row next to the label so it aligns with
+   *  the label text, not the bottom of the composite field.
+   *  Pass showLabel=false when a section-label already provides the same context. */
   private _renderColorField(
     fieldKey: string,
     label: string,
-    placeholder = "e.g. red, #ff0000, var(--primary-color)"
+    placeholder = "e.g. red, #ff0000, var(--primary-color)",
+    showLabel = true
   ) {
     const isTemplateCapable = TEMPLATE_CAPABLE_FIELDS.has(fieldKey);
     const currentValue = (this._config?.[fieldKey as keyof CardConfig] as string) ?? "";
+    const inTemplateMode = isTemplateCapable && this._templateMode.has(fieldKey);
 
-    const colorWidget = () => html`
+    return html`
       <div class="color-field">
-        <span class="color-field-label">${label}</span>
-        <div class="color-row">
-          <label class="color-btn" title="Click to open color picker">
-            <div class="color-checker"></div>
-            <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
-            <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
-            <input
-              type="color"
-              class="color-native"
-              .value=${cssToHex(currentValue)}
-              @change=${(ev: Event) =>
-                this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
-            />
-          </label>
-          <input
-            type="text"
-            class="color-text-input"
-            .value=${currentValue}
-            placeholder=${placeholder}
-            @change=${(ev: Event) =>
-              this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
-            @input=${(ev: Event) =>
-              this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
-          />
-        </div>
+        ${showLabel || isTemplateCapable ? html`
+          <div class="color-field-header">
+            ${showLabel ? html`<span class="color-field-label">${label}</span>` : nothing}
+            ${isTemplateCapable ? html`
+              <button
+                class="tmpl-btn ${inTemplateMode ? "active" : ""}"
+                title="${inTemplateMode
+                  ? "Jinja2 template active — click to switch back to simple input"
+                  : "Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
+                @click=${() => this._toggleTemplateMode(fieldKey)}
+              ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
+            ` : nothing}
+          </div>
+        ` : nothing}
+
+        ${inTemplateMode
+          ? html`
+              <textarea
+                .value=${currentValue}
+                placeholder="{{ states('sensor.example') }}"
+                @change=${(ev: Event) => this._fieldChanged(fieldKey, (ev.target as HTMLTextAreaElement).value)}
+                @input=${(ev: Event) => this._fieldChanged(fieldKey, (ev.target as HTMLTextAreaElement).value)}
+              ></textarea>
+              <div class="hint">HA Jinja2 template</div>
+            `
+          : html`
+              <div class="color-row">
+                <label class="color-btn" title="Click to open color picker">
+                  <div class="color-checker"></div>
+                  <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+                  <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+                  <input
+                    type="color"
+                    class="color-native"
+                    .value=${cssToHex(currentValue)}
+                    @change=${(ev: Event) =>
+                      this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
+                  />
+                </label>
+                <input
+                  type="text"
+                  class="color-text-input"
+                  .value=${currentValue}
+                  placeholder=${placeholder}
+                  @change=${(ev: Event) =>
+                    this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
+                  @input=${(ev: Event) =>
+                    this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
+                />
+              </div>
+            `}
       </div>
     `;
-
-    if (!isTemplateCapable) return colorWidget();
-    return this._renderTemplateField(fieldKey, label, colorWidget);
   }
 
   /** Same color field but reads from SubButtonConfig (not top-level CardConfig). */
@@ -453,7 +480,7 @@ export class IansCustomRoomCardEditor extends LitElement {
       <!-- ── Icon color ── -->
       <div class="section">
         <div class="section-label">Icon Color</div>
-        ${this._renderColorField("icon_color", "Icon Color")}
+        ${this._renderColorField("icon_color", "Icon Color", undefined, false)}
 
         <ha-form
           .hass=${this.hass}
@@ -593,7 +620,7 @@ export class IansCustomRoomCardEditor extends LitElement {
       <!-- ── Background ── -->
       <div class="section">
         <div class="section-label">Background</div>
-        ${this._renderColorField("background_color", "Color")}
+        ${this._renderColorField("background_color", "Background Color", undefined, false)}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
           .selector=${OPACITY_SELECTOR} .value=${c.background_opacity ?? 1}
           @value-changed=${(ev: CustomEvent) => this._fieldChanged("background_opacity", ev.detail.value)}
@@ -636,7 +663,7 @@ export class IansCustomRoomCardEditor extends LitElement {
       <!-- ── Border ── -->
       <div class="section">
         <div class="section-label">Border</div>
-        ${this._renderColorField("border_color", "Color")}
+        ${this._renderColorField("border_color", "Border Color", undefined, false)}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
           .selector=${OPACITY_SELECTOR} .value=${c.border_opacity ?? 1}
           @value-changed=${(ev: CustomEvent) => this._fieldChanged("border_opacity", ev.detail.value)}
@@ -957,7 +984,7 @@ export class IansCustomRoomCardEditor extends LitElement {
 
       /* ── Section ── */
       .section {
-        padding: 12px 16px 4px;
+        padding: 12px 16px 10px;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -1020,9 +1047,8 @@ export class IansCustomRoomCardEditor extends LitElement {
       }
 
       .tmpl-btn {
-        align-self: flex-end;
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1033,6 +1059,16 @@ export class IansCustomRoomCardEditor extends LitElement {
         color: var(--secondary-text-color);
         flex-shrink: 0;
         transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+
+      /* In a plain template-row (non-color fields), align to the bottom of the input */
+      .template-row .tmpl-btn {
+        align-self: flex-end;
+      }
+
+      /* Inside color-field-header, natural flow alignment is correct */
+      .color-field-header .tmpl-btn {
+        align-self: center;
       }
 
       .tmpl-btn:hover {
@@ -1047,7 +1083,7 @@ export class IansCustomRoomCardEditor extends LitElement {
       }
 
       .tmpl-icon {
-        --mdc-icon-size: 18px;
+        --mdc-icon-size: 16px;
       }
 
       /* ── Color field: label above, swatch + native input below ── */
@@ -1057,7 +1093,16 @@ export class IansCustomRoomCardEditor extends LitElement {
         gap: 6px;
       }
 
+      /* Header row: label on left, template button on right */
+      .color-field-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 20px;
+      }
+
       .color-field-label {
+        flex: 1;
         font-size: 12px;
         color: var(--secondary-text-color);
         padding-left: 2px;
