@@ -2148,11 +2148,20 @@ let IansCustomRoomCardEditor = class extends i {
       /* ── Template field ── */
       .template-row {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 6px;
       }
 
-      .template-input { flex: 1; min-width: 0; }
+      .template-input {
+        flex: 1;
+        min-width: 0;
+        align-self: flex-start; /* shrink to content height; tmpl-btn centers against this */
+      }
+
+      /* Center the template toggle button against the input component height */
+      .template-row .tmpl-btn {
+        align-self: center;
+      }
 
       .template-input textarea {
         width: 100%;
