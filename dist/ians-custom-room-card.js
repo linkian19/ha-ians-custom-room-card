@@ -1576,12 +1576,14 @@ let IansCustomRoomCardEditor = class extends i {
       () => {
         var _a3;
         return b`
-            <ha-selector .hass=${this.hass} .label=${"Title"}
-              .selector=${{ text: {} }}
+            <input
+              type="text"
+              class="color-text-input"
               .value=${(_a3 = c2.title) != null ? _a3 : ""}
-              .placeholder=${"Room name, or leave blank to hide"}
-              @value-changed=${(ev) => this._fieldChanged("title", ev.detail.value || void 0)}
-            ></ha-selector>
+              placeholder="Room name, or leave blank to hide"
+              @change=${(ev) => this._fieldChanged("title", ev.target.value || void 0)}
+              @input=${(ev) => this._fieldChanged("title", ev.target.value || void 0)}
+            />
           `;
       }
     )}
@@ -2263,10 +2265,12 @@ let IansCustomRoomCardEditor = class extends i {
         flex-shrink: 0;
       }
 
-      /* Native text input styled to match HA filled-variant text fields */
+      /* Native text input styled to match HA filled-variant text fields.
+         flex:1 handles width in color-row; width:100% handles it elsewhere. */
       .color-text-input {
         flex: 1;
         min-width: 0;
+        width: 100%;
         height: 48px;
         padding: 0 12px;
         border: 1px solid var(--divider-color, rgba(0,0,0,0.12));

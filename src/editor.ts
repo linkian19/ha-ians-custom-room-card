@@ -436,13 +436,16 @@ export class IansCustomRoomCardEditor extends LitElement {
         <div class="section-label">Title</div>
         ${this._renderTemplateField("title", "Title",
           () => html`
-            <ha-selector .hass=${this.hass} .label=${"Title"}
-              .selector=${{ text: {} }}
+            <input
+              type="text"
+              class="color-text-input"
               .value=${c.title ?? ""}
-              .placeholder=${"Room name, or leave blank to hide"}
-              @value-changed=${(ev: CustomEvent) =>
-                this._fieldChanged("title", ev.detail.value || undefined)}
-            ></ha-selector>
+              placeholder="Room name, or leave blank to hide"
+              @change=${(ev: Event) =>
+                this._fieldChanged("title", (ev.target as HTMLInputElement).value || undefined)}
+              @input=${(ev: Event) =>
+                this._fieldChanged("title", (ev.target as HTMLInputElement).value || undefined)}
+            />
           `
         )}
 
@@ -1152,10 +1155,12 @@ export class IansCustomRoomCardEditor extends LitElement {
         flex-shrink: 0;
       }
 
-      /* Native text input styled to match HA filled-variant text fields */
+      /* Native text input styled to match HA filled-variant text fields.
+         flex:1 handles width in color-row; width:100% handles it elsewhere. */
       .color-text-input {
         flex: 1;
         min-width: 0;
+        width: 100%;
         height: 48px;
         padding: 0 12px;
         border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
