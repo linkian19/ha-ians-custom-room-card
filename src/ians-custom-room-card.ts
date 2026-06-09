@@ -466,12 +466,15 @@ export class IansCustomRoomCard extends LitElement {
       bgImageUrl = c.background_image;
     }
     const bgImageStyle = bgImageUrl
-      ? `background-image: url('${bgImageUrl}');`
+      ? `background-image: url('${bgImageUrl}'); background-position: ${c.background_image_position ?? "center"};`
       : "";
 
     const iconPosition: IconPosition | undefined = c.icon_position;
     const badgePosition = c.badge_position ?? "top-right";
     const titlePosition: IconPosition | undefined = c.title_position;
+    const showHighlight = isInteractive
+      ? c.hover_highlight !== false
+      : c.hover_highlight === true;
 
     // Badge element (shared between flow and absolute icon renders)
     const badgeEl = badgeIcon
@@ -544,6 +547,7 @@ export class IansCustomRoomCard extends LitElement {
         class=${[
           hasErrors ? "has-template-error" : "",
           isInteractive ? "interactive" : "",
+          showHighlight ? "highlight-on-hover" : "",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -552,6 +556,7 @@ export class IansCustomRoomCard extends LitElement {
         ${bgImageStyle
           ? html`<div class="card-background-image" style=${bgImageStyle}></div>`
           : nothing}
+        ${showHighlight ? html`<div class="hover-ripple"></div>` : nothing}
 
         <!-- Absolutely positioned icon — z-index 2, BEFORE card-inner so card-inner (same z-index, later in DOM) renders on top -->
         ${iconPosition ? iconEl : nothing}

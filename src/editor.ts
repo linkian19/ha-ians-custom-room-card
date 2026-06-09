@@ -285,9 +285,11 @@ export class IansCustomRoomCardEditor extends LitElement {
         </div>
         <button
           class="tmpl-btn ${inTemplateMode ? "active" : ""}"
-          title="${inTemplateMode ? "Switch to simple input" : "Use HA template"}"
+          title="${inTemplateMode
+            ? "Jinja2 template active — click to switch back to simple input"
+            : "Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
           @click=${() => this._toggleTemplateMode(fieldKey)}
-        >T</button>
+        ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
       </div>
     `;
   }
@@ -579,6 +581,33 @@ export class IansCustomRoomCardEditor extends LitElement {
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("background_image", ev.detail.value || undefined)}
         ></ha-selector>
+
+        ${c.background_image ? html`
+          <ha-selector .hass=${this.hass} .label=${"Image Position (CSS background-position)"}
+            .selector=${{ text: {} }} .value=${c.background_image_position ?? ""}
+            .placeholder=${"e.g. center, top right, 75% 25%"}
+            @value-changed=${(ev: CustomEvent) =>
+              this._fieldChanged("background_image_position", ev.detail.value || undefined)}
+          ></ha-selector>
+        ` : nothing}
+      </div>
+
+      <!-- ── Hover highlight ── -->
+      <div class="section">
+        <div class="section-label">Interaction</div>
+        <ha-form
+          .hass=${this.hass}
+          .data=${{ hover_highlight: c.hover_highlight ?? true }}
+          .schema=${[{
+            name: "hover_highlight",
+            label: "Show hover highlight (ripple overlay on mouse-over)",
+            selector: { boolean: {} },
+          }]}
+          .computeLabel=${(s: any) => s.label}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("hover_highlight", ev.detail.value.hover_highlight)}
+        ></ha-form>
+        <div class="hint">When enabled, a subtle white overlay appears on hover. Enabled by default when a Global Action is configured.</div>
       </div>
 
       <!-- ── Border ── -->
@@ -968,16 +997,25 @@ export class IansCustomRoomCardEditor extends LitElement {
       }
 
       .tmpl-btn {
-        margin-top: 8px;
-        padding: 2px 7px;
-        font-size: 11px;
-        font-weight: 700;
+        align-self: flex-end;
+        margin-bottom: 4px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
         border: 1px solid var(--divider-color);
-        border-radius: 4px;
+        border-radius: 6px;
         background: transparent;
         color: var(--secondary-text-color);
         flex-shrink: 0;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+
+      .tmpl-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
       }
 
       .tmpl-btn.active {
@@ -986,10 +1024,14 @@ export class IansCustomRoomCardEditor extends LitElement {
         border-color: var(--primary-color);
       }
 
+      .tmpl-icon {
+        --mdc-icon-size: 18px;
+      }
+
       /* ── Color swatch button ── */
       .color-row {
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         gap: 8px;
       }
 
@@ -1005,6 +1047,7 @@ export class IansCustomRoomCardEditor extends LitElement {
         overflow: hidden;
         display: block;
         flex-shrink: 0;
+        margin-bottom: 4px; /* aligns with ha-textfield input area above its helper-text gap */
         transition: border-color 0.15s, box-shadow 0.15s;
       }
 

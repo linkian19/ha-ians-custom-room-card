@@ -816,8 +816,20 @@ const cardStyles = i$3`
     cursor: pointer;
   }
 
-  ha-card.interactive:hover .card-inner {
-    opacity: 0.9;
+  /* ── Hover highlight ripple ──────────────────────────────────────────────── */
+  .hover-ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.08);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  ha-card.highlight-on-hover:hover .hover-ripple {
+    opacity: 1;
   }
 
   /* ── Sub-buttons ─────────────────────────────────────────────────────────── */
@@ -1392,9 +1404,9 @@ let IansCustomRoomCardEditor = class extends i {
         </div>
         <button
           class="tmpl-btn ${inTemplateMode ? "active" : ""}"
-          title="${inTemplateMode ? "Switch to simple input" : "Use HA template"}"
+          title="${inTemplateMode ? "Jinja2 template active — click to switch back to simple input" : "Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
           @click=${() => this._toggleTemplateMode(fieldKey)}
-        >T</button>
+        ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
       </div>
     `;
   }
@@ -1664,7 +1676,7 @@ let IansCustomRoomCardEditor = class extends i {
     `;
   }
   _renderCardTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i;
     const c2 = this._config;
     return b`
       <!-- ── Background ── -->
@@ -1680,6 +1692,31 @@ let IansCustomRoomCardEditor = class extends i {
           .placeholder=${"e.g. /local/room.jpg   or   area"}
           @value-changed=${(ev) => this._fieldChanged("background_image", ev.detail.value || void 0)}
         ></ha-selector>
+
+        ${c2.background_image ? b`
+          <ha-selector .hass=${this.hass} .label=${"Image Position (CSS background-position)"}
+            .selector=${{ text: {} }} .value=${(_c2 = c2.background_image_position) != null ? _c2 : ""}
+            .placeholder=${"e.g. center, top right, 75% 25%"}
+            @value-changed=${(ev) => this._fieldChanged("background_image_position", ev.detail.value || void 0)}
+          ></ha-selector>
+        ` : A}
+      </div>
+
+      <!-- ── Hover highlight ── -->
+      <div class="section">
+        <div class="section-label">Interaction</div>
+        <ha-form
+          .hass=${this.hass}
+          .data=${{ hover_highlight: (_d2 = c2.hover_highlight) != null ? _d2 : true }}
+          .schema=${[{
+      name: "hover_highlight",
+      label: "Show hover highlight (ripple overlay on mouse-over)",
+      selector: { boolean: {} }
+    }]}
+          .computeLabel=${(s2) => s2.label}
+          @value-changed=${(ev) => this._fieldChanged("hover_highlight", ev.detail.value.hover_highlight)}
+        ></ha-form>
+        <div class="hint">When enabled, a subtle white overlay appears on hover. Enabled by default when a Global Action is configured.</div>
       </div>
 
       <!-- ── Border ── -->
@@ -1687,7 +1724,7 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="section-label">Border</div>
         ${this._renderColorField("border_color", "Color")}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
-          .selector=${OPACITY_SELECTOR} .value=${(_c2 = c2.border_opacity) != null ? _c2 : 1}
+          .selector=${OPACITY_SELECTOR} .value=${(_e2 = c2.border_opacity) != null ? _e2 : 1}
           @value-changed=${(ev) => this._fieldChanged("border_opacity", ev.detail.value)}
         ></ha-selector>
       </div>
@@ -1698,12 +1735,12 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="two-col">
           <ha-selector .hass=${this.hass} .label=${"Columns"}
             .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
-            .value=${(_e2 = (_d2 = c2.grid_options) == null ? void 0 : _d2.columns) != null ? _e2 : 6}
+            .value=${(_g = (_f2 = c2.grid_options) == null ? void 0 : _f2.columns) != null ? _g : 6}
             @value-changed=${(ev) => this._gridFieldChanged("columns", ev.detail.value)}
           ></ha-selector>
           <ha-selector .hass=${this.hass} .label=${"Rows"}
             .selector=${{ number: { min: 1, max: 6, step: 1, mode: "box" } }}
-            .value=${(_g = (_f2 = c2.grid_options) == null ? void 0 : _f2.rows) != null ? _g : 2}
+            .value=${(_i = (_h = c2.grid_options) == null ? void 0 : _h.rows) != null ? _i : 2}
             @value-changed=${(ev) => this._gridFieldChanged("rows", ev.detail.value)}
           ></ha-selector>
         </div>
@@ -2049,16 +2086,25 @@ let IansCustomRoomCardEditor = class extends i {
       }
 
       .tmpl-btn {
-        margin-top: 8px;
-        padding: 2px 7px;
-        font-size: 11px;
-        font-weight: 700;
+        align-self: flex-end;
+        margin-bottom: 4px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
         border: 1px solid var(--divider-color);
-        border-radius: 4px;
+        border-radius: 6px;
         background: transparent;
         color: var(--secondary-text-color);
         flex-shrink: 0;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+
+      .tmpl-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
       }
 
       .tmpl-btn.active {
@@ -2067,10 +2113,14 @@ let IansCustomRoomCardEditor = class extends i {
         border-color: var(--primary-color);
       }
 
+      .tmpl-icon {
+        --mdc-icon-size: 18px;
+      }
+
       /* ── Color swatch button ── */
       .color-row {
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         gap: 8px;
       }
 
@@ -2086,6 +2136,7 @@ let IansCustomRoomCardEditor = class extends i {
         overflow: hidden;
         display: block;
         flex-shrink: 0;
+        margin-bottom: 4px; /* aligns with ha-textfield input area above its helper-text gap */
         transition: border-color 0.15s, box-shadow 0.15s;
       }
 
@@ -2627,7 +2678,7 @@ let IansCustomRoomCard = class extends i {
   }
   // ── Render ─────────────────────────────────────────────────────────────────
   render() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j;
     if (!this._config) return A;
     const c2 = this._config;
     const hasErrors = Object.keys(this._templateErrors).length > 0;
@@ -2641,10 +2692,11 @@ let IansCustomRoomCard = class extends i {
     } else if (c2.background_image) {
       bgImageUrl = c2.background_image;
     }
-    const bgImageStyle = bgImageUrl ? `background-image: url('${bgImageUrl}');` : "";
+    const bgImageStyle = bgImageUrl ? `background-image: url('${bgImageUrl}'); background-position: ${(_c2 = c2.background_image_position) != null ? _c2 : "center"};` : "";
     const iconPosition = c2.icon_position;
-    const badgePosition = (_c2 = c2.badge_position) != null ? _c2 : "top-right";
+    const badgePosition = (_d2 = c2.badge_position) != null ? _d2 : "top-right";
     const titlePosition = c2.title_position;
+    const showHighlight = isInteractive ? c2.hover_highlight !== false : c2.hover_highlight === true;
     const badgeEl = badgeIcon ? b`
           <div
             part="badge"
@@ -2652,7 +2704,7 @@ let IansCustomRoomCard = class extends i {
       "badge",
       badgePosition !== "custom" ? `badge-pos-${badgePosition}` : ""
     ].filter(Boolean).join(" ")}
-            style=${badgePosition === "custom" ? `top: ${(_d2 = c2.badge_position_y) != null ? _d2 : "auto"}; left: ${(_e2 = c2.badge_position_x) != null ? _e2 : "auto"};` : ""}
+            style=${badgePosition === "custom" ? `top: ${(_e2 = c2.badge_position_y) != null ? _e2 : "auto"}; left: ${(_f2 = c2.badge_position_x) != null ? _f2 : "auto"};` : ""}
           >
             <ha-icon part="badge-icon" .icon=${badgeIcon}></ha-icon>
           </div>
@@ -2665,7 +2717,7 @@ let IansCustomRoomCard = class extends i {
       "icon-absolute",
       iconPosition !== "custom" ? `icon-pos-${iconPosition}` : ""
     ].filter(Boolean).join(" ")}
-                style=${iconPosition === "custom" ? `top: ${(_f2 = c2.icon_position_y) != null ? _f2 : "auto"}; left: ${(_g = c2.icon_position_x) != null ? _g : "auto"};` : ""}
+                style=${iconPosition === "custom" ? `top: ${(_g = c2.icon_position_y) != null ? _g : "auto"}; left: ${(_h = c2.icon_position_x) != null ? _h : "auto"};` : ""}
               >
                 <ha-icon part="icon" .icon=${icon}></ha-icon>
                 ${badgeEl}
@@ -2683,18 +2735,20 @@ let IansCustomRoomCard = class extends i {
       "card-title-absolute",
       titlePosition !== "custom" ? `card-title-abs-${titlePosition}` : ""
     ].filter(Boolean).join(" ")}
-            style=${titlePosition === "custom" ? `top: ${(_h = c2.title_position_y) != null ? _h : "auto"}; left: ${(_i = c2.title_position_x) != null ? _i : "auto"};` : ""}
+            style=${titlePosition === "custom" ? `top: ${(_i = c2.title_position_y) != null ? _i : "auto"}; left: ${(_j = c2.title_position_x) != null ? _j : "auto"};` : ""}
           >${title}</span>` : A;
     return b`
       <ha-card
         part="card"
         class=${[
       hasErrors ? "has-template-error" : "",
-      isInteractive ? "interactive" : ""
+      isInteractive ? "interactive" : "",
+      showHighlight ? "highlight-on-hover" : ""
     ].filter(Boolean).join(" ")}
       >
         <div part="background" class="card-background-color"></div>
         ${bgImageStyle ? b`<div class="card-background-image" style=${bgImageStyle}></div>` : A}
+        ${showHighlight ? b`<div class="hover-ripple"></div>` : A}
 
         <!-- Absolutely positioned icon — z-index 2, BEFORE card-inner so card-inner (same z-index, later in DOM) renders on top -->
         ${iconPosition ? iconEl : A}

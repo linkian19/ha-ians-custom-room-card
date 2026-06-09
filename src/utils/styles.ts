@@ -204,8 +204,20 @@ export const cardStyles = css`
     cursor: pointer;
   }
 
-  ha-card.interactive:hover .card-inner {
-    opacity: 0.9;
+  /* ── Hover highlight ripple ──────────────────────────────────────────────── */
+  .hover-ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.08);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  ha-card.highlight-on-hover:hover .hover-ripple {
+    opacity: 1;
   }
 
   /* ── Sub-buttons ─────────────────────────────────────────────────────────── */

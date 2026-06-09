@@ -195,8 +195,11 @@ export interface CardConfig {
   background_color?: string;
   background_opacity?: number;
   background_image?: string;
+  background_image_position?: string; // CSS background-position (default: center)
   border_color?: string;
   border_opacity?: number;
+  // Hover highlight
+  hover_highlight?: boolean;          // ripple overlay on hover; default true when global_action set
   // Icon shape & dimensions
   icon_background_shape?: IconBackgroundShape;
   icon_background_border_radius?: string; // custom CSS value — overrides shape preset
