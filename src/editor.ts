@@ -189,10 +189,14 @@ export class IansCustomRoomCardEditor extends LitElement {
 
   // ── Render helpers ────────────────────────────────────────────────────────────
 
-  /** Color swatch + text input.
-   *  Template button lives in the header row next to the label so it aligns with
-   *  the label text, not the bottom of the composite field.
-   *  Pass showLabel=false when a section-label already provides the same context. */
+  /** Color swatch + native text input, with optional label and template toggle.
+   *
+   *  When showLabel=true (default): a header row shows the label, and the
+   *  template button (if applicable) sits inline with the label at the right.
+   *
+   *  When showLabel=false: no header is rendered. If template-capable, the
+   *  template button is placed inside the color-row itself (after the text input),
+   *  so it's naturally center-aligned by the row's align-items:center. */
   private _renderColorField(
     fieldKey: string,
     label: string,
@@ -203,59 +207,68 @@ export class IansCustomRoomCardEditor extends LitElement {
     const currentValue = (this._config?.[fieldKey as keyof CardConfig] as string) ?? "";
     const inTemplateMode = isTemplateCapable && this._templateMode.has(fieldKey);
 
+    const tmplBtn = isTemplateCapable ? html`
+      <button
+        class="tmpl-btn ${inTemplateMode ? "active" : ""}"
+        title="${inTemplateMode
+          ? "Jinja2 template active — click to switch back to simple input"
+          : "Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
+        @click=${() => this._toggleTemplateMode(fieldKey)}
+      ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
+    ` : nothing;
+
+    // Template-active state: textarea + button side-by-side
+    if (inTemplateMode) {
+      return html`
+        <div class="color-field">
+          ${showLabel ? html`<span class="color-field-label">${label}</span>` : nothing}
+          <div class="color-tmpl-row">
+            <textarea
+              .value=${currentValue}
+              placeholder="{{ states('sensor.example') }}"
+              @change=${(ev: Event) => this._fieldChanged(fieldKey, (ev.target as HTMLTextAreaElement).value)}
+              @input=${(ev: Event) => this._fieldChanged(fieldKey, (ev.target as HTMLTextAreaElement).value)}
+            ></textarea>
+            ${tmplBtn}
+          </div>
+          <div class="hint">HA Jinja2 template</div>
+        </div>
+      `;
+    }
+
     return html`
       <div class="color-field">
-        ${showLabel || isTemplateCapable ? html`
+        ${showLabel ? html`
           <div class="color-field-header">
-            ${showLabel ? html`<span class="color-field-label">${label}</span>` : nothing}
-            ${isTemplateCapable ? html`
-              <button
-                class="tmpl-btn ${inTemplateMode ? "active" : ""}"
-                title="${inTemplateMode
-                  ? "Jinja2 template active — click to switch back to simple input"
-                  : "Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
-                @click=${() => this._toggleTemplateMode(fieldKey)}
-              ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
-            ` : nothing}
+            <span class="color-field-label">${label}</span>
+            ${tmplBtn}
           </div>
         ` : nothing}
-
-        ${inTemplateMode
-          ? html`
-              <textarea
-                .value=${currentValue}
-                placeholder="{{ states('sensor.example') }}"
-                @change=${(ev: Event) => this._fieldChanged(fieldKey, (ev.target as HTMLTextAreaElement).value)}
-                @input=${(ev: Event) => this._fieldChanged(fieldKey, (ev.target as HTMLTextAreaElement).value)}
-              ></textarea>
-              <div class="hint">HA Jinja2 template</div>
-            `
-          : html`
-              <div class="color-row">
-                <label class="color-btn" title="Click to open color picker">
-                  <div class="color-checker"></div>
-                  <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
-                  <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
-                  <input
-                    type="color"
-                    class="color-native"
-                    .value=${cssToHex(currentValue)}
-                    @change=${(ev: Event) =>
-                      this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
-                  />
-                </label>
-                <input
-                  type="text"
-                  class="color-text-input"
-                  .value=${currentValue}
-                  placeholder=${placeholder}
-                  @change=${(ev: Event) =>
-                    this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
-                  @input=${(ev: Event) =>
-                    this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
-                />
-              </div>
-            `}
+        <div class="color-row">
+          <label class="color-btn" title="Click to open color picker">
+            <div class="color-checker"></div>
+            <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+            <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
+            <input
+              type="color"
+              class="color-native"
+              .value=${cssToHex(currentValue)}
+              @change=${(ev: Event) =>
+                this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
+            />
+          </label>
+          <input
+            type="text"
+            class="color-text-input"
+            .value=${currentValue}
+            placeholder=${placeholder}
+            @change=${(ev: Event) =>
+              this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
+            @input=${(ev: Event) =>
+              this._fieldChanged(fieldKey, (ev.target as HTMLInputElement).value || undefined)}
+          />
+          ${!showLabel ? tmplBtn : nothing}
+        </div>
       </div>
     `;
   }
@@ -455,7 +468,7 @@ export class IansCustomRoomCardEditor extends LitElement {
 
         <div class="two-col">
           ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
-          ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
+          ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff", false)}
         </div>
       </div>
 
@@ -1007,7 +1020,7 @@ export class IansCustomRoomCardEditor extends LitElement {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
-        align-items: start;
+        align-items: end;
       }
 
       .hint {
@@ -1061,13 +1074,8 @@ export class IansCustomRoomCardEditor extends LitElement {
         transition: background 0.15s, color 0.15s, border-color 0.15s;
       }
 
-      /* In a plain template-row (non-color fields), align to the bottom of the input */
+      /* In a plain template-row (non-color fields), center against the input */
       .template-row .tmpl-btn {
-        align-self: flex-end;
-      }
-
-      /* Inside color-field-header, natural flow alignment is correct */
-      .color-field-header .tmpl-btn {
         align-self: center;
       }
 
@@ -1113,6 +1121,32 @@ export class IansCustomRoomCardEditor extends LitElement {
         display: flex;
         align-items: center;
         gap: 8px;
+      }
+
+      /* Template-active row inside a color-field (textarea + toggle button) */
+      .color-tmpl-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .color-tmpl-row textarea {
+        flex: 1;
+        min-height: 56px;
+        padding: 8px;
+        border: 1px solid var(--divider-color);
+        border-radius: 4px;
+        background: var(--secondary-background-color, #f5f5f5);
+        color: var(--primary-text-color);
+        font-family: monospace;
+        font-size: 12px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      .color-tmpl-row .tmpl-btn {
+        align-self: flex-start;
+        flex-shrink: 0;
       }
 
       /* Native text input styled to match HA filled-variant text fields */
