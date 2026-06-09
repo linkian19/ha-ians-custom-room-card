@@ -316,7 +316,6 @@ export const cardStyles = css`
   .sub-button.display-only {
     pointer-events: none;
     cursor: default;
-    opacity: calc(var(--ians-sub-button-opacity) * 0.65);
   }
 
   .sub-button ha-icon {

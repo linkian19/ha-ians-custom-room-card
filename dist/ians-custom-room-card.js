@@ -928,7 +928,6 @@ const cardStyles = i$3`
   .sub-button.display-only {
     pointer-events: none;
     cursor: default;
-    opacity: calc(var(--ians-sub-button-opacity) * 0.65);
   }
 
   .sub-button ha-icon {
@@ -2382,6 +2381,11 @@ let IansCustomRoomCard = class extends i {
     super.connectedCallback();
     if (this._config && this.hass) {
       this._subscribeTemplates();
+      this._subscribeSubButtonTemplates();
+    }
+    if (this._config) {
+      this._setupCardActionHandler();
+      this._setupSubButtonHandlers();
     }
   }
   firstUpdated() {

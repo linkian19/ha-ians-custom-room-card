@@ -152,6 +152,11 @@ export class IansCustomRoomCard extends LitElement {
     super.connectedCallback();
     if (this._config && this.hass) {
       this._subscribeTemplates();
+      this._subscribeSubButtonTemplates();
+    }
+    if (this._config) {
+      this._setupCardActionHandler();
+      this._setupSubButtonHandlers();
     }
   }
 
