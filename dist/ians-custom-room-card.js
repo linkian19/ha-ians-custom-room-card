@@ -1602,10 +1602,8 @@ let IansCustomRoomCardEditor = class extends i {
           ></ha-selector>
         ` : A}
 
-        <div class="two-col">
-          ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
-          ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff", false)}
-        </div>
+        ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
+        ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
       </div>
 
       <div class="section">
@@ -2150,7 +2148,7 @@ let IansCustomRoomCardEditor = class extends i {
       /* ── Template field ── */
       .template-row {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 6px;
       }
 
@@ -2185,10 +2183,6 @@ let IansCustomRoomCardEditor = class extends i {
         transition: background 0.15s, color 0.15s, border-color 0.15s;
       }
 
-      /* In a plain template-row (non-color fields), center against the input */
-      .template-row .tmpl-btn {
-        align-self: center;
-      }
 
       .tmpl-btn:hover {
         border-color: var(--primary-color);
