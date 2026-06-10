@@ -77,6 +77,27 @@ const SUB_BUTTON_POSITION_OPTIONS = [
   { value: "bottom-right",  label: "Bottom Right" },
 ];
 
+const ANIMATION_TYPE_OPTIONS = [
+  { value: "none",   label: "None" },
+  { value: "spin",   label: "Spin (continuous rotation)" },
+  { value: "pulse",  label: "Pulse (scale breathe)" },
+  { value: "blink",  label: "Blink (opacity flash)" },
+  { value: "bounce", label: "Bounce (vertical hop)" },
+  { value: "shake",  label: "Shake (horizontal wiggle)" },
+];
+
+const ANIMATION_WHEN_OPTIONS = [
+  { value: "always",   label: "Always" },
+  { value: "active",   label: "When entity is active (on/open/playing)" },
+  { value: "inactive", label: "When entity is inactive (off/closed)" },
+];
+
+const ANIMATION_SPEED_OPTIONS = [
+  { value: "slow",   label: "Slow" },
+  { value: "normal", label: "Normal" },
+  { value: "fast",   label: "Fast" },
+];
+
 const COLUMN_JUSTIFY_OPTIONS = [
   { value: "top",           label: "Top (default)" },
   { value: "center",        label: "Center" },
@@ -617,6 +638,33 @@ export class IansCustomRoomCardEditor extends LitElement {
         ` : nothing}
       </div>
 
+      <!-- ── Icon animation ── -->
+      <div class="section">
+        <div class="section-label">Icon Animation</div>
+        <ha-selector .hass=${this.hass} .label=${"Animation"}
+          .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
+          .value=${c.icon_animation ?? "none"}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("icon_animation", ev.detail.value === "none" ? undefined : ev.detail.value)}
+        ></ha-selector>
+        ${c.icon_animation && c.icon_animation !== "none" ? html`
+          <div class="two-col">
+            <ha-selector .hass=${this.hass} .label=${"When"}
+              .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
+              .value=${c.icon_animation_when ?? "always"}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("icon_animation_when", ev.detail.value || undefined)}
+            ></ha-selector>
+            <ha-selector .hass=${this.hass} .label=${"Speed"}
+              .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
+              .value=${c.icon_animation_speed ?? "normal"}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("icon_animation_speed", ev.detail.value || undefined)}
+            ></ha-selector>
+          </div>
+        ` : nothing}
+      </div>
+
       <!-- ── Icon position ── -->
       <div class="section">
         <div class="section-label">Icon Position</div>
@@ -671,6 +719,29 @@ export class IansCustomRoomCardEditor extends LitElement {
             <ha-selector .hass=${this.hass} .label=${"Y (CSS)"} .selector=${{ text: {} }}
               .value=${c.badge_position_y ?? ""} .placeholder=${"e.g. 10px"}
               @value-changed=${(ev: CustomEvent) => this._fieldChanged("badge_position_y", ev.detail.value || undefined)}
+            ></ha-selector>
+          </div>
+        ` : nothing}
+
+        <ha-selector .hass=${this.hass} .label=${"Badge Animation"}
+          .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
+          .value=${c.badge_animation ?? "none"}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("badge_animation", ev.detail.value === "none" ? undefined : ev.detail.value)}
+        ></ha-selector>
+        ${c.badge_animation && c.badge_animation !== "none" ? html`
+          <div class="two-col">
+            <ha-selector .hass=${this.hass} .label=${"When"}
+              .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
+              .value=${c.badge_animation_when ?? "always"}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("badge_animation_when", ev.detail.value || undefined)}
+            ></ha-selector>
+            <ha-selector .hass=${this.hass} .label=${"Speed"}
+              .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
+              .value=${c.badge_animation_speed ?? "normal"}
+              @value-changed=${(ev: CustomEvent) =>
+                this._fieldChanged("badge_animation_speed", ev.detail.value || undefined)}
             ></ha-selector>
           </div>
         ` : nothing}
@@ -961,6 +1032,31 @@ export class IansCustomRoomCardEditor extends LitElement {
               @value-changed=${(ev: CustomEvent) =>
                 this._subButtonChanged(index, { opacity: ev.detail.value })}
             ></ha-selector>
+
+            <!-- Animation -->
+            <div class="sub-group-label">Animation</div>
+            <ha-selector .hass=${this.hass} .label=${"Animation"}
+              .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
+              .value=${btn.animation ?? "none"}
+              @value-changed=${(ev: CustomEvent) =>
+                this._subButtonChanged(index, { animation: ev.detail.value === "none" ? undefined : ev.detail.value })}
+            ></ha-selector>
+            ${btn.animation && btn.animation !== "none" ? html`
+              <div class="two-col">
+                <ha-selector .hass=${this.hass} .label=${"When"}
+                  .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
+                  .value=${btn.animation_when ?? "always"}
+                  @value-changed=${(ev: CustomEvent) =>
+                    this._subButtonChanged(index, { animation_when: ev.detail.value || undefined })}
+                ></ha-selector>
+                <ha-selector .hass=${this.hass} .label=${"Speed"}
+                  .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
+                  .value=${btn.animation_speed ?? "normal"}
+                  @value-changed=${(ev: CustomEvent) =>
+                    this._subButtonChanged(index, { animation_speed: ev.detail.value || undefined })}
+                ></ha-selector>
+              </div>
+            ` : nothing}
 
             ${showPosition ? html`
               <div class="sub-group-label">Position</div>

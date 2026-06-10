@@ -121,6 +121,10 @@ export interface SubButtonConfig {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
+  // Animation
+  animation?: IconAnimationType;
+  animation_when?: IconAnimationWhen;
+  animation_speed?: IconAnimationSpeed;
 }
 
 export interface GridOptions {
@@ -165,6 +169,10 @@ export type BadgePosition =
   | "custom";
 
 export type IconBackgroundShape = "circle" | "rounded-rect" | "squircle" | "square";
+
+export type IconAnimationType = "none" | "spin" | "pulse" | "blink" | "bounce" | "shake";
+export type IconAnimationWhen = "always" | "active" | "inactive";
+export type IconAnimationSpeed = "slow" | "normal" | "fast";
 
 export type TitleAlign = "left" | "center" | "right";
 
@@ -217,6 +225,14 @@ export interface CardConfig {
   icon_color_off?: string;
   // Badge
   badge_opacity?: number;
+  // Icon animation
+  icon_animation?: IconAnimationType;
+  icon_animation_when?: IconAnimationWhen;
+  icon_animation_speed?: IconAnimationSpeed;
+  // Badge animation
+  badge_animation?: IconAnimationType;
+  badge_animation_when?: IconAnimationWhen;
+  badge_animation_speed?: IconAnimationSpeed;
   // Title
   title_align?: TitleAlign;
   title_position?: IconPosition;

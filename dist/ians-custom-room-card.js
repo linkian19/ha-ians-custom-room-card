@@ -1004,6 +1004,42 @@ const cardStyles = i$3`
   .sub-button.pos-bottom-center { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
   .sub-button.pos-bottom-right { position: absolute; bottom: 8px; right: 8px; }
 
+  /* ── Icon animations ─────────────────────────────────────────────────────── */
+
+  @keyframes ians-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  @keyframes ians-pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.25); }
+  }
+
+  @keyframes ians-blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.1; }
+  }
+
+  @keyframes ians-bounce {
+    0%, 100% { transform: translateY(0); }
+    40%      { transform: translateY(-6px); }
+    70%      { transform: translateY(-2px); }
+  }
+
+  @keyframes ians-shake {
+    0%, 100%    { transform: translateX(0); }
+    20%, 60%    { transform: translateX(-5px); }
+    40%, 80%    { transform: translateX(5px); }
+  }
+
+  /* --ians-anim-dur is set on the icon container via inline style and inherited by ha-icon */
+  ha-icon.anim-spin   { animation: ians-spin   var(--ians-anim-dur, 2s)   linear      infinite; }
+  ha-icon.anim-pulse  { animation: ians-pulse  var(--ians-anim-dur, 1.5s) ease-in-out infinite; }
+  ha-icon.anim-blink  { animation: ians-blink  var(--ians-anim-dur, 1.2s) ease-in-out infinite; }
+  ha-icon.anim-bounce { animation: ians-bounce var(--ians-anim-dur, 0.8s) ease-in-out infinite; }
+  ha-icon.anim-shake  { animation: ians-shake  var(--ians-anim-dur, 0.6s) ease-in-out infinite; }
+
   /* ── Template error state ────────────────────────────────────────────────── */
   ha-card.has-template-error {
     border: 2px solid var(--error-color, #db4437);
@@ -1250,6 +1286,24 @@ const SUB_BUTTON_POSITION_OPTIONS = [
   { value: "bottom-left", label: "Bottom Left" },
   { value: "bottom-center", label: "Bottom Center" },
   { value: "bottom-right", label: "Bottom Right" }
+];
+const ANIMATION_TYPE_OPTIONS = [
+  { value: "none", label: "None" },
+  { value: "spin", label: "Spin (continuous rotation)" },
+  { value: "pulse", label: "Pulse (scale breathe)" },
+  { value: "blink", label: "Blink (opacity flash)" },
+  { value: "bounce", label: "Bounce (vertical hop)" },
+  { value: "shake", label: "Shake (horizontal wiggle)" }
+];
+const ANIMATION_WHEN_OPTIONS = [
+  { value: "always", label: "Always" },
+  { value: "active", label: "When entity is active (on/open/playing)" },
+  { value: "inactive", label: "When entity is inactive (off/closed)" }
+];
+const ANIMATION_SPEED_OPTIONS = [
+  { value: "slow", label: "Slow" },
+  { value: "normal", label: "Normal" },
+  { value: "fast", label: "Fast" }
 ];
 const COLUMN_JUSTIFY_OPTIONS = [
   { value: "top", label: "Top (default)" },
@@ -1671,7 +1725,7 @@ let IansCustomRoomCardEditor = class extends i {
     `;
   }
   _renderIconTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s;
     const c2 = this._config;
     return b`
       <!-- ── Icon color ── -->
@@ -1744,12 +1798,36 @@ let IansCustomRoomCardEditor = class extends i {
         ` : A}
       </div>
 
+      <!-- ── Icon animation ── -->
+      <div class="section">
+        <div class="section-label">Icon Animation</div>
+        <ha-selector .hass=${this.hass} .label=${"Animation"}
+          .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
+          .value=${(_i = c2.icon_animation) != null ? _i : "none"}
+          @value-changed=${(ev) => this._fieldChanged("icon_animation", ev.detail.value === "none" ? void 0 : ev.detail.value)}
+        ></ha-selector>
+        ${c2.icon_animation && c2.icon_animation !== "none" ? b`
+          <div class="two-col">
+            <ha-selector .hass=${this.hass} .label=${"When"}
+              .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
+              .value=${(_j = c2.icon_animation_when) != null ? _j : "always"}
+              @value-changed=${(ev) => this._fieldChanged("icon_animation_when", ev.detail.value || void 0)}
+            ></ha-selector>
+            <ha-selector .hass=${this.hass} .label=${"Speed"}
+              .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
+              .value=${(_k = c2.icon_animation_speed) != null ? _k : "normal"}
+              @value-changed=${(ev) => this._fieldChanged("icon_animation_speed", ev.detail.value || void 0)}
+            ></ha-selector>
+          </div>
+        ` : A}
+      </div>
+
       <!-- ── Icon position ── -->
       <div class="section">
         <div class="section-label">Icon Position</div>
         <ha-selector .hass=${this.hass} .label=${"Position"}
           .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_i = c2.icon_position) != null ? _i : ""}
+          .value=${(_l = c2.icon_position) != null ? _l : ""}
           @value-changed=${(ev) => this._fieldChanged("icon_position", ev.detail.value || void 0)}
         ></ha-selector>
         ${c2.icon_position === "custom" ? this._renderCoordFields("icon_position_x", "icon_position_y", "X offset", "Y offset") : A}
@@ -1779,25 +1857,45 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="two-col">
           ${this._renderNumField("badge_size", "Badge Size", 8, 48, 1, 18, "px")}
           <ha-selector .hass=${this.hass} .label=${"Opacity"}
-            .selector=${OPACITY_SELECTOR} .value=${(_j = c2.badge_opacity) != null ? _j : 1}
+            .selector=${OPACITY_SELECTOR} .value=${(_m = c2.badge_opacity) != null ? _m : 1}
             @value-changed=${(ev) => this._fieldChanged("badge_opacity", ev.detail.value)}
           ></ha-selector>
         </div>
 
         <ha-selector .hass=${this.hass} .label=${"Badge Position"}
           .selector=${{ select: { options: BADGE_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_k = c2.badge_position) != null ? _k : "top-right"}
+          .value=${(_n = c2.badge_position) != null ? _n : "top-right"}
           @value-changed=${(ev) => this._fieldChanged("badge_position", ev.detail.value || void 0)}
         ></ha-selector>
         ${c2.badge_position === "custom" ? b`
           <div class="two-col">
             <ha-selector .hass=${this.hass} .label=${"X (CSS)"} .selector=${{ text: {} }}
-              .value=${(_l = c2.badge_position_x) != null ? _l : ""} .placeholder=${"e.g. 10px"}
+              .value=${(_o = c2.badge_position_x) != null ? _o : ""} .placeholder=${"e.g. 10px"}
               @value-changed=${(ev) => this._fieldChanged("badge_position_x", ev.detail.value || void 0)}
             ></ha-selector>
             <ha-selector .hass=${this.hass} .label=${"Y (CSS)"} .selector=${{ text: {} }}
-              .value=${(_m = c2.badge_position_y) != null ? _m : ""} .placeholder=${"e.g. 10px"}
+              .value=${(_p = c2.badge_position_y) != null ? _p : ""} .placeholder=${"e.g. 10px"}
               @value-changed=${(ev) => this._fieldChanged("badge_position_y", ev.detail.value || void 0)}
+            ></ha-selector>
+          </div>
+        ` : A}
+
+        <ha-selector .hass=${this.hass} .label=${"Badge Animation"}
+          .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
+          .value=${(_q = c2.badge_animation) != null ? _q : "none"}
+          @value-changed=${(ev) => this._fieldChanged("badge_animation", ev.detail.value === "none" ? void 0 : ev.detail.value)}
+        ></ha-selector>
+        ${c2.badge_animation && c2.badge_animation !== "none" ? b`
+          <div class="two-col">
+            <ha-selector .hass=${this.hass} .label=${"When"}
+              .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
+              .value=${(_r = c2.badge_animation_when) != null ? _r : "always"}
+              @value-changed=${(ev) => this._fieldChanged("badge_animation_when", ev.detail.value || void 0)}
+            ></ha-selector>
+            <ha-selector .hass=${this.hass} .label=${"Speed"}
+              .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
+              .value=${(_s = c2.badge_animation_speed) != null ? _s : "normal"}
+              @value-changed=${(ev) => this._fieldChanged("badge_animation_speed", ev.detail.value || void 0)}
             ></ha-selector>
           </div>
         ` : A}
@@ -1979,7 +2077,7 @@ let IansCustomRoomCardEditor = class extends i {
   }
   // ── Sub-button row ────────────────────────────────────────────────────────────
   _renderSubButtonRow(btn, index) {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r;
     const isExpanded = this._expandedSubButton === index;
     const label = (_c2 = (_b2 = (_a2 = btn.entity) != null ? _a2 : btn.label) != null ? _b2 : btn.icon) != null ? _c2 : `Sub-button ${index + 1}`;
     const layout = (_e2 = (_d2 = this._config) == null ? void 0 : _d2.sub_buttons_layout) != null ? _e2 : "bottom-row";
@@ -2074,11 +2172,33 @@ let IansCustomRoomCardEditor = class extends i {
               @value-changed=${(ev) => this._subButtonChanged(index, { opacity: ev.detail.value })}
             ></ha-selector>
 
+            <!-- Animation -->
+            <div class="sub-group-label">Animation</div>
+            <ha-selector .hass=${this.hass} .label=${"Animation"}
+              .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
+              .value=${(_l = btn.animation) != null ? _l : "none"}
+              @value-changed=${(ev) => this._subButtonChanged(index, { animation: ev.detail.value === "none" ? void 0 : ev.detail.value })}
+            ></ha-selector>
+            ${btn.animation && btn.animation !== "none" ? b`
+              <div class="two-col">
+                <ha-selector .hass=${this.hass} .label=${"When"}
+                  .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
+                  .value=${(_m = btn.animation_when) != null ? _m : "always"}
+                  @value-changed=${(ev) => this._subButtonChanged(index, { animation_when: ev.detail.value || void 0 })}
+                ></ha-selector>
+                <ha-selector .hass=${this.hass} .label=${"Speed"}
+                  .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
+                  .value=${(_n = btn.animation_speed) != null ? _n : "normal"}
+                  @value-changed=${(ev) => this._subButtonChanged(index, { animation_speed: ev.detail.value || void 0 })}
+                ></ha-selector>
+              </div>
+            ` : A}
+
             ${showPosition ? b`
               <div class="sub-group-label">Position</div>
               <ha-selector .hass=${this.hass} .label=${"Position"}
                 .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
-                .value=${(_l = btn.position) != null ? _l : "bottom-left"}
+                .value=${(_o = btn.position) != null ? _o : "bottom-left"}
                 @value-changed=${(ev) => this._subButtonChanged(index, { position: ev.detail.value })}
               ></ha-selector>
             ` : A}
@@ -2086,15 +2206,15 @@ let IansCustomRoomCardEditor = class extends i {
             <!-- Actions -->
             <div class="sub-group-label">Actions</div>
             <ha-selector .hass=${this.hass} .label=${"Tap Action"}
-              .selector=${{ ui_action: {} }} .value=${(_m = btn.tap_action) != null ? _m : { action: "toggle" }}
+              .selector=${{ ui_action: {} }} .value=${(_p = btn.tap_action) != null ? _p : { action: "toggle" }}
               @value-changed=${(ev) => this._subButtonChanged(index, { tap_action: ev.detail.value })}
             ></ha-selector>
             <ha-selector .hass=${this.hass} .label=${"Hold Action"}
-              .selector=${{ ui_action: {} }} .value=${(_n = btn.hold_action) != null ? _n : { action: "more-info" }}
+              .selector=${{ ui_action: {} }} .value=${(_q = btn.hold_action) != null ? _q : { action: "more-info" }}
               @value-changed=${(ev) => this._subButtonChanged(index, { hold_action: ev.detail.value })}
             ></ha-selector>
             <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
-              .selector=${{ ui_action: {} }} .value=${(_o = btn.double_tap_action) != null ? _o : { action: "none" }}
+              .selector=${{ ui_action: {} }} .value=${(_r = btn.double_tap_action) != null ? _r : { action: "none" }}
               @value-changed=${(ev) => this._subButtonChanged(index, { double_tap_action: ev.detail.value })}
             ></ha-selector>
           </div>
@@ -2626,6 +2746,13 @@ const SHAPE_BORDER_RADIUS = {
   squircle: "30%",
   square: "0"
 };
+const ANIM_DURATIONS = {
+  spin: { slow: "4s", normal: "2s", fast: "0.8s" },
+  pulse: { slow: "3s", normal: "1.5s", fast: "0.6s" },
+  blink: { slow: "2.4s", normal: "1.2s", fast: "0.5s" },
+  bounce: { slow: "1.6s", normal: "0.8s", fast: "0.35s" },
+  shake: { slow: "1.2s", normal: "0.6s", fast: "0.25s" }
+};
 const CORNER_POSITIONS = [
   "top-left",
   "top-right",
@@ -2940,6 +3067,21 @@ let IansCustomRoomCard = class extends i {
       (action) => dispatchAction(haCard, actionConfig, action)
     );
   }
+  _getAnimClass(animation, when, entityState) {
+    if (!animation || animation === "none") return "";
+    const whenMode = when != null ? when : "always";
+    if (whenMode !== "always" && entityState) {
+      const isActive = ACTIVE_STATES.has(entityState.state);
+      if (whenMode === "active" && !isActive) return "";
+      if (whenMode === "inactive" && isActive) return "";
+    }
+    return `anim-${animation}`;
+  }
+  _getAnimDur(animation, speed) {
+    var _a2, _b2;
+    if (!animation || animation === "none") return void 0;
+    return (_b2 = (_a2 = ANIM_DURATIONS[animation]) == null ? void 0 : _a2[speed != null ? speed : "normal"]) != null ? _b2 : "2s";
+  }
   _setCSSVar(prop, value) {
     if (value !== void 0 && value !== "") {
       this.style.setProperty(prop, value);
@@ -2949,7 +3091,7 @@ let IansCustomRoomCard = class extends i {
   }
   // ── Render ─────────────────────────────────────────────────────────────────
   render() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
     if (!this._config) return A;
     const c2 = this._config;
     const hasErrors = Object.keys(this._templateErrors).length > 0;
@@ -2970,6 +3112,19 @@ let IansCustomRoomCard = class extends i {
     const badgePosition = (_d2 = c2.badge_position) != null ? _d2 : "top-right";
     const titlePosition = c2.title_position;
     const showHighlight = isInteractive ? c2.hover_highlight !== false : c2.hover_highlight === true;
+    const cardEntityState = c2.entity ? (_e2 = this.hass) == null ? void 0 : _e2.states[c2.entity] : void 0;
+    const iconAnimClass = this._getAnimClass(c2.icon_animation, c2.icon_animation_when, cardEntityState);
+    const iconAnimDur = this._getAnimDur(c2.icon_animation, c2.icon_animation_speed);
+    const badgeAnimClass = this._getAnimClass(c2.badge_animation, c2.badge_animation_when, cardEntityState);
+    const badgeAnimDur = this._getAnimDur(c2.badge_animation, c2.badge_animation_speed);
+    const iconContainerStyle = [
+      iconPosition === "custom" ? `top: ${(_f2 = c2.icon_position_y) != null ? _f2 : "auto"}; left: ${(_g = c2.icon_position_x) != null ? _g : "auto"}` : "",
+      iconAnimDur ? `--ians-anim-dur: ${iconAnimDur}` : ""
+    ].filter(Boolean).join("; ");
+    const badgeContainerStyle = [
+      badgePosition === "custom" ? `top: ${(_h = c2.badge_position_y) != null ? _h : "auto"}; left: ${(_i = c2.badge_position_x) != null ? _i : "auto"}` : "",
+      badgeAnimDur ? `--ians-anim-dur: ${badgeAnimDur}` : ""
+    ].filter(Boolean).join("; ");
     const badgeEl = badgeIcon ? b`
           <div
             part="badge"
@@ -2977,9 +3132,9 @@ let IansCustomRoomCard = class extends i {
       "badge",
       badgePosition !== "custom" ? `badge-pos-${badgePosition}` : ""
     ].filter(Boolean).join(" ")}
-            style=${badgePosition === "custom" ? `top: ${(_e2 = c2.badge_position_y) != null ? _e2 : "auto"}; left: ${(_f2 = c2.badge_position_x) != null ? _f2 : "auto"};` : ""}
+            style=${badgeContainerStyle || A}
           >
-            <ha-icon part="badge-icon" .icon=${badgeIcon}></ha-icon>
+            <ha-icon part="badge-icon" .icon=${badgeIcon} class=${badgeAnimClass || A}></ha-icon>
           </div>
         ` : A;
     const iconBgOnlyEl = hasIndependentBg ? b`
@@ -2989,7 +3144,7 @@ let IansCustomRoomCard = class extends i {
       "icon-absolute",
       iconBgPosition !== "custom" ? `icon-pos-${iconBgPosition}` : ""
     ].filter(Boolean).join(" ")}
-            style=${iconBgPosition === "custom" ? `top: ${(_g = c2.icon_background_position_y) != null ? _g : "auto"}; left: ${(_h = c2.icon_background_position_x) != null ? _h : "auto"};` : ""}
+            style=${iconBgPosition === "custom" ? `top: ${(_j = c2.icon_background_position_y) != null ? _j : "auto"}; left: ${(_k = c2.icon_background_position_x) != null ? _k : "auto"};` : ""}
           ></div>
         ` : A;
     const iconEl = icon !== void 0 ? iconPosition ? b`
@@ -3001,17 +3156,18 @@ let IansCustomRoomCard = class extends i {
       hasIndependentBg ? "icon-no-bg" : "",
       iconPosition !== "custom" ? `icon-pos-${iconPosition}` : ""
     ].filter(Boolean).join(" ")}
-                style=${iconPosition === "custom" ? `top: ${(_i = c2.icon_position_y) != null ? _i : "auto"}; left: ${(_j = c2.icon_position_x) != null ? _j : "auto"};` : ""}
+                style=${iconContainerStyle || A}
               >
-                <ha-icon part="icon" .icon=${icon}></ha-icon>
+                <ha-icon part="icon" .icon=${icon} class=${iconAnimClass || A}></ha-icon>
                 ${badgeEl}
               </div>
             ` : b`
               <div
                 part="icon-container"
                 class=${["icon-container", hasIndependentBg ? "icon-no-bg" : ""].filter(Boolean).join(" ")}
+                style=${iconContainerStyle || A}
               >
-                <ha-icon part="icon" .icon=${icon}></ha-icon>
+                <ha-icon part="icon" .icon=${icon} class=${iconAnimClass || A}></ha-icon>
                 ${badgeEl}
               </div>
             ` : A;
@@ -3022,7 +3178,7 @@ let IansCustomRoomCard = class extends i {
       "card-title-absolute",
       titlePosition !== "custom" ? `card-title-abs-${titlePosition}` : ""
     ].filter(Boolean).join(" ")}
-            style=${titlePosition === "custom" ? `top: ${(_k = c2.title_position_y) != null ? _k : "auto"}; left: ${(_l = c2.title_position_x) != null ? _l : "auto"};` : ""}
+            style=${titlePosition === "custom" ? `top: ${(_l = c2.title_position_y) != null ? _l : "auto"}; left: ${(_m = c2.title_position_x) != null ? _m : "auto"};` : ""}
           >${title}</span>` : A;
     return b`
       <ha-card
@@ -3102,14 +3258,17 @@ let IansCustomRoomCard = class extends i {
         const isActive = ACTIVE_STATES.has(entityState.state);
         btnIconColor = isActive ? (_l = (_k = btn.icon_color_on) != null ? _k : DOMAIN_ACTIVE_COLORS[domain]) != null ? _l : btn.icon_color : (_m = btn.icon_color_off) != null ? _m : btn.icon_color;
       }
+      const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
+      const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
       const btnStyle = [
         btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
         btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
-        btn.opacity !== void 0 ? `opacity: ${btn.opacity}` : ""
+        btn.opacity !== void 0 ? `opacity: ${btn.opacity}` : "",
+        btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : ""
       ].filter(Boolean).join("; ");
       return b`
         <div class=${classes} part="sub-button" style=${btnStyle || A}>
-          ${btn.show_icon !== false ? b`<ha-icon part="sub-button-icon" .icon=${icon}></ha-icon>` : A}
+          ${btn.show_icon !== false ? b`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || A}></ha-icon>` : A}
           ${btn.show_label && label ? b`<span part="sub-button-label" class="sub-button-label">${label}</span>` : A}
           ${btn.show_state && entityState ? b`<span part="sub-button-state" class="sub-button-state">${entityState.state}</span>` : A}
         </div>

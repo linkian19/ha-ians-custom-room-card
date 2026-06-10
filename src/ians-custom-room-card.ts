@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { HomeAssistant, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape } from "./types";
+import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape } from "./types";
 import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION } from "./const";
 import { cardStyles } from "./utils/styles";
 import { resolveAreaImage } from "./utils/area-image";
@@ -73,6 +73,15 @@ const SHAPE_BORDER_RADIUS: Record<IconBackgroundShape, string> = {
   "rounded-rect": "8px",
   squircle: "30%",
   square: "0",
+};
+
+// Animation durations by type and speed
+const ANIM_DURATIONS: Record<string, Record<string, string>> = {
+  spin:   { slow: "4s",   normal: "2s",   fast: "0.8s"  },
+  pulse:  { slow: "3s",   normal: "1.5s", fast: "0.6s"  },
+  blink:  { slow: "2.4s", normal: "1.2s", fast: "0.5s"  },
+  bounce: { slow: "1.6s", normal: "0.8s", fast: "0.35s" },
+  shake:  { slow: "1.2s", normal: "0.6s", fast: "0.25s" },
 };
 
 // Corner positions for the "corners" layout preset (up to 4 buttons)
@@ -450,6 +459,26 @@ export class IansCustomRoomCard extends LitElement {
     );
   }
 
+  private _getAnimClass(
+    animation: string | undefined,
+    when: string | undefined,
+    entityState: HassEntity | undefined
+  ): string {
+    if (!animation || animation === "none") return "";
+    const whenMode = when ?? "always";
+    if (whenMode !== "always" && entityState) {
+      const isActive = ACTIVE_STATES.has(entityState.state);
+      if (whenMode === "active" && !isActive) return "";
+      if (whenMode === "inactive" && isActive) return "";
+    }
+    return `anim-${animation}`;
+  }
+
+  private _getAnimDur(animation: string | undefined, speed: string | undefined): string | undefined {
+    if (!animation || animation === "none") return undefined;
+    return ANIM_DURATIONS[animation]?.[speed ?? "normal"] ?? "2s";
+  }
+
   private _setCSSVar(prop: string, value: string | undefined): void {
     if (value !== undefined && value !== "") {
       this.style.setProperty(prop, value);
@@ -492,6 +521,23 @@ export class IansCustomRoomCard extends LitElement {
       ? c.hover_highlight !== false
       : c.hover_highlight === true;
 
+    // Animation — resolved against card entity state
+    const cardEntityState = c.entity ? this.hass?.states[c.entity] : undefined;
+    const iconAnimClass = this._getAnimClass(c.icon_animation, c.icon_animation_when, cardEntityState);
+    const iconAnimDur = this._getAnimDur(c.icon_animation, c.icon_animation_speed);
+    const badgeAnimClass = this._getAnimClass(c.badge_animation, c.badge_animation_when, cardEntityState);
+    const badgeAnimDur = this._getAnimDur(c.badge_animation, c.badge_animation_speed);
+
+    // Compose icon container and badge container styles (position + optional animation duration)
+    const iconContainerStyle = [
+      iconPosition === "custom" ? `top: ${c.icon_position_y ?? "auto"}; left: ${c.icon_position_x ?? "auto"}` : "",
+      iconAnimDur ? `--ians-anim-dur: ${iconAnimDur}` : "",
+    ].filter(Boolean).join("; ");
+    const badgeContainerStyle = [
+      badgePosition === "custom" ? `top: ${c.badge_position_y ?? "auto"}; left: ${c.badge_position_x ?? "auto"}` : "",
+      badgeAnimDur ? `--ians-anim-dur: ${badgeAnimDur}` : "",
+    ].filter(Boolean).join("; ");
+
     // Badge element (shared between flow and absolute icon renders)
     const badgeEl = badgeIcon
       ? html`
@@ -503,11 +549,9 @@ export class IansCustomRoomCard extends LitElement {
             ]
               .filter(Boolean)
               .join(" ")}
-            style=${badgePosition === "custom"
-              ? `top: ${c.badge_position_y ?? "auto"}; left: ${c.badge_position_x ?? "auto"};`
-              : ""}
+            style=${badgeContainerStyle || nothing}
           >
-            <ha-icon part="badge-icon" .icon=${badgeIcon}></ha-icon>
+            <ha-icon part="badge-icon" .icon=${badgeIcon} class=${badgeAnimClass || nothing}></ha-icon>
           </div>
         `
       : nothing;
@@ -543,11 +587,9 @@ export class IansCustomRoomCard extends LitElement {
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                style=${iconPosition === "custom"
-                  ? `top: ${c.icon_position_y ?? "auto"}; left: ${c.icon_position_x ?? "auto"};`
-                  : ""}
+                style=${iconContainerStyle || nothing}
               >
-                <ha-icon part="icon" .icon=${icon}></ha-icon>
+                <ha-icon part="icon" .icon=${icon} class=${iconAnimClass || nothing}></ha-icon>
                 ${badgeEl}
               </div>
             `
@@ -555,8 +597,9 @@ export class IansCustomRoomCard extends LitElement {
               <div
                 part="icon-container"
                 class=${["icon-container", hasIndependentBg ? "icon-no-bg" : ""].filter(Boolean).join(" ")}
+                style=${iconContainerStyle || nothing}
               >
-                <ha-icon part="icon" .icon=${icon}></ha-icon>
+                <ha-icon part="icon" .icon=${icon} class=${iconAnimClass || nothing}></ha-icon>
                 ${badgeEl}
               </div>
             `
@@ -683,17 +726,22 @@ export class IansCustomRoomCard extends LitElement {
           : (btn.icon_color_off ?? btn.icon_color);
       }
 
+      // Animation
+      const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
+      const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
+
       // Per-button color overrides via inline style
       const btnStyle = [
         btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
         btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
         btn.opacity !== undefined ? `opacity: ${btn.opacity}` : "",
+        btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : "",
       ].filter(Boolean).join("; ");
 
       return html`
         <div class=${classes} part="sub-button" style=${btnStyle || nothing}>
           ${btn.show_icon !== false
-            ? html`<ha-icon part="sub-button-icon" .icon=${icon}></ha-icon>`
+            ? html`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || nothing}></ha-icon>`
             : nothing}
           ${btn.show_label && label
             ? html`<span part="sub-button-label" class="sub-button-label">${label}</span>`

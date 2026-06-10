@@ -392,6 +392,42 @@ export const cardStyles = css`
   .sub-button.pos-bottom-center { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
   .sub-button.pos-bottom-right { position: absolute; bottom: 8px; right: 8px; }
 
+  /* ── Icon animations ─────────────────────────────────────────────────────── */
+
+  @keyframes ians-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  @keyframes ians-pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.25); }
+  }
+
+  @keyframes ians-blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.1; }
+  }
+
+  @keyframes ians-bounce {
+    0%, 100% { transform: translateY(0); }
+    40%      { transform: translateY(-6px); }
+    70%      { transform: translateY(-2px); }
+  }
+
+  @keyframes ians-shake {
+    0%, 100%    { transform: translateX(0); }
+    20%, 60%    { transform: translateX(-5px); }
+    40%, 80%    { transform: translateX(5px); }
+  }
+
+  /* --ians-anim-dur is set on the icon container via inline style and inherited by ha-icon */
+  ha-icon.anim-spin   { animation: ians-spin   var(--ians-anim-dur, 2s)   linear      infinite; }
+  ha-icon.anim-pulse  { animation: ians-pulse  var(--ians-anim-dur, 1.5s) ease-in-out infinite; }
+  ha-icon.anim-blink  { animation: ians-blink  var(--ians-anim-dur, 1.2s) ease-in-out infinite; }
+  ha-icon.anim-bounce { animation: ians-bounce var(--ians-anim-dur, 0.8s) ease-in-out infinite; }
+  ha-icon.anim-shake  { animation: ians-shake  var(--ians-anim-dur, 0.6s) ease-in-out infinite; }
+
   /* ── Template error state ────────────────────────────────────────────────── */
   ha-card.has-template-error {
     border: 2px solid var(--error-color, #db4437);
