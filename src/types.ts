@@ -174,6 +174,39 @@ export type IconAnimationType = "none" | "spin" | "pulse" | "blink" | "bounce" |
 export type IconAnimationWhen = "always" | "active" | "inactive";
 export type IconAnimationSpeed = "slow" | "normal" | "fast";
 
+export type SubButtonGroupPosition =
+  | "bottom-row"
+  | "top-row"
+  | "left-column"
+  | "right-column"
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "center-left"
+  | "center"
+  | "center-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right"
+  | "custom";
+
+export interface SubButtonGroup {
+  label?: string;
+  layout?: SubButtonsLayout;
+  position?: SubButtonGroupPosition;
+  position_x?: string;
+  position_y?: string;
+  column_justify?: "top" | "center" | "bottom" | "space-between" | "space-around";
+  gap?: number;
+  grid_columns?: number;
+  grid_min_width?: number;
+  grid_cell_layout?: "vertical" | "horizontal";
+  icon_color?: string;
+  background_color?: string;
+  opacity?: number;
+  buttons?: SubButtonConfig[];
+}
+
 export type TitleAlign = "left" | "center" | "right";
 
 export interface CardConfig {
@@ -248,11 +281,13 @@ export interface CardConfig {
   // Grid sub-button layout options
   sub_buttons_grid_columns?: number;    // fixed column count for grid layout
   sub_buttons_grid_min_width?: number;  // px min cell width for auto-fill grid
+  sub_buttons_grid_cell_layout?: "vertical" | "horizontal";
   // Column alignment (left-column / right-column layouts only)
   sub_buttons_column_justify?: "top" | "center" | "bottom" | "space-between" | "space-around";
   // Layout
   grid_options?: GridOptions;
   sub_buttons_layout?: SubButtonsLayout;
   sub_buttons?: SubButtonConfig[];
+  sub_button_groups?: SubButtonGroup[];  // max 4; supersedes sub_buttons when present
   global_action?: GlobalAction;
 }

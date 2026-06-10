@@ -1,8 +1,8 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type {
-  HomeAssistant, CardConfig, SubButtonConfig,
-  SubButtonsLayout, IconPosition, BadgePosition,
+  HomeAssistant, CardConfig, SubButtonConfig, SubButtonGroup,
+  SubButtonsLayout, SubButtonGroupPosition, IconPosition, BadgePosition,
   IconBackgroundShape, TitleAlign,
 } from "./types";
 import { CARD_TYPE } from "./const";
@@ -106,6 +106,29 @@ const COLUMN_JUSTIFY_OPTIONS = [
   { value: "space-around",  label: "Space Around" },
 ];
 
+const GROUP_POSITION_OPTIONS = [
+  { value: "",               label: "Default (derived from layout)" },
+  { value: "bottom-row",     label: "Full width — bottom edge" },
+  { value: "top-row",        label: "Full width — top edge" },
+  { value: "right-column",   label: "Full height — right side" },
+  { value: "left-column",    label: "Full height — left side" },
+  { value: "top-left",       label: "Top Left corner" },
+  { value: "top-center",     label: "Top Center" },
+  { value: "top-right",      label: "Top Right corner" },
+  { value: "center-left",    label: "Center Left" },
+  { value: "center",         label: "Center" },
+  { value: "center-right",   label: "Center Right" },
+  { value: "bottom-left",    label: "Bottom Left corner" },
+  { value: "bottom-center",  label: "Bottom Center" },
+  { value: "bottom-right",   label: "Bottom Right corner" },
+  { value: "custom",         label: "Custom (X/Y coordinates)" },
+];
+
+const GRID_CELL_LAYOUT_OPTIONS = [
+  { value: "vertical",   label: "Vertical — icon above label (default)" },
+  { value: "horizontal", label: "Horizontal — icon beside label" },
+];
+
 const TEMPLATE_CAPABLE_FIELDS = new Set([
   "title", "icon", "icon_color", "icon_background_color",
   "badge_icon", "badge_color", "badge_background_color",
@@ -140,6 +163,10 @@ export class IansCustomRoomCardEditor extends LitElement {
   @state() private _activeTab: TabId = "basic";
   @state() private _dragOverIndex: number | null = null;
   private _dragIndex: number | null = null;
+  // Groups mode state
+  @state() private _expandedGroup: number | null = null;
+  @state() private _expandedGroupButton: Record<number, number | null> = {};
+  private _dragGroupContext: number | null = null;
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -344,15 +371,13 @@ export class IansCustomRoomCardEditor extends LitElement {
     `;
   }
 
-  /** Same color field but reads from SubButtonConfig (not top-level CardConfig). */
-  private _renderSubBtnColorField(
-    btn: SubButtonConfig,
-    index: number,
-    field: "icon_color" | "icon_color_on" | "icon_color_off" | "background_color",
+  /** Generic color field with callback. Used by both sub-button and group color fields. */
+  private _renderButtonColorField(
+    currentValue: string,
     label: string,
-    placeholder = "e.g. #ff9800, var(--primary-color)"
+    placeholder: string,
+    onChange: (v: string | undefined) => void
   ) {
-    const currentValue = (btn[field] as string | undefined) ?? "";
     return html`
       <div class="color-field">
         <span class="color-field-label">${label}</span>
@@ -361,26 +386,151 @@ export class IansCustomRoomCardEditor extends LitElement {
             <div class="color-checker"></div>
             <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
             <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
-            <input
-              type="color"
-              class="color-native"
+            <input type="color" class="color-native"
               .value=${cssToHex(currentValue)}
-              @change=${(ev: Event) =>
-                this._subButtonChanged(index, { [field]: (ev.target as HTMLInputElement).value || undefined })}
+              @change=${(ev: Event) => onChange((ev.target as HTMLInputElement).value || undefined)}
             />
           </label>
-          <input
-            type="text"
-            class="color-text-input"
+          <input type="text" class="color-text-input"
             .value=${currentValue}
             placeholder=${placeholder}
-            @change=${(ev: Event) =>
-              this._subButtonChanged(index, { [field]: (ev.target as HTMLInputElement).value || undefined })}
-            @input=${(ev: Event) =>
-              this._subButtonChanged(index, { [field]: (ev.target as HTMLInputElement).value || undefined })}
+            @change=${(ev: Event) => onChange((ev.target as HTMLInputElement).value || undefined)}
+            @input=${(ev: Event) => onChange((ev.target as HTMLInputElement).value || undefined)}
           />
         </div>
       </div>
+    `;
+  }
+
+  /** Color field bound to a SubButtonConfig field (single-group mode). */
+  private _renderSubBtnColorField(
+    btn: SubButtonConfig,
+    index: number,
+    field: "icon_color" | "icon_color_on" | "icon_color_off" | "background_color",
+    label: string,
+    placeholder = "e.g. #ff9800, var(--primary-color)"
+  ) {
+    return this._renderButtonColorField(
+      (btn[field] as string | undefined) ?? "",
+      label,
+      placeholder,
+      (v) => this._subButtonChanged(index, { [field]: v })
+    );
+  }
+
+  /** Shared button accordion body used by both single-group and multi-group editors. */
+  private _renderButtonBody(
+    btn: SubButtonConfig,
+    showPosition: boolean,
+    onChange: (patch: Partial<SubButtonConfig>) => void,
+    onColorChange: (field: "icon_color" | "icon_color_on" | "icon_color_off" | "background_color", value: string | undefined) => void
+  ) {
+    return html`
+      <div class="sub-group-label">Entity &amp; Display</div>
+
+      <ha-entity-picker .hass=${this.hass} .label=${"Entity"}
+        .value=${btn.entity ?? ""} allow-custom-entity
+        @value-changed=${(ev: CustomEvent) => onChange({ entity: ev.detail.value || undefined })}
+      ></ha-entity-picker>
+
+      <ha-icon-picker .hass=${this.hass}
+        .label=${"Icon (blank = auto-pick from entity domain)"}
+        .value=${btn.icon ?? ""}
+        @value-changed=${(ev: CustomEvent) => onChange({ icon: ev.detail.value || undefined })}
+      ></ha-icon-picker>
+
+      <ha-selector .hass=${this.hass}
+        .label=${"Label (blank to hide, or type 'entity' for entity name)"}
+        .selector=${{ text: {} }} .value=${btn.label ?? ""}
+        @value-changed=${(ev: CustomEvent) => onChange({ label: ev.detail.value || undefined })}
+      ></ha-selector>
+
+      <ha-form .hass=${this.hass} .data=${btn}
+        .schema=${[
+          { name: "show_icon",  label: "Show Icon",       selector: { boolean: {} } },
+          { name: "show_label", label: "Show Label",      selector: { boolean: {} } },
+          { name: "show_state", label: "Show State (includes unit of measurement)", selector: { boolean: {} } },
+          { name: "background", label: "Show Background", selector: { boolean: {} } },
+        ]}
+        .computeLabel=${(s: any) => s.label}
+        @value-changed=${(ev: CustomEvent) => {
+          onChange({
+            show_icon:  ev.detail.value.show_icon,
+            show_label: ev.detail.value.show_label,
+            show_state: ev.detail.value.show_state,
+            background: ev.detail.value.background,
+          });
+        }}
+      ></ha-form>
+
+      <div class="sub-group-label">Color &amp; Opacity</div>
+
+      <ha-form .hass=${this.hass}
+        .data=${{ state_based_color: btn.state_based_color ?? false }}
+        .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
+        .computeLabel=${(s: any) => s.label}
+        @value-changed=${(ev: CustomEvent) => onChange({ state_based_color: ev.detail.value.state_based_color })}
+      ></ha-form>
+
+      ${btn.state_based_color ? html`
+        <div class="hint">Active when entity is on/open/home/playing. Defaults to domain color (yellow for lights) if left blank.</div>
+        ${this._renderButtonColorField(btn.icon_color_on ?? "", "Active Icon Color",   "e.g. #FDD835, yellow", (v) => onColorChange("icon_color_on",  v))}
+        ${this._renderButtonColorField(btn.icon_color_off ?? "", "Inactive Icon Color", "e.g. #888888, grey",   (v) => onColorChange("icon_color_off", v))}
+      ` : html`
+        ${this._renderButtonColorField(btn.icon_color ?? "", "Icon Color", "e.g. #ff9800, var(--primary-color)", (v) => onColorChange("icon_color", v))}
+      `}
+
+      ${this._renderButtonColorField(btn.background_color ?? "", "Background Color", "e.g. rgba(255,255,255,0.15)", (v) => onColorChange("background_color", v))}
+
+      <ha-selector .hass=${this.hass} .label=${"Button Opacity"}
+        .selector=${OPACITY_SELECTOR} .value=${btn.opacity ?? 1}
+        @value-changed=${(ev: CustomEvent) => onChange({ opacity: ev.detail.value })}
+      ></ha-selector>
+
+      <div class="sub-group-label">Animation</div>
+      <ha-selector .hass=${this.hass} .label=${"Animation"}
+        .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
+        .value=${btn.animation ?? "none"}
+        @value-changed=${(ev: CustomEvent) =>
+          onChange({ animation: ev.detail.value === "none" ? undefined : ev.detail.value })}
+      ></ha-selector>
+      ${btn.animation && btn.animation !== "none" ? html`
+        <div class="two-col">
+          <ha-selector .hass=${this.hass} .label=${"When"}
+            .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
+            .value=${btn.animation_when ?? "always"}
+            @value-changed=${(ev: CustomEvent) => onChange({ animation_when: ev.detail.value || undefined })}
+          ></ha-selector>
+          <ha-selector .hass=${this.hass} .label=${"Speed"}
+            .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
+            .value=${btn.animation_speed ?? "normal"}
+            @value-changed=${(ev: CustomEvent) => onChange({ animation_speed: ev.detail.value || undefined })}
+          ></ha-selector>
+        </div>
+      ` : nothing}
+
+      ${showPosition ? html`
+        <div class="sub-group-label">Position</div>
+        <ha-selector .hass=${this.hass} .label=${"Position"}
+          .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${btn.position ?? "bottom-left"}
+          @value-changed=${(ev: CustomEvent) => onChange({ position: ev.detail.value })}
+        ></ha-selector>
+      ` : nothing}
+
+      <div class="sub-group-label">Actions</div>
+      <ha-selector .hass=${this.hass} .label=${"Tap Action"}
+        .selector=${{ ui_action: {} }} .value=${btn.tap_action ?? { action: "toggle" }}
+        @value-changed=${(ev: CustomEvent) => onChange({ tap_action: ev.detail.value })}
+      ></ha-selector>
+      <ha-selector .hass=${this.hass} .label=${"Hold Action"}
+        .selector=${{ ui_action: {} }} .value=${btn.hold_action ?? { action: "more-info" }}
+        @value-changed=${(ev: CustomEvent) => onChange({ hold_action: ev.detail.value })}
+      ></ha-selector>
+      <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
+        .selector=${{ ui_action: {} }} .value=${btn.double_tap_action ?? { action: "none" }}
+        @value-changed=${(ev: CustomEvent) => onChange({ double_tap_action: ev.detail.value })}
+      ></ha-selector>
     `;
   }
 
@@ -826,6 +976,30 @@ export class IansCustomRoomCardEditor extends LitElement {
 
   private _renderButtonsTab() {
     const c = this._config!;
+    const isGroupsMode = !!(c.sub_button_groups?.length);
+
+    if (isGroupsMode) {
+      return html`
+        <div class="section">
+          <div class="section-label">Button Groups</div>
+          <div class="hint">Each group is an independent set of buttons with its own layout and position. Max 4 groups.</div>
+          ${(c.sub_button_groups ?? []).map((group, i) => this._renderGroupRow(group, i))}
+          ${(c.sub_button_groups?.length ?? 0) < 4 ? html`
+            <button class="add-btn" @click=${() => this._addGroup()}>+ Add Group</button>
+          ` : nothing}
+        </div>
+        <div class="section">
+          <button class="clear-btn"
+            @click=${() => {
+              if (!confirm("Revert to single-group mode? Only the first group's settings will be kept.")) return;
+              this._revertToSingleGroup();
+            }}
+          >Revert to Single Group Mode</button>
+        </div>
+      `;
+    }
+
+    // ── Single-group mode ──
     const layout = c.sub_buttons_layout ?? "bottom-row";
 
     return html`
@@ -854,6 +1028,12 @@ export class IansCustomRoomCardEditor extends LitElement {
                 this._fieldChanged("sub_buttons_grid_min_width", ev.detail.value)}
             ></ha-selector>
           </div>
+          <ha-selector .hass=${this.hass} .label=${"Cell Layout"}
+            .selector=${{ select: { options: GRID_CELL_LAYOUT_OPTIONS, mode: "list" } }}
+            .value=${c.sub_buttons_grid_cell_layout ?? "vertical"}
+            @value-changed=${(ev: CustomEvent) =>
+              this._fieldChanged("sub_buttons_grid_cell_layout", ev.detail.value || undefined)}
+          ></ha-selector>
         ` : nothing}
 
         ${layout === "left-column" || layout === "right-column" ? html`
@@ -889,6 +1069,14 @@ export class IansCustomRoomCardEditor extends LitElement {
         <div class="section-label">Buttons</div>
         ${(c.sub_buttons ?? []).map((btn, i) => this._renderSubButtonRow(btn, i))}
         <button class="add-btn" @click=${this._addSubButton}>+ Add Button</button>
+      </div>
+
+      <!-- ── Switch to groups mode ── -->
+      <div class="section">
+        <div class="hint">Groups mode allows multiple independent button groups with different layouts and positions.</div>
+        <button class="add-btn" style="background: var(--secondary-background-color);"
+          @click=${() => this._switchToGroupsMode()}
+        >Switch to Groups Mode</button>
       </div>
     `;
   }
@@ -933,7 +1121,7 @@ export class IansCustomRoomCardEditor extends LitElement {
     `;
   }
 
-  // ── Sub-button row ────────────────────────────────────────────────────────────
+  // ── Sub-button row (single-group mode) ───────────────────────────────────────
 
   private _renderSubButtonRow(btn: SubButtonConfig, index: number) {
     const isExpanded = this._expandedSubButton === index;
@@ -965,126 +1153,351 @@ export class IansCustomRoomCardEditor extends LitElement {
 
         ${isExpanded ? html`
           <div class="sub-btn-body">
-            <!-- Entity & display -->
-            <div class="sub-group-label">Entity &amp; Display</div>
+            ${this._renderButtonBody(
+              btn,
+              showPosition,
+              (patch) => this._subButtonChanged(index, patch),
+              (field, value) => this._subButtonChanged(index, { [field]: value })
+            )}
+          </div>
+        ` : nothing}
+      </div>
+    `;
+  }
 
-            <ha-entity-picker .hass=${this.hass} .label=${"Entity"}
-              .value=${btn.entity ?? ""} allow-custom-entity
-              @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { entity: ev.detail.value || undefined })}
-            ></ha-entity-picker>
+  // ── Group management methods ──────────────────────────────────────────────────
 
-            <ha-icon-picker .hass=${this.hass}
-              .label=${"Icon (blank = auto-pick from entity domain)"}
-              .value=${btn.icon ?? ""}
-              @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { icon: ev.detail.value || undefined })}
-            ></ha-icon-picker>
+  private _addGroup(): void {
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    if (groups.length >= 4) return;
+    groups.push({ layout: "bottom-row", buttons: [] });
+    this._fieldChanged("sub_button_groups", groups);
+    this._expandedGroup = groups.length - 1;
+  }
 
-            <ha-selector .hass=${this.hass}
-              .label=${"Label (blank to hide, or type 'entity' for entity name)"}
-              .selector=${{ text: {} }} .value=${btn.label ?? ""}
+  private _deleteGroup(index: number): void {
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    groups.splice(index, 1);
+    this._fieldChanged("sub_button_groups", groups.length ? groups : undefined);
+    if (this._expandedGroup === index) this._expandedGroup = null;
+  }
+
+  private _moveGroupUp(index: number): void {
+    if (index === 0) return;
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    [groups[index - 1], groups[index]] = [groups[index], groups[index - 1]];
+    this._fieldChanged("sub_button_groups", groups);
+  }
+
+  private _moveGroupDown(index: number): void {
+    const groups = this._config?.sub_button_groups ?? [];
+    if (index >= groups.length - 1) return;
+    const arr = [...groups];
+    [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+    this._fieldChanged("sub_button_groups", arr);
+  }
+
+  private _groupChanged(groupIndex: number, patch: Partial<SubButtonGroup>): void {
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    groups[groupIndex] = { ...groups[groupIndex], ...patch };
+    this._fieldChanged("sub_button_groups", groups);
+  }
+
+  private _groupButtonChanged(groupIndex: number, btnIndex: number, patch: Partial<SubButtonConfig>): void {
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    const buttons = [...(groups[groupIndex]?.buttons ?? [])];
+    buttons[btnIndex] = { ...buttons[btnIndex], ...patch };
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+  }
+
+  private _addGroupButton(groupIndex: number): void {
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    const buttons = [...(groups[groupIndex]?.buttons ?? [])];
+    buttons.push({
+      show_icon: true, show_label: false, show_state: false, background: true,
+      state_based_color: false,
+      tap_action: { action: "toggle" },
+      hold_action: { action: "more-info" },
+      double_tap_action: { action: "none" },
+    });
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+    this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: buttons.length - 1 };
+  }
+
+  private _deleteGroupButton(groupIndex: number, btnIndex: number): void {
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    const buttons = [...(groups[groupIndex]?.buttons ?? [])];
+    buttons.splice(btnIndex, 1);
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+    if (this._expandedGroupButton[groupIndex] === btnIndex) {
+      this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: null };
+    }
+  }
+
+  private _switchToGroupsMode(): void {
+    const cfg = { ...this._config! };
+    cfg.sub_button_groups = [{
+      layout: cfg.sub_buttons_layout ?? "bottom-row",
+      gap: cfg.sub_button_gap,
+      grid_columns: cfg.sub_buttons_grid_columns,
+      grid_min_width: cfg.sub_buttons_grid_min_width,
+      grid_cell_layout: cfg.sub_buttons_grid_cell_layout,
+      column_justify: cfg.sub_buttons_column_justify,
+      icon_color: cfg.sub_button_icon_color,
+      background_color: cfg.sub_button_background_color,
+      opacity: cfg.sub_button_opacity,
+      buttons: cfg.sub_buttons ?? [],
+    }];
+    delete cfg.sub_buttons;
+    delete cfg.sub_buttons_layout;
+    delete cfg.sub_button_gap;
+    delete cfg.sub_buttons_grid_columns;
+    delete cfg.sub_buttons_grid_min_width;
+    delete cfg.sub_buttons_grid_cell_layout;
+    delete cfg.sub_buttons_column_justify;
+    delete cfg.sub_button_icon_color;
+    delete cfg.sub_button_background_color;
+    delete cfg.sub_button_opacity;
+    this._fireConfigChanged(cfg);
+    this._expandedGroup = 0;
+  }
+
+  private _revertToSingleGroup(): void {
+    const firstGroup = this._config?.sub_button_groups?.[0] ?? {};
+    const cfg = { ...this._config! };
+    cfg.sub_buttons = firstGroup.buttons ?? [];
+    if (firstGroup.layout) cfg.sub_buttons_layout = firstGroup.layout as SubButtonsLayout;
+    if (firstGroup.gap !== undefined) cfg.sub_button_gap = firstGroup.gap;
+    if (firstGroup.grid_columns !== undefined) cfg.sub_buttons_grid_columns = firstGroup.grid_columns;
+    if (firstGroup.grid_min_width !== undefined) cfg.sub_buttons_grid_min_width = firstGroup.grid_min_width;
+    if (firstGroup.grid_cell_layout) cfg.sub_buttons_grid_cell_layout = firstGroup.grid_cell_layout;
+    if (firstGroup.column_justify) cfg.sub_buttons_column_justify = firstGroup.column_justify;
+    if (firstGroup.icon_color) cfg.sub_button_icon_color = firstGroup.icon_color;
+    if (firstGroup.background_color) cfg.sub_button_background_color = firstGroup.background_color;
+    if (firstGroup.opacity !== undefined) cfg.sub_button_opacity = firstGroup.opacity;
+    delete cfg.sub_button_groups;
+    this._fireConfigChanged(cfg);
+  }
+
+  // ── Group button drag-and-drop ────────────────────────────────────────────────
+
+  private _onGroupBtnDragHandleMousedown(e: MouseEvent, groupIndex: number, btnIndex: number): void {
+    const row = (e.currentTarget as Element).closest(".sub-btn-row") as HTMLElement | null;
+    if (row) row.setAttribute("draggable", "true");
+    this._dragGroupContext = groupIndex;
+    this._dragIndex = btnIndex;
+  }
+
+  private _onGroupBtnDragStart(e: DragEvent, groupIndex: number, btnIndex: number): void {
+    e.dataTransfer?.setData("text/plain", String(btnIndex));
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+    this._dragGroupContext = groupIndex;
+    this._dragIndex = btnIndex;
+  }
+
+  private _onGroupBtnDragOver(e: DragEvent, groupIndex: number, btnIndex: number): void {
+    if (this._dragGroupContext !== groupIndex || this._dragIndex === null || this._dragIndex === btnIndex) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    if (this._dragOverIndex !== btnIndex) this._dragOverIndex = btnIndex;
+  }
+
+  private _onGroupBtnDrop(e: DragEvent, groupIndex: number, toIndex: number): void {
+    e.preventDefault();
+    const fromIndex = this._dragIndex;
+    this._dragGroupContext = null;
+    this._dragIndex = null;
+    this._dragOverIndex = null;
+    if (fromIndex === null || fromIndex === toIndex) return;
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    const buttons = [...(groups[groupIndex]?.buttons ?? [])];
+    const [moved] = buttons.splice(fromIndex, 1);
+    buttons.splice(toIndex, 0, moved);
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+    this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: null };
+  }
+
+  // ── Group button row ──────────────────────────────────────────────────────────
+
+  private _renderGroupButtonRow(btn: SubButtonConfig, btnIndex: number, groupIndex: number, layout: SubButtonsLayout) {
+    const isExpanded = this._expandedGroupButton[groupIndex] === btnIndex;
+    const label = btn.entity ?? btn.label ?? btn.icon ?? `Button ${btnIndex + 1}`;
+    const showPosition = layout === "custom";
+    const isDragTarget = this._dragGroupContext === groupIndex && this._dragOverIndex === btnIndex;
+
+    return html`
+      <div class="sub-btn-row ${isDragTarget ? "drag-over" : ""}"
+        @dragstart=${(e: DragEvent) => this._onGroupBtnDragStart(e, groupIndex, btnIndex)}
+        @dragover=${(e: DragEvent) => this._onGroupBtnDragOver(e, groupIndex, btnIndex)}
+        @dragleave=${() => { if (this._dragGroupContext === groupIndex && this._dragOverIndex === btnIndex) this._dragOverIndex = null; }}
+        @dragend=${(e: DragEvent) => { (e.currentTarget as HTMLElement).removeAttribute("draggable"); this._dragGroupContext = null; this._dragIndex = null; this._dragOverIndex = null; }}
+        @drop=${(e: DragEvent) => this._onGroupBtnDrop(e, groupIndex, btnIndex)}
+      >
+        <div class="sub-btn-header"
+          @click=${() => {
+            const cur = this._expandedGroupButton[groupIndex];
+            this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: cur === btnIndex ? null : btnIndex };
+          }}
+        >
+          <ha-icon class="drag-handle" icon="mdi:drag-vertical"
+            @mousedown=${(e: MouseEvent) => this._onGroupBtnDragHandleMousedown(e, groupIndex, btnIndex)}
+          ></ha-icon>
+          <ha-icon .icon=${btn.icon ?? "mdi:gesture-tap"}></ha-icon>
+          <span class="sub-btn-label">${label}</span>
+          <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+          <button class="del-btn"
+            @click=${(ev: Event) => { ev.stopPropagation(); this._deleteGroupButton(groupIndex, btnIndex); }}
+          ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
+        </div>
+        ${isExpanded ? html`
+          <div class="sub-btn-body">
+            ${this._renderButtonBody(
+              btn,
+              showPosition,
+              (patch) => this._groupButtonChanged(groupIndex, btnIndex, patch),
+              (field, value) => this._groupButtonChanged(groupIndex, btnIndex, { [field]: value })
+            )}
+          </div>
+        ` : nothing}
+      </div>
+    `;
+  }
+
+  // ── Group row ─────────────────────────────────────────────────────────────────
+
+  private _renderGroupRow(group: SubButtonGroup, groupIndex: number) {
+    const c = this._config!;
+    const isExpanded = this._expandedGroup === groupIndex;
+    const numGroups = c.sub_button_groups?.length ?? 0;
+    const groupLabel = group.label ?? `Group ${groupIndex + 1}`;
+    const layout = (group.layout ?? "bottom-row") as SubButtonsLayout;
+    const isColumn = layout === "left-column" || layout === "right-column";
+    const isGrid = layout === "grid";
+    const showCustomPos = group.position === "custom";
+
+    return html`
+      <div class="sub-btn-row">
+        <div class="sub-btn-header" @click=${() => (this._expandedGroup = isExpanded ? null : groupIndex)}>
+          <ha-icon icon="mdi:layers" style="--mdc-icon-size:18px; opacity:0.7; flex-shrink:0;"></ha-icon>
+          <span class="sub-btn-label">${groupLabel}</span>
+          <span class="group-layout-chip">${layout}</span>
+          <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+          <div style="display:flex; gap:2px; flex-shrink:0;">
+            ${groupIndex > 0 ? html`
+              <button class="icon-btn" title="Move up"
+                @click=${(e: Event) => { e.stopPropagation(); this._moveGroupUp(groupIndex); }}
+              ><ha-icon icon="mdi:arrow-up" style="--mdc-icon-size:14px;"></ha-icon></button>
+            ` : nothing}
+            ${groupIndex < numGroups - 1 ? html`
+              <button class="icon-btn" title="Move down"
+                @click=${(e: Event) => { e.stopPropagation(); this._moveGroupDown(groupIndex); }}
+              ><ha-icon icon="mdi:arrow-down" style="--mdc-icon-size:14px;"></ha-icon></button>
+            ` : nothing}
+            <button class="del-btn"
+              @click=${(e: Event) => { e.stopPropagation(); this._deleteGroup(groupIndex); }}
+            ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
+          </div>
+        </div>
+
+        ${isExpanded ? html`
+          <div class="sub-btn-body">
+            <ha-selector .hass=${this.hass} .label=${"Group Name (editor label only)"}
+              .selector=${{ text: {} }} .value=${group.label ?? ""}
               @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { label: ev.detail.value || undefined })}
+                this._groupChanged(groupIndex, { label: ev.detail.value || undefined })}
             ></ha-selector>
 
-            <ha-form .hass=${this.hass} .data=${btn}
-              .schema=${[
-                { name: "show_icon",  label: "Show Icon",       selector: { boolean: {} } },
-                { name: "show_label", label: "Show Label",      selector: { boolean: {} } },
-                { name: "show_state", label: "Show State",      selector: { boolean: {} } },
-                { name: "background", label: "Show Background", selector: { boolean: {} } },
-              ]}
-              .computeLabel=${(s: any) => s.label}
-              @value-changed=${(ev: CustomEvent) => {
-                this._subButtonChanged(index, {
-                  show_icon:  ev.detail.value.show_icon,
-                  show_label: ev.detail.value.show_label,
-                  show_state: ev.detail.value.show_state,
-                  background: ev.detail.value.background,
-                });
-              }}
-            ></ha-form>
+            <div class="sub-group-label">Layout &amp; Position</div>
 
-            <!-- Color & opacity -->
-            <div class="sub-group-label">Color &amp; Opacity</div>
-
-            <ha-form .hass=${this.hass}
-              .data=${{ state_based_color: btn.state_based_color ?? false }}
-              .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
-              .computeLabel=${(s: any) => s.label}
+            <ha-selector .hass=${this.hass} .label=${"Button Layout"}
+              .selector=${{ select: { options: SUB_BUTTON_LAYOUT_OPTIONS, mode: "dropdown" } }}
+              .value=${layout}
               @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { state_based_color: ev.detail.value.state_based_color })}
-            ></ha-form>
-
-            ${btn.state_based_color ? html`
-              <div class="hint">Active when entity is on/open/home/playing. Defaults to domain color (yellow for lights) if left blank.</div>
-              ${this._renderSubBtnColorField(btn, index, "icon_color_on",  "Active Icon Color")}
-              ${this._renderSubBtnColorField(btn, index, "icon_color_off", "Inactive Icon Color")}
-            ` : html`
-              ${this._renderSubBtnColorField(btn, index, "icon_color", "Icon Color")}
-            `}
-
-            ${this._renderSubBtnColorField(btn, index, "background_color", "Background Color", "e.g. rgba(255,255,255,0.15)")}
-
-            <ha-selector .hass=${this.hass} .label=${"Button Opacity"}
-              .selector=${OPACITY_SELECTOR} .value=${btn.opacity ?? 1}
-              @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { opacity: ev.detail.value })}
+                this._groupChanged(groupIndex, { layout: ev.detail.value as SubButtonsLayout })}
             ></ha-selector>
 
-            <!-- Animation -->
-            <div class="sub-group-label">Animation</div>
-            <ha-selector .hass=${this.hass} .label=${"Animation"}
-              .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
-              .value=${btn.animation ?? "none"}
+            <ha-selector .hass=${this.hass} .label=${"Group Position (overrides layout default)"}
+              .selector=${{ select: { options: GROUP_POSITION_OPTIONS, mode: "dropdown" } }}
+              .value=${group.position ?? ""}
               @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { animation: ev.detail.value === "none" ? undefined : ev.detail.value })}
+                this._groupChanged(groupIndex, { position: (ev.detail.value as SubButtonGroupPosition) || undefined })}
             ></ha-selector>
-            ${btn.animation && btn.animation !== "none" ? html`
+
+            ${showCustomPos ? html`
               <div class="two-col">
-                <ha-selector .hass=${this.hass} .label=${"When"}
-                  .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
-                  .value=${btn.animation_when ?? "always"}
+                <ha-selector .hass=${this.hass} .label=${"X (CSS left)"}
+                  .selector=${{ text: {} }} .value=${group.position_x ?? ""}
+                  .placeholder=${"e.g. 10px, 25%"}
                   @value-changed=${(ev: CustomEvent) =>
-                    this._subButtonChanged(index, { animation_when: ev.detail.value || undefined })}
+                    this._groupChanged(groupIndex, { position_x: ev.detail.value || undefined })}
                 ></ha-selector>
-                <ha-selector .hass=${this.hass} .label=${"Speed"}
-                  .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
-                  .value=${btn.animation_speed ?? "normal"}
+                <ha-selector .hass=${this.hass} .label=${"Y (CSS top)"}
+                  .selector=${{ text: {} }} .value=${group.position_y ?? ""}
+                  .placeholder=${"e.g. 10px, 25%"}
                   @value-changed=${(ev: CustomEvent) =>
-                    this._subButtonChanged(index, { animation_speed: ev.detail.value || undefined })}
+                    this._groupChanged(groupIndex, { position_y: ev.detail.value || undefined })}
                 ></ha-selector>
               </div>
             ` : nothing}
 
-            ${showPosition ? html`
-              <div class="sub-group-label">Position</div>
-              <ha-selector .hass=${this.hass} .label=${"Position"}
-                .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
-                .value=${btn.position ?? "bottom-left"}
+            ${isColumn ? html`
+              <ha-selector .hass=${this.hass} .label=${"Column Alignment"}
+                .selector=${{ select: { options: COLUMN_JUSTIFY_OPTIONS, mode: "dropdown" } }}
+                .value=${group.column_justify ?? "top"}
                 @value-changed=${(ev: CustomEvent) =>
-                  this._subButtonChanged(index, { position: ev.detail.value })}
+                  this._groupChanged(groupIndex, { column_justify: ev.detail.value || undefined })}
               ></ha-selector>
             ` : nothing}
 
-            <!-- Actions -->
-            <div class="sub-group-label">Actions</div>
-            <ha-selector .hass=${this.hass} .label=${"Tap Action"}
-              .selector=${{ ui_action: {} }} .value=${btn.tap_action ?? { action: "toggle" }}
-              @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { tap_action: ev.detail.value })}
-            ></ha-selector>
-            <ha-selector .hass=${this.hass} .label=${"Hold Action"}
-              .selector=${{ ui_action: {} }} .value=${btn.hold_action ?? { action: "more-info" }}
-              @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { hold_action: ev.detail.value })}
-            ></ha-selector>
-            <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
-              .selector=${{ ui_action: {} }} .value=${btn.double_tap_action ?? { action: "none" }}
-              @value-changed=${(ev: CustomEvent) =>
-                this._subButtonChanged(index, { double_tap_action: ev.detail.value })}
-            ></ha-selector>
+            ${isGrid ? html`
+              <div class="two-col">
+                <ha-selector .hass=${this.hass} .label=${"Columns (0 = auto-fill)"}
+                  .selector=${{ number: { min: 0, max: 8, step: 1, mode: "box" } }}
+                  .value=${group.grid_columns ?? 0}
+                  @value-changed=${(ev: CustomEvent) =>
+                    this._groupChanged(groupIndex, { grid_columns: ev.detail.value || undefined })}
+                ></ha-selector>
+                <ha-selector .hass=${this.hass} .label=${"Cell Min Width"}
+                  .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
+                  .value=${group.grid_min_width ?? 56}
+                  @value-changed=${(ev: CustomEvent) =>
+                    this._groupChanged(groupIndex, { grid_min_width: ev.detail.value })}
+                ></ha-selector>
+              </div>
+              <ha-selector .hass=${this.hass} .label=${"Cell Layout"}
+                .selector=${{ select: { options: GRID_CELL_LAYOUT_OPTIONS, mode: "list" } }}
+                .value=${group.grid_cell_layout ?? "vertical"}
+                @value-changed=${(ev: CustomEvent) =>
+                  this._groupChanged(groupIndex, { grid_cell_layout: ev.detail.value || undefined })}
+              ></ha-selector>
+            ` : nothing}
+
+            <div class="sub-group-label">Group Style</div>
+            <div class="two-col">
+              <ha-selector .hass=${this.hass} .label=${"Opacity"}
+                .selector=${OPACITY_SELECTOR} .value=${group.opacity ?? 1}
+                @value-changed=${(ev: CustomEvent) =>
+                  this._groupChanged(groupIndex, { opacity: ev.detail.value })}
+              ></ha-selector>
+              <ha-selector .hass=${this.hass} .label=${"Button Gap"}
+                .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
+                .value=${group.gap ?? 6}
+                @value-changed=${(ev: CustomEvent) =>
+                  this._groupChanged(groupIndex, { gap: ev.detail.value })}
+              ></ha-selector>
+            </div>
+            ${this._renderButtonColorField(group.icon_color ?? "", "Icon Color (default for group)",       "e.g. #ff9800",       (v) => this._groupChanged(groupIndex, { icon_color: v }))}
+            ${this._renderButtonColorField(group.background_color ?? "", "Background Color (default for group)", "e.g. rgba(255,255,255,0.1)", (v) => this._groupChanged(groupIndex, { background_color: v }))}
+
+            <div class="sub-group-label">Buttons</div>
+            ${(group.buttons ?? []).map((btn, i) =>
+              this._renderGroupButtonRow(btn, i, groupIndex, layout)
+            )}
+            <button class="add-btn" @click=${() => this._addGroupButton(groupIndex)}>+ Add Button</button>
           </div>
         ` : nothing}
       </div>
@@ -1526,6 +1939,38 @@ export class IansCustomRoomCardEditor extends LitElement {
         font-size: 13px;
         cursor: pointer;
         color: var(--primary-text-color);
+      }
+
+      .icon-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--secondary-text-color);
+        padding: 0;
+        flex-shrink: 0;
+        transition: background 0.15s;
+      }
+
+      .icon-btn:hover {
+        background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+        color: var(--primary-color);
+      }
+
+      .group-layout-chip {
+        font-size: 11px;
+        background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+        color: var(--primary-color);
+        border-radius: 10px;
+        padding: 2px 7px;
+        margin-left: 4px;
+        font-weight: 500;
+        flex-shrink: 0;
       }
     `;
   }

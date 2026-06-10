@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape } from "./types";
+import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape, SubButtonGroup, SubButtonsLayout, SubButtonConfig } from "./types";
 import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION } from "./const";
 import { cardStyles } from "./utils/styles";
 import { resolveAreaImage } from "./utils/area-image";
@@ -273,36 +273,49 @@ export class IansCustomRoomCard extends LitElement {
     await this._unsubscribeSubButtonTemplates();
 
     const c = this._config;
-    if (!c?.sub_buttons || !this.hass) return;
+    if (!this.hass) return;
 
     const variables: Record<string, unknown> = {
       config: c,
       user: this.hass.user?.name ?? "",
     };
 
-    for (const [i, btn] of c.sub_buttons.entries()) {
-      const btnVars = {
-        ...variables,
-        entity: btn.entity ? this.hass.states[btn.entity] : undefined,
-      };
-
-      for (const field of ["icon", "label"] as const) {
-        const value = btn[field];
-        if (!value || !isTemplate(value)) continue;
-
-        const key = `sub_${i}_${field}`;
-        try {
-          const unsub = await subscribeTemplate(
-            this.hass,
-            value,
-            btnVars,
-            (result) => {
-              this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
+    if (c?.sub_button_groups?.length) {
+      // Multi-group mode: keys are "g{g}_sub_{i}_{field}"
+      for (const [g, group] of c.sub_button_groups.slice(0, 4).entries()) {
+        for (const [i, btn] of (group.buttons ?? []).entries()) {
+          const btnVars = { ...variables, entity: btn.entity ? this.hass.states[btn.entity] : undefined };
+          for (const field of ["icon", "label"] as const) {
+            const value = btn[field];
+            if (!value || !isTemplate(value)) continue;
+            const key = `g${g}_sub_${i}_${field}`;
+            try {
+              const unsub = await subscribeTemplate(this.hass, value, btnVars,
+                (result) => { this._subTemplateResults = { ...this._subTemplateResults, [key]: result }; }
+              );
+              this._subTemplateUnsubs.set(key, unsub);
+            } catch (e) {
+              console.warn(`[ians-room-card] Group button template error (${key}):`, e);
             }
-          );
-          this._subTemplateUnsubs.set(key, unsub);
-        } catch (e) {
-          console.warn(`[ians-room-card] Sub-button template error (${key}):`, e);
+          }
+        }
+      }
+    } else if (c?.sub_buttons) {
+      // Single-group mode
+      for (const [i, btn] of c.sub_buttons.entries()) {
+        const btnVars = { ...variables, entity: btn.entity ? this.hass.states[btn.entity] : undefined };
+        for (const field of ["icon", "label"] as const) {
+          const value = btn[field];
+          if (!value || !isTemplate(value)) continue;
+          const key = `sub_${i}_${field}`;
+          try {
+            const unsub = await subscribeTemplate(this.hass, value, btnVars,
+              (result) => { this._subTemplateResults = { ...this._subTemplateResults, [key]: result }; }
+            );
+            this._subTemplateUnsubs.set(key, unsub);
+          } catch (e) {
+            console.warn(`[ians-room-card] Sub-button template error (${key}):`, e);
+          }
         }
       }
     }
@@ -373,28 +386,32 @@ export class IansCustomRoomCard extends LitElement {
     this._setCSSVar("--ians-sub-button-opacity", c.sub_button_opacity !== undefined ? String(c.sub_button_opacity) : undefined);
     this._setCSSVar("--ians-sub-button-gap", c.sub_button_gap !== undefined ? `${c.sub_button_gap}px` : undefined);
 
-    // Grid template columns — set as CSS variable for the grid layout to consume
-    if (c.sub_buttons_layout === "grid") {
-      if (c.sub_buttons_grid_columns) {
-        this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(${c.sub_buttons_grid_columns}, 1fr)`);
-      } else if (c.sub_buttons_grid_min_width) {
-        this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(auto-fill, minmax(${c.sub_buttons_grid_min_width}px, 1fr))`);
+    // Grid/column vars — single-group mode only; multi-group sets these per-group via inline style
+    if (!c.sub_button_groups?.length) {
+      if (c.sub_buttons_layout === "grid") {
+        if (c.sub_buttons_grid_columns) {
+          this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(${c.sub_buttons_grid_columns}, 1fr)`);
+        } else if (c.sub_buttons_grid_min_width) {
+          this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(auto-fill, minmax(${c.sub_buttons_grid_min_width}px, 1fr))`);
+        } else {
+          this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
+        }
       } else {
         this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
       }
+
+      if (c.sub_buttons_layout === "left-column" || c.sub_buttons_layout === "right-column") {
+        const justifyMap: Record<string, string> = {
+          top: "flex-start", center: "center", bottom: "flex-end",
+          "space-between": "space-between", "space-around": "space-around",
+        };
+        const justify = c.sub_buttons_column_justify ? justifyMap[c.sub_buttons_column_justify] : undefined;
+        this._setCSSVar("--ians-sub-buttons-column-justify", justify);
+      } else {
+        this.style.removeProperty("--ians-sub-buttons-column-justify");
+      }
     } else {
       this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
-    }
-
-    // Column justify — only applies to left/right-column layouts
-    if (c.sub_buttons_layout === "left-column" || c.sub_buttons_layout === "right-column") {
-      const justifyMap: Record<string, string> = {
-        top: "flex-start", center: "center", bottom: "flex-end",
-        "space-between": "space-between", "space-around": "space-around",
-      };
-      const justify = c.sub_buttons_column_justify ? justifyMap[c.sub_buttons_column_justify] : undefined;
-      this._setCSSVar("--ians-sub-buttons-column-justify", justify);
-    } else {
       this.style.removeProperty("--ians-sub-buttons-column-justify");
     }
   }
@@ -405,15 +422,23 @@ export class IansCustomRoomCard extends LitElement {
     this._cleanupSubButtonHandlers();
 
     const c = this._config;
-    // When global_action is active, sub-buttons are display-only — no handlers
-    if (!c?.sub_buttons || c.global_action) return;
+    if (!c || c.global_action) return;
 
-    const subBtnEls =
-      this.shadowRoot?.querySelectorAll<HTMLElement>(".sub-button");
+    const isGroupMode = !!(c.sub_button_groups?.length);
+    if (!isGroupMode && !c.sub_buttons?.length) return;
+
+    const subBtnEls = this.shadowRoot?.querySelectorAll<HTMLElement>(".sub-button");
     if (!subBtnEls) return;
 
-    subBtnEls.forEach((el, i) => {
-      const btn = c.sub_buttons![i];
+    subBtnEls.forEach((el, flatIndex) => {
+      let btn;
+      if (isGroupMode) {
+        const g = parseInt(el.dataset.group ?? "0");
+        const i = parseInt(el.dataset.index ?? "0");
+        btn = c.sub_button_groups?.[g]?.buttons?.[i];
+      } else {
+        btn = c.sub_buttons?.[flatIndex];
+      }
       if (!btn) return;
 
       const actionConfig: ActionHandlerConfig = {
@@ -673,89 +698,162 @@ export class IansCustomRoomCard extends LitElement {
 
   private _renderSubButtons() {
     const c = this._config;
-    if (!c?.sub_buttons?.length) return nothing;
+    if (!c) return nothing;
 
-    const layout = c.sub_buttons_layout ?? "bottom-row";
-    const isAbsolute = layout === "corners" || layout === "custom"
-      || layout === "left-column" || layout === "right-column";
+    // Multi-group mode
+    if (c.sub_button_groups?.length) {
+      return c.sub_button_groups.slice(0, 4).map((group, gIdx) =>
+        this._renderGroup(group, gIdx)
+      );
+    }
+
+    // Single-group mode
+    if (!c.sub_buttons?.length) return nothing;
+
+    const layout = (c.sub_buttons_layout ?? "bottom-row") as SubButtonsLayout;
     const isGlobal = !!c.global_action;
+    const buttons = c.sub_buttons.map((btn, i) =>
+      this._renderSingleButton(btn, i, null, layout, isGlobal)
+    );
 
-    const buttons = c.sub_buttons.map((btn, i) => {
-      const entityState = btn.entity ? this.hass?.states[btn.entity] : undefined;
-
-      // Resolve icon: template → user override → entity attribute → domain default → fallback
-      const domain = btn.entity?.split(".")[0] ?? "";
-      const domainIcon = domain ? (DOMAIN_ICONS[domain] ?? "mdi:circle") : "mdi:circle";
-      const icon =
-        this._subTemplateResults[`sub_${i}_icon`] ??
-        btn.icon ??
-        (entityState?.attributes.icon as string | undefined) ??
-        domainIcon;
-
-      // Resolve label
-      let label: string | undefined;
-      if (btn.label !== undefined) {
-        if (btn.label === "entity" && entityState) {
-          label = (entityState.attributes.friendly_name as string | undefined) ?? btn.entity;
-        } else {
-          label = this._subTemplateResults[`sub_${i}_label`] ?? btn.label;
-        }
-      }
-
-      // Position class for corners/custom layouts
-      let posClass = "";
-      if (layout === "corners") {
-        posClass = `pos-${CORNER_POSITIONS[i] ?? "bottom-right"}`;
-      } else if (layout === "custom" && btn.position) {
-        posClass = `pos-${btn.position}`;
-      }
-
-      const classes = [
-        "sub-button",
-        btn.background !== false ? "has-background" : "",
-        isGlobal ? "display-only" : "",
-        posClass,
-      ].filter(Boolean).join(" ");
-
-      // State-based icon color: auto-color by entity state when enabled
-      let btnIconColor = btn.icon_color;
-      if (btn.state_based_color && entityState) {
-        const isActive = ACTIVE_STATES.has(entityState.state);
-        btnIconColor = isActive
-          ? (btn.icon_color_on ?? DOMAIN_ACTIVE_COLORS[domain] ?? btn.icon_color)
-          : (btn.icon_color_off ?? btn.icon_color);
-      }
-
-      // Animation
-      const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
-      const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
-
-      // Per-button color overrides via inline style
-      const btnStyle = [
-        btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
-        btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
-        btn.opacity !== undefined ? `opacity: ${btn.opacity}` : "",
-        btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : "",
-      ].filter(Boolean).join("; ");
-
-      return html`
-        <div class=${classes} part="sub-button" style=${btnStyle || nothing}>
-          ${btn.show_icon !== false
-            ? html`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || nothing}></ha-icon>`
-            : nothing}
-          ${btn.show_label && label
-            ? html`<span part="sub-button-label" class="sub-button-label">${label}</span>`
-            : nothing}
-          ${btn.show_state && entityState
-            ? html`<span part="sub-button-state" class="sub-button-state">${entityState.state}</span>`
-            : nothing}
-        </div>
-      `;
-    });
-
-    const containerClasses = ["sub-buttons", `layout-${layout}`].filter(Boolean).join(" ");
+    const containerClasses = [
+      "sub-buttons",
+      `layout-${layout}`,
+      layout === "grid" && c.sub_buttons_grid_cell_layout === "horizontal" ? "grid-horizontal" : "",
+    ].filter(Boolean).join(" ");
 
     return html`<div part="sub-buttons" class=${containerClasses}>${buttons}</div>`;
+  }
+
+  private _deriveGroupPosition(layout: SubButtonsLayout): string {
+    switch (layout) {
+      case "top-row":     return "top-row";
+      case "left-column": return "left-column";
+      case "right-column":return "right-column";
+      case "corners":
+      case "custom":      return "full";
+      default:            return "bottom-row";
+    }
+  }
+
+  private _renderGroup(group: SubButtonGroup, groupIndex: number) {
+    const c = this._config!;
+    const layout = (group.layout ?? "bottom-row") as SubButtonsLayout;
+    const isGlobal = !!c.global_action;
+    const isColumn = layout === "left-column" || layout === "right-column";
+    const isGrid = layout === "grid";
+
+    const effectivePos = group.position ?? this._deriveGroupPosition(layout);
+
+    const justifyMap: Record<string, string> = {
+      top: "flex-start", center: "center", bottom: "flex-end",
+      "space-between": "space-between", "space-around": "space-around",
+    };
+
+    const groupStyle = [
+      effectivePos === "custom" ? `top: ${group.position_y ?? "auto"}; left: ${group.position_x ?? "auto"}` : "",
+      group.gap !== undefined ? `--ians-sub-button-gap: ${group.gap}px` : "",
+      group.icon_color ? `--ians-sub-button-icon-color: ${group.icon_color}` : "",
+      group.background_color ? `--ians-sub-button-background-color: ${group.background_color}` : "",
+      group.opacity !== undefined ? `opacity: ${group.opacity}` : "",
+      isColumn && group.column_justify ? `--ians-sub-buttons-column-justify: ${justifyMap[group.column_justify] ?? "flex-start"}` : "",
+      isGrid && group.grid_columns ? `--ians-sub-buttons-grid-template-columns: repeat(${group.grid_columns}, 1fr)` :
+      isGrid && group.grid_min_width ? `--ians-sub-buttons-grid-template-columns: repeat(auto-fill, minmax(${group.grid_min_width}px, 1fr))` : "",
+    ].filter(Boolean).join("; ");
+
+    const containerClass = [
+      "sub-button-group",
+      `group-pos-${effectivePos}`,
+      isGrid ? "group-layout-grid" : "",
+      isGrid && group.grid_cell_layout === "horizontal" ? "grid-horizontal" : "",
+    ].filter(Boolean).join(" ");
+
+    const buttons = (group.buttons ?? []).map((btn, i) =>
+      this._renderSingleButton(btn, i, groupIndex, layout, isGlobal)
+    );
+
+    return html`<div class=${containerClass} part="sub-button-group" style=${groupStyle || nothing}>${buttons}</div>`;
+  }
+
+  private _renderSingleButton(
+    btn: SubButtonConfig,
+    btnIndex: number,
+    groupIndex: number | null,
+    layout: SubButtonsLayout,
+    isGlobal: boolean
+  ) {
+    const entityState = btn.entity ? this.hass?.states[btn.entity] : undefined;
+    const domain = btn.entity?.split(".")[0] ?? "";
+    const domainIcon = domain ? (DOMAIN_ICONS[domain] ?? "mdi:circle") : "mdi:circle";
+    const keyPfx = groupIndex !== null ? `g${groupIndex}_sub_${btnIndex}` : `sub_${btnIndex}`;
+
+    const icon =
+      this._subTemplateResults[`${keyPfx}_icon`] ??
+      btn.icon ??
+      (entityState?.attributes.icon as string | undefined) ??
+      domainIcon;
+
+    let label: string | undefined;
+    if (btn.label !== undefined) {
+      if (btn.label === "entity" && entityState) {
+        label = (entityState.attributes.friendly_name as string | undefined) ?? btn.entity;
+      } else {
+        label = this._subTemplateResults[`${keyPfx}_label`] ?? btn.label;
+      }
+    }
+
+    let posClass = "";
+    if (layout === "corners") {
+      posClass = `pos-${CORNER_POSITIONS[btnIndex] ?? "bottom-right"}`;
+    } else if (layout === "custom" && btn.position) {
+      posClass = `pos-${btn.position}`;
+    }
+
+    const classes = [
+      "sub-button",
+      btn.background !== false ? "has-background" : "",
+      isGlobal ? "display-only" : "",
+      posClass,
+    ].filter(Boolean).join(" ");
+
+    let btnIconColor = btn.icon_color;
+    if (btn.state_based_color && entityState) {
+      const isActive = ACTIVE_STATES.has(entityState.state);
+      btnIconColor = isActive
+        ? (btn.icon_color_on ?? DOMAIN_ACTIVE_COLORS[domain] ?? btn.icon_color)
+        : (btn.icon_color_off ?? btn.icon_color);
+    }
+
+    const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
+    const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
+
+    const stateDisplay = entityState
+      ? `${entityState.state}${entityState.attributes.unit_of_measurement ? ` ${entityState.attributes.unit_of_measurement}` : ""}`
+      : "";
+
+    const btnStyle = [
+      btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
+      btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
+      btn.opacity !== undefined ? `opacity: ${btn.opacity}` : "",
+      btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : "",
+    ].filter(Boolean).join("; ");
+
+    return html`
+      <div class=${classes} part="sub-button" style=${btnStyle || nothing}
+        data-index=${String(btnIndex)}
+        data-group=${groupIndex !== null ? String(groupIndex) : nothing}
+      >
+        ${btn.show_icon !== false
+          ? html`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || nothing}></ha-icon>`
+          : nothing}
+        ${btn.show_label && label
+          ? html`<span part="sub-button-label" class="sub-button-label">${label}</span>`
+          : nothing}
+        ${btn.show_state && entityState
+          ? html`<span part="sub-button-state" class="sub-button-state">${stateDisplay}</span>`
+          : nothing}
+      </div>
+    `;
   }
 
   private _resolveTitle(): string | undefined {

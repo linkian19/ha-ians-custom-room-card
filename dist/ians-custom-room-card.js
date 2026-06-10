@@ -1004,6 +1004,101 @@ const cardStyles = i$3`
   .sub-button.pos-bottom-center { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
   .sub-button.pos-bottom-right { position: absolute; bottom: 8px; right: 8px; }
 
+  /* Grid cells: horizontal layout (icon beside label) */
+  .sub-buttons.layout-grid.grid-horizontal .sub-button {
+    flex-direction: row;
+    min-height: auto;
+    padding: 6px 10px;
+    text-align: left;
+    border-radius: calc(var(--ians-sub-button-size) / 2);
+  }
+
+  .sub-buttons.layout-grid.grid-horizontal .sub-button-label,
+  .sub-buttons.layout-grid.grid-horizontal .sub-button-state {
+    text-align: left;
+    max-width: none;
+  }
+
+  /* ── Sub-button groups (multi-group mode) ────────────────────────────────── */
+  .sub-button-group {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ians-sub-button-gap);
+  }
+
+  /* Full-edge anchor positions */
+  .sub-button-group.group-pos-bottom-row  { bottom: 8px; left: 8px; right: 8px; flex-direction: row; }
+  .sub-button-group.group-pos-top-row     { top: 8px;    left: 8px; right: 8px; flex-direction: row; }
+  .sub-button-group.group-pos-left-column {
+    left: 8px; top: 8px; bottom: 8px;
+    flex-direction: column; align-items: flex-start;
+    justify-content: var(--ians-sub-buttons-column-justify, flex-start);
+    flex-wrap: nowrap;
+  }
+  .sub-button-group.group-pos-right-column {
+    right: 8px; top: 8px; bottom: 8px;
+    flex-direction: column; align-items: flex-end;
+    justify-content: var(--ians-sub-buttons-column-justify, flex-start);
+    flex-wrap: nowrap;
+  }
+
+  /* Corner/center anchor positions */
+  .sub-button-group.group-pos-top-left     { top: 8px;    left: 8px; }
+  .sub-button-group.group-pos-top-center   { top: 8px;    left: 50%; transform: translateX(-50%); }
+  .sub-button-group.group-pos-top-right    { top: 8px;    right: 8px; }
+  .sub-button-group.group-pos-center-left  { top: 50%;    left: 8px;  transform: translateY(-50%); flex-direction: column; flex-wrap: nowrap; }
+  .sub-button-group.group-pos-center       { top: 50%;    left: 50%; transform: translate(-50%, -50%); }
+  .sub-button-group.group-pos-center-right { top: 50%;    right: 8px; transform: translateY(-50%); flex-direction: column; flex-wrap: nowrap; }
+  .sub-button-group.group-pos-bottom-left  { bottom: 8px; left: 8px; }
+  .sub-button-group.group-pos-bottom-center { bottom: 8px; left: 50%; transform: translateX(-50%); }
+  .sub-button-group.group-pos-bottom-right  { bottom: 8px; right: 8px; }
+
+  /* Full card overlay — for corners/custom sub-button layouts within a group */
+  .sub-button-group.group-pos-full { inset: 0; }
+
+  /* Grid layout within a group */
+  .sub-button-group.group-layout-grid {
+    display: grid;
+    grid-template-columns: var(--ians-sub-buttons-grid-template-columns, repeat(auto-fill, minmax(56px, 1fr)));
+    flex-wrap: unset;
+    align-content: start;
+  }
+
+  .sub-button-group.group-layout-grid .sub-button {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 4px;
+    min-height: 56px;
+    min-width: 0;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .sub-button-group.group-layout-grid .sub-button-label,
+  .sub-button-group.group-layout-grid .sub-button-state {
+    max-width: 100%;
+    text-align: center;
+    font-size: 10px;
+  }
+
+  .sub-button-group.group-layout-grid.grid-horizontal .sub-button {
+    flex-direction: row;
+    min-height: auto;
+    padding: 6px 10px;
+    text-align: left;
+    border-radius: calc(var(--ians-sub-button-size) / 2);
+  }
+
+  .sub-button-group.group-layout-grid.grid-horizontal .sub-button-label,
+  .sub-button-group.group-layout-grid.grid-horizontal .sub-button-state {
+    text-align: left;
+    max-width: none;
+  }
+
   /* ── Icon animations ─────────────────────────────────────────────────────── */
 
   @keyframes ians-spin {
@@ -1312,6 +1407,27 @@ const COLUMN_JUSTIFY_OPTIONS = [
   { value: "space-between", label: "Space Between" },
   { value: "space-around", label: "Space Around" }
 ];
+const GROUP_POSITION_OPTIONS = [
+  { value: "", label: "Default (derived from layout)" },
+  { value: "bottom-row", label: "Full width — bottom edge" },
+  { value: "top-row", label: "Full width — top edge" },
+  { value: "right-column", label: "Full height — right side" },
+  { value: "left-column", label: "Full height — left side" },
+  { value: "top-left", label: "Top Left corner" },
+  { value: "top-center", label: "Top Center" },
+  { value: "top-right", label: "Top Right corner" },
+  { value: "center-left", label: "Center Left" },
+  { value: "center", label: "Center" },
+  { value: "center-right", label: "Center Right" },
+  { value: "bottom-left", label: "Bottom Left corner" },
+  { value: "bottom-center", label: "Bottom Center" },
+  { value: "bottom-right", label: "Bottom Right corner" },
+  { value: "custom", label: "Custom (X/Y coordinates)" }
+];
+const GRID_CELL_LAYOUT_OPTIONS = [
+  { value: "vertical", label: "Vertical — icon above label (default)" },
+  { value: "horizontal", label: "Horizontal — icon beside label" }
+];
 const TEMPLATE_CAPABLE_FIELDS = /* @__PURE__ */ new Set([
   "title",
   "icon",
@@ -1342,6 +1458,9 @@ let IansCustomRoomCardEditor = class extends i {
     this._activeTab = "basic";
     this._dragOverIndex = null;
     this._dragIndex = null;
+    this._expandedGroup = null;
+    this._expandedGroupButton = {};
+    this._dragGroupContext = null;
   }
   connectedCallback() {
     super.connectedCallback();
@@ -1526,10 +1645,8 @@ let IansCustomRoomCardEditor = class extends i {
       </div>
     `;
   }
-  /** Same color field but reads from SubButtonConfig (not top-level CardConfig). */
-  _renderSubBtnColorField(btn, index, field, label, placeholder = "e.g. #ff9800, var(--primary-color)") {
-    var _a2;
-    const currentValue = (_a2 = btn[field]) != null ? _a2 : "";
+  /** Generic color field with callback. Used by both sub-button and group color fields. */
+  _renderButtonColorField(currentValue, label, placeholder, onChange) {
     return b`
       <div class="color-field">
         <span class="color-field-label">${label}</span>
@@ -1538,23 +1655,139 @@ let IansCustomRoomCardEditor = class extends i {
             <div class="color-checker"></div>
             <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
             <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
-            <input
-              type="color"
-              class="color-native"
+            <input type="color" class="color-native"
               .value=${cssToHex(currentValue)}
-              @change=${(ev) => this._subButtonChanged(index, { [field]: ev.target.value || void 0 })}
+              @change=${(ev) => onChange(ev.target.value || void 0)}
             />
           </label>
-          <input
-            type="text"
-            class="color-text-input"
+          <input type="text" class="color-text-input"
             .value=${currentValue}
             placeholder=${placeholder}
-            @change=${(ev) => this._subButtonChanged(index, { [field]: ev.target.value || void 0 })}
-            @input=${(ev) => this._subButtonChanged(index, { [field]: ev.target.value || void 0 })}
+            @change=${(ev) => onChange(ev.target.value || void 0)}
+            @input=${(ev) => onChange(ev.target.value || void 0)}
           />
         </div>
       </div>
+    `;
+  }
+  /** Color field bound to a SubButtonConfig field (single-group mode). */
+  _renderSubBtnColorField(btn, index, field, label, placeholder = "e.g. #ff9800, var(--primary-color)") {
+    var _a2;
+    return this._renderButtonColorField(
+      (_a2 = btn[field]) != null ? _a2 : "",
+      label,
+      placeholder,
+      (v2) => this._subButtonChanged(index, { [field]: v2 })
+    );
+  }
+  /** Shared button accordion body used by both single-group and multi-group editors. */
+  _renderButtonBody(btn, showPosition, onChange, onColorChange) {
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p;
+    return b`
+      <div class="sub-group-label">Entity &amp; Display</div>
+
+      <ha-entity-picker .hass=${this.hass} .label=${"Entity"}
+        .value=${(_a2 = btn.entity) != null ? _a2 : ""} allow-custom-entity
+        @value-changed=${(ev) => onChange({ entity: ev.detail.value || void 0 })}
+      ></ha-entity-picker>
+
+      <ha-icon-picker .hass=${this.hass}
+        .label=${"Icon (blank = auto-pick from entity domain)"}
+        .value=${(_b2 = btn.icon) != null ? _b2 : ""}
+        @value-changed=${(ev) => onChange({ icon: ev.detail.value || void 0 })}
+      ></ha-icon-picker>
+
+      <ha-selector .hass=${this.hass}
+        .label=${"Label (blank to hide, or type 'entity' for entity name)"}
+        .selector=${{ text: {} }} .value=${(_c2 = btn.label) != null ? _c2 : ""}
+        @value-changed=${(ev) => onChange({ label: ev.detail.value || void 0 })}
+      ></ha-selector>
+
+      <ha-form .hass=${this.hass} .data=${btn}
+        .schema=${[
+      { name: "show_icon", label: "Show Icon", selector: { boolean: {} } },
+      { name: "show_label", label: "Show Label", selector: { boolean: {} } },
+      { name: "show_state", label: "Show State (includes unit of measurement)", selector: { boolean: {} } },
+      { name: "background", label: "Show Background", selector: { boolean: {} } }
+    ]}
+        .computeLabel=${(s2) => s2.label}
+        @value-changed=${(ev) => {
+      onChange({
+        show_icon: ev.detail.value.show_icon,
+        show_label: ev.detail.value.show_label,
+        show_state: ev.detail.value.show_state,
+        background: ev.detail.value.background
+      });
+    }}
+      ></ha-form>
+
+      <div class="sub-group-label">Color &amp; Opacity</div>
+
+      <ha-form .hass=${this.hass}
+        .data=${{ state_based_color: (_d2 = btn.state_based_color) != null ? _d2 : false }}
+        .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
+        .computeLabel=${(s2) => s2.label}
+        @value-changed=${(ev) => onChange({ state_based_color: ev.detail.value.state_based_color })}
+      ></ha-form>
+
+      ${btn.state_based_color ? b`
+        <div class="hint">Active when entity is on/open/home/playing. Defaults to domain color (yellow for lights) if left blank.</div>
+        ${this._renderButtonColorField((_e2 = btn.icon_color_on) != null ? _e2 : "", "Active Icon Color", "e.g. #FDD835, yellow", (v2) => onColorChange("icon_color_on", v2))}
+        ${this._renderButtonColorField((_f2 = btn.icon_color_off) != null ? _f2 : "", "Inactive Icon Color", "e.g. #888888, grey", (v2) => onColorChange("icon_color_off", v2))}
+      ` : b`
+        ${this._renderButtonColorField((_g = btn.icon_color) != null ? _g : "", "Icon Color", "e.g. #ff9800, var(--primary-color)", (v2) => onColorChange("icon_color", v2))}
+      `}
+
+      ${this._renderButtonColorField((_h = btn.background_color) != null ? _h : "", "Background Color", "e.g. rgba(255,255,255,0.15)", (v2) => onColorChange("background_color", v2))}
+
+      <ha-selector .hass=${this.hass} .label=${"Button Opacity"}
+        .selector=${OPACITY_SELECTOR} .value=${(_i = btn.opacity) != null ? _i : 1}
+        @value-changed=${(ev) => onChange({ opacity: ev.detail.value })}
+      ></ha-selector>
+
+      <div class="sub-group-label">Animation</div>
+      <ha-selector .hass=${this.hass} .label=${"Animation"}
+        .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
+        .value=${(_j = btn.animation) != null ? _j : "none"}
+        @value-changed=${(ev) => onChange({ animation: ev.detail.value === "none" ? void 0 : ev.detail.value })}
+      ></ha-selector>
+      ${btn.animation && btn.animation !== "none" ? b`
+        <div class="two-col">
+          <ha-selector .hass=${this.hass} .label=${"When"}
+            .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
+            .value=${(_k = btn.animation_when) != null ? _k : "always"}
+            @value-changed=${(ev) => onChange({ animation_when: ev.detail.value || void 0 })}
+          ></ha-selector>
+          <ha-selector .hass=${this.hass} .label=${"Speed"}
+            .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
+            .value=${(_l = btn.animation_speed) != null ? _l : "normal"}
+            @value-changed=${(ev) => onChange({ animation_speed: ev.detail.value || void 0 })}
+          ></ha-selector>
+        </div>
+      ` : A}
+
+      ${showPosition ? b`
+        <div class="sub-group-label">Position</div>
+        <ha-selector .hass=${this.hass} .label=${"Position"}
+          .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
+          .value=${(_m = btn.position) != null ? _m : "bottom-left"}
+          @value-changed=${(ev) => onChange({ position: ev.detail.value })}
+        ></ha-selector>
+      ` : A}
+
+      <div class="sub-group-label">Actions</div>
+      <ha-selector .hass=${this.hass} .label=${"Tap Action"}
+        .selector=${{ ui_action: {} }} .value=${(_n = btn.tap_action) != null ? _n : { action: "toggle" }}
+        @value-changed=${(ev) => onChange({ tap_action: ev.detail.value })}
+      ></ha-selector>
+      <ha-selector .hass=${this.hass} .label=${"Hold Action"}
+        .selector=${{ ui_action: {} }} .value=${(_o = btn.hold_action) != null ? _o : { action: "more-info" }}
+        @value-changed=${(ev) => onChange({ hold_action: ev.detail.value })}
+      ></ha-selector>
+      <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
+        .selector=${{ ui_action: {} }} .value=${(_p = btn.double_tap_action) != null ? _p : { action: "none" }}
+        @value-changed=${(ev) => onChange({ double_tap_action: ev.detail.value })}
+      ></ha-selector>
     `;
   }
   _renderTemplateField(fieldKey, label, renderWidget) {
@@ -1975,9 +2208,30 @@ let IansCustomRoomCardEditor = class extends i {
     `;
   }
   _renderButtonsTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l;
     const c2 = this._config;
-    const layout = (_a2 = c2.sub_buttons_layout) != null ? _a2 : "bottom-row";
+    const isGroupsMode = !!((_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length);
+    if (isGroupsMode) {
+      return b`
+        <div class="section">
+          <div class="section-label">Button Groups</div>
+          <div class="hint">Each group is an independent set of buttons with its own layout and position. Max 4 groups.</div>
+          ${((_b2 = c2.sub_button_groups) != null ? _b2 : []).map((group, i2) => this._renderGroupRow(group, i2))}
+          ${((_d2 = (_c2 = c2.sub_button_groups) == null ? void 0 : _c2.length) != null ? _d2 : 0) < 4 ? b`
+            <button class="add-btn" @click=${() => this._addGroup()}>+ Add Group</button>
+          ` : A}
+        </div>
+        <div class="section">
+          <button class="clear-btn"
+            @click=${() => {
+        if (!confirm("Revert to single-group mode? Only the first group's settings will be kept.")) return;
+        this._revertToSingleGroup();
+      }}
+          >Revert to Single Group Mode</button>
+        </div>
+      `;
+    }
+    const layout = (_e2 = c2.sub_buttons_layout) != null ? _e2 : "bottom-row";
     return b`
       <!-- ── Layout ── -->
       <div class="section">
@@ -1992,21 +2246,26 @@ let IansCustomRoomCardEditor = class extends i {
           <div class="two-col">
             <ha-selector .hass=${this.hass} .label=${"Columns (0 = auto-fill)"}
               .selector=${{ number: { min: 0, max: 8, step: 1, mode: "box" } }}
-              .value=${(_b2 = c2.sub_buttons_grid_columns) != null ? _b2 : 0}
+              .value=${(_f2 = c2.sub_buttons_grid_columns) != null ? _f2 : 0}
               @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_columns", ev.detail.value || void 0)}
             ></ha-selector>
             <ha-selector .hass=${this.hass} .label=${"Cell Min Width"}
               .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
-              .value=${(_c2 = c2.sub_buttons_grid_min_width) != null ? _c2 : 56}
+              .value=${(_g = c2.sub_buttons_grid_min_width) != null ? _g : 56}
               @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_min_width", ev.detail.value)}
             ></ha-selector>
           </div>
+          <ha-selector .hass=${this.hass} .label=${"Cell Layout"}
+            .selector=${{ select: { options: GRID_CELL_LAYOUT_OPTIONS, mode: "list" } }}
+            .value=${(_h = c2.sub_buttons_grid_cell_layout) != null ? _h : "vertical"}
+            @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_cell_layout", ev.detail.value || void 0)}
+          ></ha-selector>
         ` : A}
 
         ${layout === "left-column" || layout === "right-column" ? b`
           <ha-selector .hass=${this.hass} .label=${"Column Alignment"}
             .selector=${{ select: { options: COLUMN_JUSTIFY_OPTIONS, mode: "dropdown" } }}
-            .value=${(_d2 = c2.sub_buttons_column_justify) != null ? _d2 : "top"}
+            .value=${(_i = c2.sub_buttons_column_justify) != null ? _i : "top"}
             @value-changed=${(ev) => this._fieldChanged("sub_buttons_column_justify", ev.detail.value || void 0)}
           ></ha-selector>
         ` : A}
@@ -2019,12 +2278,12 @@ let IansCustomRoomCardEditor = class extends i {
         ${this._renderColorField("sub_button_background_color", "Background Color (default for all)")}
         <div class="two-col">
           <ha-selector .hass=${this.hass} .label=${"Opacity"}
-            .selector=${OPACITY_SELECTOR} .value=${(_e2 = c2.sub_button_opacity) != null ? _e2 : 1}
+            .selector=${OPACITY_SELECTOR} .value=${(_j = c2.sub_button_opacity) != null ? _j : 1}
             @value-changed=${(ev) => this._fieldChanged("sub_button_opacity", ev.detail.value)}
           ></ha-selector>
           <ha-selector .hass=${this.hass} .label=${"Button Gap"}
             .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
-            .value=${(_f2 = c2.sub_button_gap) != null ? _f2 : 6}
+            .value=${(_k = c2.sub_button_gap) != null ? _k : 6}
             @value-changed=${(ev) => this._fieldChanged("sub_button_gap", ev.detail.value)}
           ></ha-selector>
         </div>
@@ -2033,8 +2292,16 @@ let IansCustomRoomCardEditor = class extends i {
       <!-- ── Individual buttons ── -->
       <div class="section">
         <div class="section-label">Buttons</div>
-        ${((_g = c2.sub_buttons) != null ? _g : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
+        ${((_l = c2.sub_buttons) != null ? _l : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
         <button class="add-btn" @click=${this._addSubButton}>+ Add Button</button>
+      </div>
+
+      <!-- ── Switch to groups mode ── -->
+      <div class="section">
+        <div class="hint">Groups mode allows multiple independent button groups with different layouts and positions.</div>
+        <button class="add-btn" style="background: var(--secondary-background-color);"
+          @click=${() => this._switchToGroupsMode()}
+        >Switch to Groups Mode</button>
       </div>
     `;
   }
@@ -2075,9 +2342,9 @@ let IansCustomRoomCardEditor = class extends i {
       </div>
     `;
   }
-  // ── Sub-button row ────────────────────────────────────────────────────────────
+  // ── Sub-button row (single-group mode) ───────────────────────────────────────
   _renderSubButtonRow(btn, index) {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r;
+    var _a2, _b2, _c2, _d2, _e2, _f2;
     const isExpanded = this._expandedSubButton === index;
     const label = (_c2 = (_b2 = (_a2 = btn.entity) != null ? _a2 : btn.label) != null ? _b2 : btn.icon) != null ? _c2 : `Sub-button ${index + 1}`;
     const layout = (_e2 = (_d2 = this._config) == null ? void 0 : _d2.sub_buttons_layout) != null ? _e2 : "bottom-row";
@@ -2109,114 +2376,354 @@ let IansCustomRoomCardEditor = class extends i {
 
         ${isExpanded ? b`
           <div class="sub-btn-body">
-            <!-- Entity & display -->
-            <div class="sub-group-label">Entity &amp; Display</div>
-
-            <ha-entity-picker .hass=${this.hass} .label=${"Entity"}
-              .value=${(_g = btn.entity) != null ? _g : ""} allow-custom-entity
-              @value-changed=${(ev) => this._subButtonChanged(index, { entity: ev.detail.value || void 0 })}
-            ></ha-entity-picker>
-
-            <ha-icon-picker .hass=${this.hass}
-              .label=${"Icon (blank = auto-pick from entity domain)"}
-              .value=${(_h = btn.icon) != null ? _h : ""}
-              @value-changed=${(ev) => this._subButtonChanged(index, { icon: ev.detail.value || void 0 })}
-            ></ha-icon-picker>
-
-            <ha-selector .hass=${this.hass}
-              .label=${"Label (blank to hide, or type 'entity' for entity name)"}
-              .selector=${{ text: {} }} .value=${(_i = btn.label) != null ? _i : ""}
-              @value-changed=${(ev) => this._subButtonChanged(index, { label: ev.detail.value || void 0 })}
-            ></ha-selector>
-
-            <ha-form .hass=${this.hass} .data=${btn}
-              .schema=${[
-      { name: "show_icon", label: "Show Icon", selector: { boolean: {} } },
-      { name: "show_label", label: "Show Label", selector: { boolean: {} } },
-      { name: "show_state", label: "Show State", selector: { boolean: {} } },
-      { name: "background", label: "Show Background", selector: { boolean: {} } }
-    ]}
-              .computeLabel=${(s2) => s2.label}
-              @value-changed=${(ev) => {
-      this._subButtonChanged(index, {
-        show_icon: ev.detail.value.show_icon,
-        show_label: ev.detail.value.show_label,
-        show_state: ev.detail.value.show_state,
-        background: ev.detail.value.background
-      });
+            ${this._renderButtonBody(
+      btn,
+      showPosition,
+      (patch) => this._subButtonChanged(index, patch),
+      (field, value) => this._subButtonChanged(index, { [field]: value })
+    )}
+          </div>
+        ` : A}
+      </div>
+    `;
+  }
+  // ── Group management methods ──────────────────────────────────────────────────
+  _addGroup() {
+    var _a2, _b2;
+    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
+    if (groups.length >= 4) return;
+    groups.push({ layout: "bottom-row", buttons: [] });
+    this._fieldChanged("sub_button_groups", groups);
+    this._expandedGroup = groups.length - 1;
+  }
+  _deleteGroup(index) {
+    var _a2, _b2;
+    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
+    groups.splice(index, 1);
+    this._fieldChanged("sub_button_groups", groups.length ? groups : void 0);
+    if (this._expandedGroup === index) this._expandedGroup = null;
+  }
+  _moveGroupUp(index) {
+    var _a2, _b2;
+    if (index === 0) return;
+    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
+    [groups[index - 1], groups[index]] = [groups[index], groups[index - 1]];
+    this._fieldChanged("sub_button_groups", groups);
+  }
+  _moveGroupDown(index) {
+    var _a2, _b2;
+    const groups = (_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : [];
+    if (index >= groups.length - 1) return;
+    const arr = [...groups];
+    [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+    this._fieldChanged("sub_button_groups", arr);
+  }
+  _groupChanged(groupIndex, patch) {
+    var _a2, _b2;
+    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
+    groups[groupIndex] = { ...groups[groupIndex], ...patch };
+    this._fieldChanged("sub_button_groups", groups);
+  }
+  _groupButtonChanged(groupIndex, btnIndex, patch) {
+    var _a2, _b2, _c2, _d2;
+    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
+    const buttons = [...(_d2 = (_c2 = groups[groupIndex]) == null ? void 0 : _c2.buttons) != null ? _d2 : []];
+    buttons[btnIndex] = { ...buttons[btnIndex], ...patch };
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+  }
+  _addGroupButton(groupIndex) {
+    var _a2, _b2, _c2, _d2;
+    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
+    const buttons = [...(_d2 = (_c2 = groups[groupIndex]) == null ? void 0 : _c2.buttons) != null ? _d2 : []];
+    buttons.push({
+      show_icon: true,
+      show_label: false,
+      show_state: false,
+      background: true,
+      state_based_color: false,
+      tap_action: { action: "toggle" },
+      hold_action: { action: "more-info" },
+      double_tap_action: { action: "none" }
+    });
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+    this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: buttons.length - 1 };
+  }
+  _deleteGroupButton(groupIndex, btnIndex) {
+    var _a2, _b2, _c2, _d2;
+    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
+    const buttons = [...(_d2 = (_c2 = groups[groupIndex]) == null ? void 0 : _c2.buttons) != null ? _d2 : []];
+    buttons.splice(btnIndex, 1);
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+    if (this._expandedGroupButton[groupIndex] === btnIndex) {
+      this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: null };
+    }
+  }
+  _switchToGroupsMode() {
+    var _a2, _b2;
+    const cfg = { ...this._config };
+    cfg.sub_button_groups = [{
+      layout: (_a2 = cfg.sub_buttons_layout) != null ? _a2 : "bottom-row",
+      gap: cfg.sub_button_gap,
+      grid_columns: cfg.sub_buttons_grid_columns,
+      grid_min_width: cfg.sub_buttons_grid_min_width,
+      grid_cell_layout: cfg.sub_buttons_grid_cell_layout,
+      column_justify: cfg.sub_buttons_column_justify,
+      icon_color: cfg.sub_button_icon_color,
+      background_color: cfg.sub_button_background_color,
+      opacity: cfg.sub_button_opacity,
+      buttons: (_b2 = cfg.sub_buttons) != null ? _b2 : []
+    }];
+    delete cfg.sub_buttons;
+    delete cfg.sub_buttons_layout;
+    delete cfg.sub_button_gap;
+    delete cfg.sub_buttons_grid_columns;
+    delete cfg.sub_buttons_grid_min_width;
+    delete cfg.sub_buttons_grid_cell_layout;
+    delete cfg.sub_buttons_column_justify;
+    delete cfg.sub_button_icon_color;
+    delete cfg.sub_button_background_color;
+    delete cfg.sub_button_opacity;
+    this._fireConfigChanged(cfg);
+    this._expandedGroup = 0;
+  }
+  _revertToSingleGroup() {
+    var _a2, _b2, _c2, _d2;
+    const firstGroup = (_c2 = (_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) == null ? void 0 : _b2[0]) != null ? _c2 : {};
+    const cfg = { ...this._config };
+    cfg.sub_buttons = (_d2 = firstGroup.buttons) != null ? _d2 : [];
+    if (firstGroup.layout) cfg.sub_buttons_layout = firstGroup.layout;
+    if (firstGroup.gap !== void 0) cfg.sub_button_gap = firstGroup.gap;
+    if (firstGroup.grid_columns !== void 0) cfg.sub_buttons_grid_columns = firstGroup.grid_columns;
+    if (firstGroup.grid_min_width !== void 0) cfg.sub_buttons_grid_min_width = firstGroup.grid_min_width;
+    if (firstGroup.grid_cell_layout) cfg.sub_buttons_grid_cell_layout = firstGroup.grid_cell_layout;
+    if (firstGroup.column_justify) cfg.sub_buttons_column_justify = firstGroup.column_justify;
+    if (firstGroup.icon_color) cfg.sub_button_icon_color = firstGroup.icon_color;
+    if (firstGroup.background_color) cfg.sub_button_background_color = firstGroup.background_color;
+    if (firstGroup.opacity !== void 0) cfg.sub_button_opacity = firstGroup.opacity;
+    delete cfg.sub_button_groups;
+    this._fireConfigChanged(cfg);
+  }
+  // ── Group button drag-and-drop ────────────────────────────────────────────────
+  _onGroupBtnDragHandleMousedown(e2, groupIndex, btnIndex) {
+    const row = e2.currentTarget.closest(".sub-btn-row");
+    if (row) row.setAttribute("draggable", "true");
+    this._dragGroupContext = groupIndex;
+    this._dragIndex = btnIndex;
+  }
+  _onGroupBtnDragStart(e2, groupIndex, btnIndex) {
+    var _a2;
+    (_a2 = e2.dataTransfer) == null ? void 0 : _a2.setData("text/plain", String(btnIndex));
+    if (e2.dataTransfer) e2.dataTransfer.effectAllowed = "move";
+    this._dragGroupContext = groupIndex;
+    this._dragIndex = btnIndex;
+  }
+  _onGroupBtnDragOver(e2, groupIndex, btnIndex) {
+    if (this._dragGroupContext !== groupIndex || this._dragIndex === null || this._dragIndex === btnIndex) return;
+    e2.preventDefault();
+    if (e2.dataTransfer) e2.dataTransfer.dropEffect = "move";
+    if (this._dragOverIndex !== btnIndex) this._dragOverIndex = btnIndex;
+  }
+  _onGroupBtnDrop(e2, groupIndex, toIndex) {
+    var _a2, _b2, _c2, _d2;
+    e2.preventDefault();
+    const fromIndex = this._dragIndex;
+    this._dragGroupContext = null;
+    this._dragIndex = null;
+    this._dragOverIndex = null;
+    if (fromIndex === null || fromIndex === toIndex) return;
+    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
+    const buttons = [...(_d2 = (_c2 = groups[groupIndex]) == null ? void 0 : _c2.buttons) != null ? _d2 : []];
+    const [moved] = buttons.splice(fromIndex, 1);
+    buttons.splice(toIndex, 0, moved);
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+    this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: null };
+  }
+  // ── Group button row ──────────────────────────────────────────────────────────
+  _renderGroupButtonRow(btn, btnIndex, groupIndex, layout) {
+    var _a2, _b2, _c2, _d2;
+    const isExpanded = this._expandedGroupButton[groupIndex] === btnIndex;
+    const label = (_c2 = (_b2 = (_a2 = btn.entity) != null ? _a2 : btn.label) != null ? _b2 : btn.icon) != null ? _c2 : `Button ${btnIndex + 1}`;
+    const showPosition = layout === "custom";
+    const isDragTarget = this._dragGroupContext === groupIndex && this._dragOverIndex === btnIndex;
+    return b`
+      <div class="sub-btn-row ${isDragTarget ? "drag-over" : ""}"
+        @dragstart=${(e2) => this._onGroupBtnDragStart(e2, groupIndex, btnIndex)}
+        @dragover=${(e2) => this._onGroupBtnDragOver(e2, groupIndex, btnIndex)}
+        @dragleave=${() => {
+      if (this._dragGroupContext === groupIndex && this._dragOverIndex === btnIndex) this._dragOverIndex = null;
     }}
-            ></ha-form>
+        @dragend=${(e2) => {
+      e2.currentTarget.removeAttribute("draggable");
+      this._dragGroupContext = null;
+      this._dragIndex = null;
+      this._dragOverIndex = null;
+    }}
+        @drop=${(e2) => this._onGroupBtnDrop(e2, groupIndex, btnIndex)}
+      >
+        <div class="sub-btn-header"
+          @click=${() => {
+      const cur = this._expandedGroupButton[groupIndex];
+      this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: cur === btnIndex ? null : btnIndex };
+    }}
+        >
+          <ha-icon class="drag-handle" icon="mdi:drag-vertical"
+            @mousedown=${(e2) => this._onGroupBtnDragHandleMousedown(e2, groupIndex, btnIndex)}
+          ></ha-icon>
+          <ha-icon .icon=${(_d2 = btn.icon) != null ? _d2 : "mdi:gesture-tap"}></ha-icon>
+          <span class="sub-btn-label">${label}</span>
+          <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+          <button class="del-btn"
+            @click=${(ev) => {
+      ev.stopPropagation();
+      this._deleteGroupButton(groupIndex, btnIndex);
+    }}
+          ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
+        </div>
+        ${isExpanded ? b`
+          <div class="sub-btn-body">
+            ${this._renderButtonBody(
+      btn,
+      showPosition,
+      (patch) => this._groupButtonChanged(groupIndex, btnIndex, patch),
+      (field, value) => this._groupButtonChanged(groupIndex, btnIndex, { [field]: value })
+    )}
+          </div>
+        ` : A}
+      </div>
+    `;
+  }
+  // ── Group row ─────────────────────────────────────────────────────────────────
+  _renderGroupRow(group, groupIndex) {
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
+    const c2 = this._config;
+    const isExpanded = this._expandedGroup === groupIndex;
+    const numGroups = (_b2 = (_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length) != null ? _b2 : 0;
+    const groupLabel = (_c2 = group.label) != null ? _c2 : `Group ${groupIndex + 1}`;
+    const layout = (_d2 = group.layout) != null ? _d2 : "bottom-row";
+    const isColumn = layout === "left-column" || layout === "right-column";
+    const isGrid = layout === "grid";
+    const showCustomPos = group.position === "custom";
+    return b`
+      <div class="sub-btn-row">
+        <div class="sub-btn-header" @click=${() => this._expandedGroup = isExpanded ? null : groupIndex}>
+          <ha-icon icon="mdi:layers" style="--mdc-icon-size:18px; opacity:0.7; flex-shrink:0;"></ha-icon>
+          <span class="sub-btn-label">${groupLabel}</span>
+          <span class="group-layout-chip">${layout}</span>
+          <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+          <div style="display:flex; gap:2px; flex-shrink:0;">
+            ${groupIndex > 0 ? b`
+              <button class="icon-btn" title="Move up"
+                @click=${(e2) => {
+      e2.stopPropagation();
+      this._moveGroupUp(groupIndex);
+    }}
+              ><ha-icon icon="mdi:arrow-up" style="--mdc-icon-size:14px;"></ha-icon></button>
+            ` : A}
+            ${groupIndex < numGroups - 1 ? b`
+              <button class="icon-btn" title="Move down"
+                @click=${(e2) => {
+      e2.stopPropagation();
+      this._moveGroupDown(groupIndex);
+    }}
+              ><ha-icon icon="mdi:arrow-down" style="--mdc-icon-size:14px;"></ha-icon></button>
+            ` : A}
+            <button class="del-btn"
+              @click=${(e2) => {
+      e2.stopPropagation();
+      this._deleteGroup(groupIndex);
+    }}
+            ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
+          </div>
+        </div>
 
-            <!-- Color & opacity -->
-            <div class="sub-group-label">Color &amp; Opacity</div>
-
-            <ha-form .hass=${this.hass}
-              .data=${{ state_based_color: (_j = btn.state_based_color) != null ? _j : false }}
-              .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
-              .computeLabel=${(s2) => s2.label}
-              @value-changed=${(ev) => this._subButtonChanged(index, { state_based_color: ev.detail.value.state_based_color })}
-            ></ha-form>
-
-            ${btn.state_based_color ? b`
-              <div class="hint">Active when entity is on/open/home/playing. Defaults to domain color (yellow for lights) if left blank.</div>
-              ${this._renderSubBtnColorField(btn, index, "icon_color_on", "Active Icon Color")}
-              ${this._renderSubBtnColorField(btn, index, "icon_color_off", "Inactive Icon Color")}
-            ` : b`
-              ${this._renderSubBtnColorField(btn, index, "icon_color", "Icon Color")}
-            `}
-
-            ${this._renderSubBtnColorField(btn, index, "background_color", "Background Color", "e.g. rgba(255,255,255,0.15)")}
-
-            <ha-selector .hass=${this.hass} .label=${"Button Opacity"}
-              .selector=${OPACITY_SELECTOR} .value=${(_k = btn.opacity) != null ? _k : 1}
-              @value-changed=${(ev) => this._subButtonChanged(index, { opacity: ev.detail.value })}
+        ${isExpanded ? b`
+          <div class="sub-btn-body">
+            <ha-selector .hass=${this.hass} .label=${"Group Name (editor label only)"}
+              .selector=${{ text: {} }} .value=${(_e2 = group.label) != null ? _e2 : ""}
+              @value-changed=${(ev) => this._groupChanged(groupIndex, { label: ev.detail.value || void 0 })}
             ></ha-selector>
 
-            <!-- Animation -->
-            <div class="sub-group-label">Animation</div>
-            <ha-selector .hass=${this.hass} .label=${"Animation"}
-              .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
-              .value=${(_l = btn.animation) != null ? _l : "none"}
-              @value-changed=${(ev) => this._subButtonChanged(index, { animation: ev.detail.value === "none" ? void 0 : ev.detail.value })}
+            <div class="sub-group-label">Layout &amp; Position</div>
+
+            <ha-selector .hass=${this.hass} .label=${"Button Layout"}
+              .selector=${{ select: { options: SUB_BUTTON_LAYOUT_OPTIONS, mode: "dropdown" } }}
+              .value=${layout}
+              @value-changed=${(ev) => this._groupChanged(groupIndex, { layout: ev.detail.value })}
             ></ha-selector>
-            ${btn.animation && btn.animation !== "none" ? b`
+
+            <ha-selector .hass=${this.hass} .label=${"Group Position (overrides layout default)"}
+              .selector=${{ select: { options: GROUP_POSITION_OPTIONS, mode: "dropdown" } }}
+              .value=${(_f2 = group.position) != null ? _f2 : ""}
+              @value-changed=${(ev) => this._groupChanged(groupIndex, { position: ev.detail.value || void 0 })}
+            ></ha-selector>
+
+            ${showCustomPos ? b`
               <div class="two-col">
-                <ha-selector .hass=${this.hass} .label=${"When"}
-                  .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
-                  .value=${(_m = btn.animation_when) != null ? _m : "always"}
-                  @value-changed=${(ev) => this._subButtonChanged(index, { animation_when: ev.detail.value || void 0 })}
+                <ha-selector .hass=${this.hass} .label=${"X (CSS left)"}
+                  .selector=${{ text: {} }} .value=${(_g = group.position_x) != null ? _g : ""}
+                  .placeholder=${"e.g. 10px, 25%"}
+                  @value-changed=${(ev) => this._groupChanged(groupIndex, { position_x: ev.detail.value || void 0 })}
                 ></ha-selector>
-                <ha-selector .hass=${this.hass} .label=${"Speed"}
-                  .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
-                  .value=${(_n = btn.animation_speed) != null ? _n : "normal"}
-                  @value-changed=${(ev) => this._subButtonChanged(index, { animation_speed: ev.detail.value || void 0 })}
+                <ha-selector .hass=${this.hass} .label=${"Y (CSS top)"}
+                  .selector=${{ text: {} }} .value=${(_h = group.position_y) != null ? _h : ""}
+                  .placeholder=${"e.g. 10px, 25%"}
+                  @value-changed=${(ev) => this._groupChanged(groupIndex, { position_y: ev.detail.value || void 0 })}
                 ></ha-selector>
               </div>
             ` : A}
 
-            ${showPosition ? b`
-              <div class="sub-group-label">Position</div>
-              <ha-selector .hass=${this.hass} .label=${"Position"}
-                .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
-                .value=${(_o = btn.position) != null ? _o : "bottom-left"}
-                @value-changed=${(ev) => this._subButtonChanged(index, { position: ev.detail.value })}
+            ${isColumn ? b`
+              <ha-selector .hass=${this.hass} .label=${"Column Alignment"}
+                .selector=${{ select: { options: COLUMN_JUSTIFY_OPTIONS, mode: "dropdown" } }}
+                .value=${(_i = group.column_justify) != null ? _i : "top"}
+                @value-changed=${(ev) => this._groupChanged(groupIndex, { column_justify: ev.detail.value || void 0 })}
               ></ha-selector>
             ` : A}
 
-            <!-- Actions -->
-            <div class="sub-group-label">Actions</div>
-            <ha-selector .hass=${this.hass} .label=${"Tap Action"}
-              .selector=${{ ui_action: {} }} .value=${(_p = btn.tap_action) != null ? _p : { action: "toggle" }}
-              @value-changed=${(ev) => this._subButtonChanged(index, { tap_action: ev.detail.value })}
-            ></ha-selector>
-            <ha-selector .hass=${this.hass} .label=${"Hold Action"}
-              .selector=${{ ui_action: {} }} .value=${(_q = btn.hold_action) != null ? _q : { action: "more-info" }}
-              @value-changed=${(ev) => this._subButtonChanged(index, { hold_action: ev.detail.value })}
-            ></ha-selector>
-            <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
-              .selector=${{ ui_action: {} }} .value=${(_r = btn.double_tap_action) != null ? _r : { action: "none" }}
-              @value-changed=${(ev) => this._subButtonChanged(index, { double_tap_action: ev.detail.value })}
-            ></ha-selector>
+            ${isGrid ? b`
+              <div class="two-col">
+                <ha-selector .hass=${this.hass} .label=${"Columns (0 = auto-fill)"}
+                  .selector=${{ number: { min: 0, max: 8, step: 1, mode: "box" } }}
+                  .value=${(_j = group.grid_columns) != null ? _j : 0}
+                  @value-changed=${(ev) => this._groupChanged(groupIndex, { grid_columns: ev.detail.value || void 0 })}
+                ></ha-selector>
+                <ha-selector .hass=${this.hass} .label=${"Cell Min Width"}
+                  .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
+                  .value=${(_k = group.grid_min_width) != null ? _k : 56}
+                  @value-changed=${(ev) => this._groupChanged(groupIndex, { grid_min_width: ev.detail.value })}
+                ></ha-selector>
+              </div>
+              <ha-selector .hass=${this.hass} .label=${"Cell Layout"}
+                .selector=${{ select: { options: GRID_CELL_LAYOUT_OPTIONS, mode: "list" } }}
+                .value=${(_l = group.grid_cell_layout) != null ? _l : "vertical"}
+                @value-changed=${(ev) => this._groupChanged(groupIndex, { grid_cell_layout: ev.detail.value || void 0 })}
+              ></ha-selector>
+            ` : A}
+
+            <div class="sub-group-label">Group Style</div>
+            <div class="two-col">
+              <ha-selector .hass=${this.hass} .label=${"Opacity"}
+                .selector=${OPACITY_SELECTOR} .value=${(_m = group.opacity) != null ? _m : 1}
+                @value-changed=${(ev) => this._groupChanged(groupIndex, { opacity: ev.detail.value })}
+              ></ha-selector>
+              <ha-selector .hass=${this.hass} .label=${"Button Gap"}
+                .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
+                .value=${(_n = group.gap) != null ? _n : 6}
+                @value-changed=${(ev) => this._groupChanged(groupIndex, { gap: ev.detail.value })}
+              ></ha-selector>
+            </div>
+            ${this._renderButtonColorField((_o = group.icon_color) != null ? _o : "", "Icon Color (default for group)", "e.g. #ff9800", (v2) => this._groupChanged(groupIndex, { icon_color: v2 }))}
+            ${this._renderButtonColorField((_p = group.background_color) != null ? _p : "", "Background Color (default for group)", "e.g. rgba(255,255,255,0.1)", (v2) => this._groupChanged(groupIndex, { background_color: v2 }))}
+
+            <div class="sub-group-label">Buttons</div>
+            ${((_q = group.buttons) != null ? _q : []).map(
+      (btn, i2) => this._renderGroupButtonRow(btn, i2, groupIndex, layout)
+    )}
+            <button class="add-btn" @click=${() => this._addGroupButton(groupIndex)}>+ Add Button</button>
           </div>
         ` : A}
       </div>
@@ -2654,6 +3161,38 @@ let IansCustomRoomCardEditor = class extends i {
         cursor: pointer;
         color: var(--primary-text-color);
       }
+
+      .icon-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--secondary-text-color);
+        padding: 0;
+        flex-shrink: 0;
+        transition: background 0.15s;
+      }
+
+      .icon-btn:hover {
+        background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+        color: var(--primary-color);
+      }
+
+      .group-layout-chip {
+        font-size: 11px;
+        background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+        color: var(--primary-color);
+        border-radius: 10px;
+        padding: 2px 7px;
+        margin-left: 4px;
+        font-weight: 500;
+        flex-shrink: 0;
+      }
     `;
   }
 };
@@ -2678,6 +3217,12 @@ __decorateClass$1([
 __decorateClass$1([
   r()
 ], IansCustomRoomCardEditor.prototype, "_dragOverIndex", 2);
+__decorateClass$1([
+  r()
+], IansCustomRoomCardEditor.prototype, "_expandedGroup", 2);
+__decorateClass$1([
+  r()
+], IansCustomRoomCardEditor.prototype, "_expandedGroupButton", 2);
 IansCustomRoomCardEditor = __decorateClass$1([
   t(`${CARD_TYPE}-editor`)
 ], IansCustomRoomCardEditor);
@@ -2906,35 +3451,58 @@ let IansCustomRoomCard = class extends i {
     this._templateErrors = {};
   }
   async _subscribeSubButtonTemplates() {
-    var _a2, _b2;
+    var _a2, _b2, _c2, _d2;
     await this._unsubscribeSubButtonTemplates();
     const c2 = this._config;
-    if (!(c2 == null ? void 0 : c2.sub_buttons) || !this.hass) return;
+    if (!this.hass) return;
     const variables = {
       config: c2,
       user: (_b2 = (_a2 = this.hass.user) == null ? void 0 : _a2.name) != null ? _b2 : ""
     };
-    for (const [i2, btn] of c2.sub_buttons.entries()) {
-      const btnVars = {
-        ...variables,
-        entity: btn.entity ? this.hass.states[btn.entity] : void 0
-      };
-      for (const field of ["icon", "label"]) {
-        const value = btn[field];
-        if (!value || !isTemplate(value)) continue;
-        const key = `sub_${i2}_${field}`;
-        try {
-          const unsub = await subscribeTemplate(
-            this.hass,
-            value,
-            btnVars,
-            (result) => {
-              this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
+    if ((_c2 = c2 == null ? void 0 : c2.sub_button_groups) == null ? void 0 : _c2.length) {
+      for (const [g2, group] of c2.sub_button_groups.slice(0, 4).entries()) {
+        for (const [i2, btn] of ((_d2 = group.buttons) != null ? _d2 : []).entries()) {
+          const btnVars = { ...variables, entity: btn.entity ? this.hass.states[btn.entity] : void 0 };
+          for (const field of ["icon", "label"]) {
+            const value = btn[field];
+            if (!value || !isTemplate(value)) continue;
+            const key = `g${g2}_sub_${i2}_${field}`;
+            try {
+              const unsub = await subscribeTemplate(
+                this.hass,
+                value,
+                btnVars,
+                (result) => {
+                  this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
+                }
+              );
+              this._subTemplateUnsubs.set(key, unsub);
+            } catch (e2) {
+              console.warn(`[ians-room-card] Group button template error (${key}):`, e2);
             }
-          );
-          this._subTemplateUnsubs.set(key, unsub);
-        } catch (e2) {
-          console.warn(`[ians-room-card] Sub-button template error (${key}):`, e2);
+          }
+        }
+      }
+    } else if (c2 == null ? void 0 : c2.sub_buttons) {
+      for (const [i2, btn] of c2.sub_buttons.entries()) {
+        const btnVars = { ...variables, entity: btn.entity ? this.hass.states[btn.entity] : void 0 };
+        for (const field of ["icon", "label"]) {
+          const value = btn[field];
+          if (!value || !isTemplate(value)) continue;
+          const key = `sub_${i2}_${field}`;
+          try {
+            const unsub = await subscribeTemplate(
+              this.hass,
+              value,
+              btnVars,
+              (result) => {
+                this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
+              }
+            );
+            this._subTemplateUnsubs.set(key, unsub);
+          } catch (e2) {
+            console.warn(`[ians-room-card] Sub-button template error (${key}):`, e2);
+          }
         }
       }
     }
@@ -2951,7 +3519,7 @@ let IansCustomRoomCard = class extends i {
   }
   // ── CSS variable application ───────────────────────────────────────────────
   _applyConfigStyles() {
-    var _a2, _b2, _c2;
+    var _a2, _b2, _c2, _d2;
     const c2 = this._config;
     if (!c2) return;
     const resolve = (field, configValue) => {
@@ -2992,48 +3560,62 @@ let IansCustomRoomCard = class extends i {
     this._setCSSVar("--ians-sub-button-background-color", c2.sub_button_background_color);
     this._setCSSVar("--ians-sub-button-opacity", c2.sub_button_opacity !== void 0 ? String(c2.sub_button_opacity) : void 0);
     this._setCSSVar("--ians-sub-button-gap", c2.sub_button_gap !== void 0 ? `${c2.sub_button_gap}px` : void 0);
-    if (c2.sub_buttons_layout === "grid") {
-      if (c2.sub_buttons_grid_columns) {
-        this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(${c2.sub_buttons_grid_columns}, 1fr)`);
-      } else if (c2.sub_buttons_grid_min_width) {
-        this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(auto-fill, minmax(${c2.sub_buttons_grid_min_width}px, 1fr))`);
+    if (!((_d2 = c2.sub_button_groups) == null ? void 0 : _d2.length)) {
+      if (c2.sub_buttons_layout === "grid") {
+        if (c2.sub_buttons_grid_columns) {
+          this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(${c2.sub_buttons_grid_columns}, 1fr)`);
+        } else if (c2.sub_buttons_grid_min_width) {
+          this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(auto-fill, minmax(${c2.sub_buttons_grid_min_width}px, 1fr))`);
+        } else {
+          this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
+        }
       } else {
         this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
       }
+      if (c2.sub_buttons_layout === "left-column" || c2.sub_buttons_layout === "right-column") {
+        const justifyMap = {
+          top: "flex-start",
+          center: "center",
+          bottom: "flex-end",
+          "space-between": "space-between",
+          "space-around": "space-around"
+        };
+        const justify = c2.sub_buttons_column_justify ? justifyMap[c2.sub_buttons_column_justify] : void 0;
+        this._setCSSVar("--ians-sub-buttons-column-justify", justify);
+      } else {
+        this.style.removeProperty("--ians-sub-buttons-column-justify");
+      }
     } else {
       this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
-    }
-    if (c2.sub_buttons_layout === "left-column" || c2.sub_buttons_layout === "right-column") {
-      const justifyMap = {
-        top: "flex-start",
-        center: "center",
-        bottom: "flex-end",
-        "space-between": "space-between",
-        "space-around": "space-around"
-      };
-      const justify = c2.sub_buttons_column_justify ? justifyMap[c2.sub_buttons_column_justify] : void 0;
-      this._setCSSVar("--ians-sub-buttons-column-justify", justify);
-    } else {
       this.style.removeProperty("--ians-sub-buttons-column-justify");
     }
   }
   // ── Action handlers ────────────────────────────────────────────────────────
   _setupSubButtonHandlers() {
-    var _a2;
+    var _a2, _b2, _c2;
     this._cleanupSubButtonHandlers();
     const c2 = this._config;
-    if (!(c2 == null ? void 0 : c2.sub_buttons) || c2.global_action) return;
-    const subBtnEls = (_a2 = this.shadowRoot) == null ? void 0 : _a2.querySelectorAll(".sub-button");
+    if (!c2 || c2.global_action) return;
+    const isGroupMode = !!((_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length);
+    if (!isGroupMode && !((_b2 = c2.sub_buttons) == null ? void 0 : _b2.length)) return;
+    const subBtnEls = (_c2 = this.shadowRoot) == null ? void 0 : _c2.querySelectorAll(".sub-button");
     if (!subBtnEls) return;
-    subBtnEls.forEach((el, i2) => {
-      var _a3, _b2, _c2;
-      const btn = c2.sub_buttons[i2];
+    subBtnEls.forEach((el, flatIndex) => {
+      var _a3, _b3, _c3, _d2, _e2, _f2, _g, _h, _i;
+      let btn;
+      if (isGroupMode) {
+        const g2 = parseInt((_a3 = el.dataset.group) != null ? _a3 : "0");
+        const i2 = parseInt((_b3 = el.dataset.index) != null ? _b3 : "0");
+        btn = (_e2 = (_d2 = (_c3 = c2.sub_button_groups) == null ? void 0 : _c3[g2]) == null ? void 0 : _d2.buttons) == null ? void 0 : _e2[i2];
+      } else {
+        btn = (_f2 = c2.sub_buttons) == null ? void 0 : _f2[flatIndex];
+      }
       if (!btn) return;
       const actionConfig = {
         entity: btn.entity,
-        tap_action: (_a3 = btn.tap_action) != null ? _a3 : { action: "more-info" },
-        hold_action: (_b2 = btn.hold_action) != null ? _b2 : { action: "more-info" },
-        double_tap_action: (_c2 = btn.double_tap_action) != null ? _c2 : { action: "none" }
+        tap_action: (_g = btn.tap_action) != null ? _g : { action: "more-info" },
+        hold_action: (_h = btn.hold_action) != null ? _h : { action: "more-info" },
+        double_tap_action: (_i = btn.double_tap_action) != null ? _i : { action: "none" }
       };
       const cleanup = attachActionHandler(
         el,
@@ -3222,60 +3804,128 @@ let IansCustomRoomCard = class extends i {
   }
   // ── Helpers ────────────────────────────────────────────────────────────────
   _renderSubButtons() {
-    var _a2, _b2;
+    var _a2, _b2, _c2;
     const c2 = this._config;
-    if (!((_a2 = c2 == null ? void 0 : c2.sub_buttons) == null ? void 0 : _a2.length)) return A;
-    const layout = (_b2 = c2.sub_buttons_layout) != null ? _b2 : "bottom-row";
+    if (!c2) return A;
+    if ((_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length) {
+      return c2.sub_button_groups.slice(0, 4).map(
+        (group, gIdx) => this._renderGroup(group, gIdx)
+      );
+    }
+    if (!((_b2 = c2.sub_buttons) == null ? void 0 : _b2.length)) return A;
+    const layout = (_c2 = c2.sub_buttons_layout) != null ? _c2 : "bottom-row";
     const isGlobal = !!c2.global_action;
-    const buttons = c2.sub_buttons.map((btn, i2) => {
-      var _a3, _b3, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
-      const entityState = btn.entity ? (_a3 = this.hass) == null ? void 0 : _a3.states[btn.entity] : void 0;
-      const domain = (_c2 = (_b3 = btn.entity) == null ? void 0 : _b3.split(".")[0]) != null ? _c2 : "";
-      const domainIcon = domain ? (_d2 = DOMAIN_ICONS[domain]) != null ? _d2 : "mdi:circle" : "mdi:circle";
-      const icon = (_g = (_f2 = (_e2 = this._subTemplateResults[`sub_${i2}_icon`]) != null ? _e2 : btn.icon) != null ? _f2 : entityState == null ? void 0 : entityState.attributes.icon) != null ? _g : domainIcon;
-      let label;
-      if (btn.label !== void 0) {
-        if (btn.label === "entity" && entityState) {
-          label = (_h = entityState.attributes.friendly_name) != null ? _h : btn.entity;
-        } else {
-          label = (_i = this._subTemplateResults[`sub_${i2}_label`]) != null ? _i : btn.label;
-        }
-      }
-      let posClass = "";
-      if (layout === "corners") {
-        posClass = `pos-${(_j = CORNER_POSITIONS[i2]) != null ? _j : "bottom-right"}`;
-      } else if (layout === "custom" && btn.position) {
-        posClass = `pos-${btn.position}`;
-      }
-      const classes = [
-        "sub-button",
-        btn.background !== false ? "has-background" : "",
-        isGlobal ? "display-only" : "",
-        posClass
-      ].filter(Boolean).join(" ");
-      let btnIconColor = btn.icon_color;
-      if (btn.state_based_color && entityState) {
-        const isActive = ACTIVE_STATES.has(entityState.state);
-        btnIconColor = isActive ? (_l = (_k = btn.icon_color_on) != null ? _k : DOMAIN_ACTIVE_COLORS[domain]) != null ? _l : btn.icon_color : (_m = btn.icon_color_off) != null ? _m : btn.icon_color;
-      }
-      const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
-      const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
-      const btnStyle = [
-        btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
-        btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
-        btn.opacity !== void 0 ? `opacity: ${btn.opacity}` : "",
-        btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : ""
-      ].filter(Boolean).join("; ");
-      return b`
-        <div class=${classes} part="sub-button" style=${btnStyle || A}>
-          ${btn.show_icon !== false ? b`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || A}></ha-icon>` : A}
-          ${btn.show_label && label ? b`<span part="sub-button-label" class="sub-button-label">${label}</span>` : A}
-          ${btn.show_state && entityState ? b`<span part="sub-button-state" class="sub-button-state">${entityState.state}</span>` : A}
-        </div>
-      `;
-    });
-    const containerClasses = ["sub-buttons", `layout-${layout}`].filter(Boolean).join(" ");
+    const buttons = c2.sub_buttons.map(
+      (btn, i2) => this._renderSingleButton(btn, i2, null, layout, isGlobal)
+    );
+    const containerClasses = [
+      "sub-buttons",
+      `layout-${layout}`,
+      layout === "grid" && c2.sub_buttons_grid_cell_layout === "horizontal" ? "grid-horizontal" : ""
+    ].filter(Boolean).join(" ");
     return b`<div part="sub-buttons" class=${containerClasses}>${buttons}</div>`;
+  }
+  _deriveGroupPosition(layout) {
+    switch (layout) {
+      case "top-row":
+        return "top-row";
+      case "left-column":
+        return "left-column";
+      case "right-column":
+        return "right-column";
+      case "corners":
+      case "custom":
+        return "full";
+      default:
+        return "bottom-row";
+    }
+  }
+  _renderGroup(group, groupIndex) {
+    var _a2, _b2, _c2, _d2, _e2, _f2;
+    const c2 = this._config;
+    const layout = (_a2 = group.layout) != null ? _a2 : "bottom-row";
+    const isGlobal = !!c2.global_action;
+    const isColumn = layout === "left-column" || layout === "right-column";
+    const isGrid = layout === "grid";
+    const effectivePos = (_b2 = group.position) != null ? _b2 : this._deriveGroupPosition(layout);
+    const justifyMap = {
+      top: "flex-start",
+      center: "center",
+      bottom: "flex-end",
+      "space-between": "space-between",
+      "space-around": "space-around"
+    };
+    const groupStyle = [
+      effectivePos === "custom" ? `top: ${(_c2 = group.position_y) != null ? _c2 : "auto"}; left: ${(_d2 = group.position_x) != null ? _d2 : "auto"}` : "",
+      group.gap !== void 0 ? `--ians-sub-button-gap: ${group.gap}px` : "",
+      group.icon_color ? `--ians-sub-button-icon-color: ${group.icon_color}` : "",
+      group.background_color ? `--ians-sub-button-background-color: ${group.background_color}` : "",
+      group.opacity !== void 0 ? `opacity: ${group.opacity}` : "",
+      isColumn && group.column_justify ? `--ians-sub-buttons-column-justify: ${(_e2 = justifyMap[group.column_justify]) != null ? _e2 : "flex-start"}` : "",
+      isGrid && group.grid_columns ? `--ians-sub-buttons-grid-template-columns: repeat(${group.grid_columns}, 1fr)` : isGrid && group.grid_min_width ? `--ians-sub-buttons-grid-template-columns: repeat(auto-fill, minmax(${group.grid_min_width}px, 1fr))` : ""
+    ].filter(Boolean).join("; ");
+    const containerClass = [
+      "sub-button-group",
+      `group-pos-${effectivePos}`,
+      isGrid ? "group-layout-grid" : "",
+      isGrid && group.grid_cell_layout === "horizontal" ? "grid-horizontal" : ""
+    ].filter(Boolean).join(" ");
+    const buttons = ((_f2 = group.buttons) != null ? _f2 : []).map(
+      (btn, i2) => this._renderSingleButton(btn, i2, groupIndex, layout, isGlobal)
+    );
+    return b`<div class=${containerClass} part="sub-button-group" style=${groupStyle || A}>${buttons}</div>`;
+  }
+  _renderSingleButton(btn, btnIndex, groupIndex, layout, isGlobal) {
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
+    const entityState = btn.entity ? (_a2 = this.hass) == null ? void 0 : _a2.states[btn.entity] : void 0;
+    const domain = (_c2 = (_b2 = btn.entity) == null ? void 0 : _b2.split(".")[0]) != null ? _c2 : "";
+    const domainIcon = domain ? (_d2 = DOMAIN_ICONS[domain]) != null ? _d2 : "mdi:circle" : "mdi:circle";
+    const keyPfx = groupIndex !== null ? `g${groupIndex}_sub_${btnIndex}` : `sub_${btnIndex}`;
+    const icon = (_g = (_f2 = (_e2 = this._subTemplateResults[`${keyPfx}_icon`]) != null ? _e2 : btn.icon) != null ? _f2 : entityState == null ? void 0 : entityState.attributes.icon) != null ? _g : domainIcon;
+    let label;
+    if (btn.label !== void 0) {
+      if (btn.label === "entity" && entityState) {
+        label = (_h = entityState.attributes.friendly_name) != null ? _h : btn.entity;
+      } else {
+        label = (_i = this._subTemplateResults[`${keyPfx}_label`]) != null ? _i : btn.label;
+      }
+    }
+    let posClass = "";
+    if (layout === "corners") {
+      posClass = `pos-${(_j = CORNER_POSITIONS[btnIndex]) != null ? _j : "bottom-right"}`;
+    } else if (layout === "custom" && btn.position) {
+      posClass = `pos-${btn.position}`;
+    }
+    const classes = [
+      "sub-button",
+      btn.background !== false ? "has-background" : "",
+      isGlobal ? "display-only" : "",
+      posClass
+    ].filter(Boolean).join(" ");
+    let btnIconColor = btn.icon_color;
+    if (btn.state_based_color && entityState) {
+      const isActive = ACTIVE_STATES.has(entityState.state);
+      btnIconColor = isActive ? (_l = (_k = btn.icon_color_on) != null ? _k : DOMAIN_ACTIVE_COLORS[domain]) != null ? _l : btn.icon_color : (_m = btn.icon_color_off) != null ? _m : btn.icon_color;
+    }
+    const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
+    const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
+    const stateDisplay = entityState ? `${entityState.state}${entityState.attributes.unit_of_measurement ? ` ${entityState.attributes.unit_of_measurement}` : ""}` : "";
+    const btnStyle = [
+      btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
+      btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
+      btn.opacity !== void 0 ? `opacity: ${btn.opacity}` : "",
+      btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : ""
+    ].filter(Boolean).join("; ");
+    return b`
+      <div class=${classes} part="sub-button" style=${btnStyle || A}
+        data-index=${String(btnIndex)}
+        data-group=${groupIndex !== null ? String(groupIndex) : A}
+      >
+        ${btn.show_icon !== false ? b`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || A}></ha-icon>` : A}
+        ${btn.show_label && label ? b`<span part="sub-button-label" class="sub-button-label">${label}</span>` : A}
+        ${btn.show_state && entityState ? b`<span part="sub-button-state" class="sub-button-state">${stateDisplay}</span>` : A}
+      </div>
+    `;
   }
   _resolveTitle() {
     var _a2, _b2;

@@ -392,6 +392,101 @@ export const cardStyles = css`
   .sub-button.pos-bottom-center { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
   .sub-button.pos-bottom-right { position: absolute; bottom: 8px; right: 8px; }
 
+  /* Grid cells: horizontal layout (icon beside label) */
+  .sub-buttons.layout-grid.grid-horizontal .sub-button {
+    flex-direction: row;
+    min-height: auto;
+    padding: 6px 10px;
+    text-align: left;
+    border-radius: calc(var(--ians-sub-button-size) / 2);
+  }
+
+  .sub-buttons.layout-grid.grid-horizontal .sub-button-label,
+  .sub-buttons.layout-grid.grid-horizontal .sub-button-state {
+    text-align: left;
+    max-width: none;
+  }
+
+  /* ── Sub-button groups (multi-group mode) ────────────────────────────────── */
+  .sub-button-group {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ians-sub-button-gap);
+  }
+
+  /* Full-edge anchor positions */
+  .sub-button-group.group-pos-bottom-row  { bottom: 8px; left: 8px; right: 8px; flex-direction: row; }
+  .sub-button-group.group-pos-top-row     { top: 8px;    left: 8px; right: 8px; flex-direction: row; }
+  .sub-button-group.group-pos-left-column {
+    left: 8px; top: 8px; bottom: 8px;
+    flex-direction: column; align-items: flex-start;
+    justify-content: var(--ians-sub-buttons-column-justify, flex-start);
+    flex-wrap: nowrap;
+  }
+  .sub-button-group.group-pos-right-column {
+    right: 8px; top: 8px; bottom: 8px;
+    flex-direction: column; align-items: flex-end;
+    justify-content: var(--ians-sub-buttons-column-justify, flex-start);
+    flex-wrap: nowrap;
+  }
+
+  /* Corner/center anchor positions */
+  .sub-button-group.group-pos-top-left     { top: 8px;    left: 8px; }
+  .sub-button-group.group-pos-top-center   { top: 8px;    left: 50%; transform: translateX(-50%); }
+  .sub-button-group.group-pos-top-right    { top: 8px;    right: 8px; }
+  .sub-button-group.group-pos-center-left  { top: 50%;    left: 8px;  transform: translateY(-50%); flex-direction: column; flex-wrap: nowrap; }
+  .sub-button-group.group-pos-center       { top: 50%;    left: 50%; transform: translate(-50%, -50%); }
+  .sub-button-group.group-pos-center-right { top: 50%;    right: 8px; transform: translateY(-50%); flex-direction: column; flex-wrap: nowrap; }
+  .sub-button-group.group-pos-bottom-left  { bottom: 8px; left: 8px; }
+  .sub-button-group.group-pos-bottom-center { bottom: 8px; left: 50%; transform: translateX(-50%); }
+  .sub-button-group.group-pos-bottom-right  { bottom: 8px; right: 8px; }
+
+  /* Full card overlay — for corners/custom sub-button layouts within a group */
+  .sub-button-group.group-pos-full { inset: 0; }
+
+  /* Grid layout within a group */
+  .sub-button-group.group-layout-grid {
+    display: grid;
+    grid-template-columns: var(--ians-sub-buttons-grid-template-columns, repeat(auto-fill, minmax(56px, 1fr)));
+    flex-wrap: unset;
+    align-content: start;
+  }
+
+  .sub-button-group.group-layout-grid .sub-button {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 4px;
+    min-height: 56px;
+    min-width: 0;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .sub-button-group.group-layout-grid .sub-button-label,
+  .sub-button-group.group-layout-grid .sub-button-state {
+    max-width: 100%;
+    text-align: center;
+    font-size: 10px;
+  }
+
+  .sub-button-group.group-layout-grid.grid-horizontal .sub-button {
+    flex-direction: row;
+    min-height: auto;
+    padding: 6px 10px;
+    text-align: left;
+    border-radius: calc(var(--ians-sub-button-size) / 2);
+  }
+
+  .sub-button-group.group-layout-grid.grid-horizontal .sub-button-label,
+  .sub-button-group.group-layout-grid.grid-horizontal .sub-button-state {
+    text-align: left;
+    max-width: none;
+  }
+
   /* ── Icon animations ─────────────────────────────────────────────────────── */
 
   @keyframes ians-spin {
