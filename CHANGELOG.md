@@ -5,6 +5,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-10
+
+### Fixed
+- `_setupSubButtonHandlers` no longer re-runs on every entity state update that drives a template — previously fired on every `_subTemplateResults` or `_templateResults` change, causing unnecessary event listener churn on dashboards with many cards. Now only re-runs when `_config` changes.
+- Wrong `documentationURL` in card registration (`IanStanek/` → `linkian19/`)
+- "Switch to Groups Mode" button now uses outlined styling for correct contrast on all themes
+
+### Changed
+- Card description updated: "A highly customizable room card…" across `const.ts`, `package.json`, `info.md`, and `README.md`
+- `justifyMap` object extracted to a module-level constant (was recreated on every render)
+- Full documentation update: README feature list, sub-button groups reference, grid cell layout field, sub-button animation fields in config table, sub-button groups config table and position reference; CHANGELOG v0.2.0 entry
+
+## [0.2.0] - 2026-06-10
+
+### Added
+- **Sub-button groups** (`sub_button_groups`) — up to 4 independent button groups, each with its own layout, position, gap, icon color, background color, and opacity. Groups default to non-overlapping positions derived from their layout; override with any of 14 position presets or full custom X/Y. Backward-compatible: existing `sub_buttons` configs work unchanged. Template key scheme uses `g{n}_sub_{i}_{field}` for group buttons.
+- **`SubButtonGroup` config object** — `layout`, `position`, `position_x`, `position_y`, `column_justify`, `gap`, `grid_columns`, `grid_min_width`, `grid_cell_layout`, `icon_color`, `background_color`, `opacity`, `buttons[]`
+- **Grid cell layout** — `sub_buttons_grid_cell_layout` (single-group) and per-group `grid_cell_layout`: `vertical` (icon above label, default square) or `horizontal` (icon beside label, pill shape)
+- **Unit of measurement on state display** — wherever `show_state: true` renders entity state, the entity's `unit_of_measurement` attribute is appended (e.g. "72 °F", "45 %", "1013 hPa")
+- Editor **Switch to Groups Mode** / **Revert to Single Group Mode** — migrate existing config between modes without losing settings
+- Per-group button drag-and-drop reordering in the editor
+- Move-up / move-down arrows for group reordering in the editor
+
+### Fixed
+- `_setupSubButtonHandlers` no longer re-runs on every entity state update — previously fired on every `_subTemplateResults` or `_templateResults` change, causing unnecessary event listener churn on dashboards with many cards
+
 ## [0.1.20] - 2026-06-10
 
 ### Added

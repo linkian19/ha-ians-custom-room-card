@@ -1074,7 +1074,7 @@ export class IansCustomRoomCardEditor extends LitElement {
       <!-- ── Switch to groups mode ── -->
       <div class="section">
         <div class="hint">Groups mode allows multiple independent button groups with different layouts and positions.</div>
-        <button class="add-btn" style="background: var(--secondary-background-color);"
+        <button class="clear-btn"
           @click=${() => this._switchToGroupsMode()}
         >Switch to Groups Mode</button>
       </div>

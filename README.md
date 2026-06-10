@@ -1,17 +1,20 @@
 # Ian's Custom Room Card
 
-A customizable room card for Home Assistant's Lovelace dashboard. Combines a room icon, entity-driven badge, configurable title, and sub-buttons into one card with a complete visual editor.
+A highly customizable room card for Home Assistant's Lovelace dashboard. Combines a room icon, entity-driven badge, configurable title, and sub-buttons into one card with a complete visual editor — no YAML required for basic use.
 
 ## Features
 
 - **Icon** with optional badge (entity-driven or static)
 - **Icon shapes** — circle, rounded-rect, squircle, square, or custom border-radius
-- **Icon positions** — top-left, top-right, bottom-left, bottom-right, center, and more
+- **Icon positions** — top-left, top-right, bottom-left, bottom-right, center, and more; or custom X/Y
 - **Icon animations** — spin, pulse, blink, bounce, or shake; optionally triggered only when entity is active or inactive
 - **State-based icon colors** — auto-color icon and sub-button icons by entity state
 - **Background** color, opacity, and image (URL or HA area image)
 - **Title** with configurable position, alignment, size, and color
 - **Sub-buttons** with 7 layout presets and per-button tap/hold/double-tap actions
+- **Sub-button groups** — up to 4 independent groups, each with its own layout, position, and style
+- **Grid cell layout** — buttons can be vertical (icon above label) or horizontal (icon beside label, pill shape)
+- **Unit of measurement** — entity state display automatically appends the unit (°F, %, hPa, etc.)
 - **Sub-button column alignment** — justify left/right-column layouts to top, center, bottom, or spaced
 - **Global action** — makes the entire card a single tap target (sub-buttons become decorative)
 - **HA Jinja2 templates** for icon, colors, badge, title, and icon background color
@@ -127,10 +130,12 @@ sub_buttons:
 | `sub_button_gap` | number | `6` | — | Gap between sub-buttons in px |
 | `sub_buttons_grid_columns` | number | — | — | Fixed column count for `grid` layout (overrides auto-fill) |
 | `sub_buttons_grid_min_width` | number | — | — | Min cell width in px for auto-fill `grid` layout |
+| `sub_buttons_grid_cell_layout` | string | `vertical` | — | Grid cell shape: `vertical` (icon above label) or `horizontal` (icon beside label, pill) |
 | `sub_buttons_column_justify` | string | `top` | — | Vertical alignment for `left-column` / `right-column` layouts: `top`, `center`, `bottom`, `space-between`, `space-around` |
 | `grid_options` | object | see below | — | Native sections-view grid sizing |
 | `sub_buttons_layout` | string | `bottom-row` | — | Layout preset for sub-buttons (see below) |
 | `sub_buttons` | list | `[]` | — | List of sub-button configs (see below) |
+| `sub_button_groups` | list | — | — | Up to 4 independent button groups (see below); supersedes `sub_buttons` when present |
 | `global_action` | object | — | — | Card-level action; disables all sub-button actions |
 
 ### icon_position values
@@ -197,7 +202,66 @@ grid_options:
 | `animation_when` | string | `always` | When to animate: `always`, `active`, `inactive` (uses button's `entity`) |
 | `animation_speed` | string | `normal` | Animation speed: `slow`, `normal`, `fast` |
 
-`position` values: `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
+`position` values (for `sub_buttons_layout: custom`): `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
+
+### Sub-button groups
+
+`sub_button_groups` lets you place up to 4 independent button sets at different positions on the card, each with its own layout and style. When `sub_button_groups` is present it supersedes `sub_buttons`.
+
+```yaml
+sub_button_groups:
+  - layout: right-column
+    position: top-right      # optional override; auto-derived from layout if omitted
+    gap: 8
+    icon_color: white
+    buttons:
+      - entity: light.living_room
+        show_icon: true
+        tap_action: { action: toggle }
+  - layout: grid
+    position: bottom-row
+    grid_cell_layout: horizontal
+    buttons:
+      - entity: climate.living_room
+        show_icon: true
+        show_state: true
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `layout` | string | `bottom-row` | Button layout within the group — same values as `sub_buttons_layout` |
+| `position` | string | derived | Group anchor on the card (see below); auto-derived from `layout` if omitted |
+| `position_x` | string | — | CSS `left` value for `position: custom` (e.g. `10px`, `25%`) |
+| `position_y` | string | — | CSS `top` value for `position: custom` |
+| `column_justify` | string | `top` | Vertical alignment for column layouts: `top`, `center`, `bottom`, `space-between`, `space-around` |
+| `gap` | number | `6` | Gap between buttons in px |
+| `grid_columns` | number | — | Fixed column count for `grid` layout |
+| `grid_min_width` | number | — | Min cell width in px for auto-fill grid |
+| `grid_cell_layout` | string | `vertical` | Grid cell shape: `vertical` or `horizontal` |
+| `icon_color` | string | — | Default icon color for all buttons in this group |
+| `background_color` | string | — | Default background color for all buttons in this group |
+| `opacity` | float | `1` | Overall opacity for the group |
+| `label` | string | — | Editor-only label for the group accordion |
+| `buttons` | list | `[]` | Sub-button configs (same fields as `sub_buttons` entries) |
+
+**`position` values:**
+
+| Value | Description |
+|---|---|
+| `bottom-row` | Full width, bottom edge (default for row layouts) |
+| `top-row` | Full width, top edge |
+| `left-column` | Full height, left side (default for left-column layout) |
+| `right-column` | Full height, right side (default for right-column layout) |
+| `top-left` | Top-left corner |
+| `top-center` | Top, horizontally centered |
+| `top-right` | Top-right corner |
+| `center-left` | Vertically centered, left side |
+| `center` | Centered on card |
+| `center-right` | Vertically centered, right side |
+| `bottom-left` | Bottom-left corner |
+| `bottom-center` | Bottom, horizontally centered |
+| `bottom-right` | Bottom-right corner |
+| `custom` | Use `position_x` and `position_y` for exact placement |
 
 ### State-based icon color
 

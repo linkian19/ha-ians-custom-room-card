@@ -68,6 +68,11 @@ const DOMAIN_ICONS: Record<string, string> = {
   alarm_control_panel: "mdi:shield-home",
 };
 
+const COLUMN_JUSTIFY_MAP: Record<string, string> = {
+  top: "flex-start", center: "center", bottom: "flex-end",
+  "space-between": "space-between", "space-around": "space-around",
+};
+
 const SHAPE_BORDER_RADIUS: Record<IconBackgroundShape, string> = {
   circle: "50%",
   "rounded-rect": "8px",
@@ -202,7 +207,7 @@ export class IansCustomRoomCard extends LitElement {
       this._applyConfigStyles();
     }
 
-    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults")) {
+    if (configChanged) {
       this._setupSubButtonHandlers();
     }
   }
@@ -401,11 +406,7 @@ export class IansCustomRoomCard extends LitElement {
       }
 
       if (c.sub_buttons_layout === "left-column" || c.sub_buttons_layout === "right-column") {
-        const justifyMap: Record<string, string> = {
-          top: "flex-start", center: "center", bottom: "flex-end",
-          "space-between": "space-between", "space-around": "space-around",
-        };
-        const justify = c.sub_buttons_column_justify ? justifyMap[c.sub_buttons_column_justify] : undefined;
+        const justify = c.sub_buttons_column_justify ? COLUMN_JUSTIFY_MAP[c.sub_buttons_column_justify] : undefined;
         this._setCSSVar("--ians-sub-buttons-column-justify", justify);
       } else {
         this.style.removeProperty("--ians-sub-buttons-column-justify");
@@ -745,18 +746,13 @@ export class IansCustomRoomCard extends LitElement {
 
     const effectivePos = group.position ?? this._deriveGroupPosition(layout);
 
-    const justifyMap: Record<string, string> = {
-      top: "flex-start", center: "center", bottom: "flex-end",
-      "space-between": "space-between", "space-around": "space-around",
-    };
-
     const groupStyle = [
       effectivePos === "custom" ? `top: ${group.position_y ?? "auto"}; left: ${group.position_x ?? "auto"}` : "",
       group.gap !== undefined ? `--ians-sub-button-gap: ${group.gap}px` : "",
       group.icon_color ? `--ians-sub-button-icon-color: ${group.icon_color}` : "",
       group.background_color ? `--ians-sub-button-background-color: ${group.background_color}` : "",
       group.opacity !== undefined ? `opacity: ${group.opacity}` : "",
-      isColumn && group.column_justify ? `--ians-sub-buttons-column-justify: ${justifyMap[group.column_justify] ?? "flex-start"}` : "",
+      isColumn && group.column_justify ? `--ians-sub-buttons-column-justify: ${COLUMN_JUSTIFY_MAP[group.column_justify] ?? "flex-start"}` : "",
       isGrid && group.grid_columns ? `--ians-sub-buttons-grid-template-columns: repeat(${group.grid_columns}, 1fr)` :
       isGrid && group.grid_min_width ? `--ians-sub-buttons-grid-template-columns: repeat(auto-fill, minmax(${group.grid_min_width}px, 1fr))` : "",
     ].filter(Boolean).join("; ");
@@ -886,7 +882,7 @@ window.customCards.push({
   name: CARD_NAME,
   description: CARD_DESCRIPTION,
   preview: false,
-  documentationURL: "https://github.com/IanStanek/ha-ians-custom-room-card",
+  documentationURL: "https://github.com/linkian19/ha-ians-custom-room-card",
 });
 
 declare global {
