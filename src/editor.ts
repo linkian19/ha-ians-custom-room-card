@@ -77,8 +77,16 @@ const SUB_BUTTON_POSITION_OPTIONS = [
   { value: "bottom-right",  label: "Bottom Right" },
 ];
 
+const COLUMN_JUSTIFY_OPTIONS = [
+  { value: "top",           label: "Top (default)" },
+  { value: "center",        label: "Center" },
+  { value: "bottom",        label: "Bottom" },
+  { value: "space-between", label: "Space Between" },
+  { value: "space-around",  label: "Space Around" },
+];
+
 const TEMPLATE_CAPABLE_FIELDS = new Set([
-  "title", "icon", "icon_color",
+  "title", "icon", "icon_color", "icon_background_color",
   "badge_icon", "badge_color", "badge_background_color",
   "background_color", "border_color",
 ]);
@@ -109,6 +117,8 @@ export class IansCustomRoomCardEditor extends LitElement {
   @state() private _templateMode: Set<string> = new Set();
   @state() private _expandedSubButton: number | null = null;
   @state() private _activeTab: TabId = "basic";
+  @state() private _dragOverIndex: number | null = null;
+  private _dragIndex: number | null = null;
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -180,6 +190,48 @@ export class IansCustomRoomCardEditor extends LitElement {
     buttons.splice(index, 1);
     this._fieldChanged("sub_buttons", buttons);
     if (this._expandedSubButton === index) this._expandedSubButton = null;
+  }
+
+  private _onDragHandleMousedown(e: MouseEvent, index: number): void {
+    const row = (e.currentTarget as Element).closest(".sub-btn-row") as HTMLElement | null;
+    if (row) row.setAttribute("draggable", "true");
+    this._dragIndex = index;
+  }
+
+  private _onDragStart(e: DragEvent, index: number): void {
+    e.dataTransfer?.setData("text/plain", String(index));
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+    this._dragIndex = index;
+  }
+
+  private _onDragOver(e: DragEvent, index: number): void {
+    if (this._dragIndex === null || this._dragIndex === index) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    if (this._dragOverIndex !== index) this._dragOverIndex = index;
+  }
+
+  private _onDragLeave(index: number): void {
+    if (this._dragOverIndex === index) this._dragOverIndex = null;
+  }
+
+  private _onDrop(e: DragEvent, toIndex: number): void {
+    e.preventDefault();
+    const fromIndex = this._dragIndex;
+    this._dragIndex = null;
+    this._dragOverIndex = null;
+    if (fromIndex === null || fromIndex === toIndex || !this._config?.sub_buttons) return;
+    const buttons = [...this._config.sub_buttons];
+    const [moved] = buttons.splice(fromIndex, 1);
+    buttons.splice(toIndex, 0, moved);
+    this._fieldChanged("sub_buttons", buttons);
+    this._expandedSubButton = null;
+  }
+
+  private _onDragEnd(e: DragEvent): void {
+    (e.currentTarget as HTMLElement).removeAttribute("draggable");
+    this._dragIndex = null;
+    this._dragOverIndex = null;
   }
 
   private _toggleTemplateMode(field: string): void {
@@ -732,6 +784,15 @@ export class IansCustomRoomCardEditor extends LitElement {
             ></ha-selector>
           </div>
         ` : nothing}
+
+        ${layout === "left-column" || layout === "right-column" ? html`
+          <ha-selector .hass=${this.hass} .label=${"Column Alignment"}
+            .selector=${{ select: { options: COLUMN_JUSTIFY_OPTIONS, mode: "dropdown" } }}
+            .value=${c.sub_buttons_column_justify ?? "top"}
+            @value-changed=${(ev: CustomEvent) =>
+              this._fieldChanged("sub_buttons_column_justify", ev.detail.value || undefined)}
+          ></ha-selector>
+        ` : nothing}
       </div>
 
       <!-- ── Global style ── -->
@@ -810,16 +871,25 @@ export class IansCustomRoomCardEditor extends LitElement {
     const showPosition = layout === "custom";
 
     return html`
-      <div class="sub-btn-row">
+      <div class="sub-btn-row ${this._dragOverIndex === index ? "drag-over" : ""}"
+        @dragstart=${(e: DragEvent) => this._onDragStart(e, index)}
+        @dragover=${(e: DragEvent) => this._onDragOver(e, index)}
+        @dragleave=${() => this._onDragLeave(index)}
+        @dragend=${(e: DragEvent) => this._onDragEnd(e)}
+        @drop=${(e: DragEvent) => this._onDrop(e, index)}
+      >
         <div class="sub-btn-header"
           @click=${() => (this._expandedSubButton = isExpanded ? null : index)}
         >
+          <ha-icon class="drag-handle" icon="mdi:drag-vertical"
+            @mousedown=${(e: MouseEvent) => this._onDragHandleMousedown(e, index)}
+          ></ha-icon>
           <ha-icon .icon=${btn.icon ?? "mdi:gesture-tap"}></ha-icon>
           <span class="sub-btn-label">${label}</span>
           <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
           <button class="del-btn"
             @click=${(ev: Event) => { ev.stopPropagation(); this._deleteSubButton(index); }}
-          >✕</button>
+          ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
         </div>
 
         ${isExpanded ? html`
@@ -1254,6 +1324,16 @@ export class IansCustomRoomCardEditor extends LitElement {
         border: 1px solid var(--divider-color);
         border-radius: 8px;
         overflow: hidden;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+
+      .sub-btn-row.drag-over {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 30%, transparent);
+      }
+
+      .sub-btn-row[draggable="true"] {
+        opacity: 0.5;
       }
 
       .sub-btn-header {
@@ -1267,6 +1347,16 @@ export class IansCustomRoomCardEditor extends LitElement {
       }
 
       .sub-btn-header:hover { background: var(--primary-background-color, #fff); }
+
+      .drag-handle {
+        cursor: grab;
+        color: var(--secondary-text-color);
+        --mdc-icon-size: 18px;
+        flex-shrink: 0;
+        opacity: 0.6;
+      }
+
+      .drag-handle:active { cursor: grabbing; }
 
       .sub-btn-label {
         flex: 1;
@@ -1297,14 +1387,27 @@ export class IansCustomRoomCardEditor extends LitElement {
 
       /* ── Buttons ── */
       .del-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
         color: var(--error-color, #db4437);
         border: 1px solid var(--error-color, #db4437);
-        border-radius: 4px;
-        padding: 2px 6px;
+        border-radius: 6px;
+        padding: 0;
         cursor: pointer;
         background: transparent;
-        font-size: 12px;
         flex-shrink: 0;
+        transition: background 0.15s;
+      }
+
+      .del-btn:hover {
+        background: color-mix(in srgb, var(--error-color, #db4437) 15%, transparent);
+      }
+
+      .del-icon {
+        --mdc-icon-size: 16px;
       }
 
       .add-btn {

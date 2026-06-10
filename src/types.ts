@@ -232,6 +232,8 @@ export interface CardConfig {
   // Grid sub-button layout options
   sub_buttons_grid_columns?: number;    // fixed column count for grid layout
   sub_buttons_grid_min_width?: number;  // px min cell width for auto-fill grid
+  // Column alignment (left-column / right-column layouts only)
+  sub_buttons_column_justify?: "top" | "center" | "bottom" | "space-between" | "space-around";
   // Layout
   grid_options?: GridOptions;
   sub_buttons_layout?: SubButtonsLayout;

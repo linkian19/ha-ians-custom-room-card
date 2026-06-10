@@ -13,6 +13,7 @@ import "./editor";
 const TEMPLATE_FIELDS = [
   "icon",
   "icon_color",
+  "icon_background_color",
   "badge_icon",
   "badge_color",
   "badge_background_color",
@@ -338,7 +339,7 @@ export class IansCustomRoomCard extends LitElement {
     }
     this._setCSSVar("--ians-icon-color", iconColor);
     this._setCSSVar("--ians-icon-opacity", c.icon_opacity !== undefined ? String(c.icon_opacity) : undefined);
-    this._setCSSVar("--ians-icon-background-color", c.icon_background_color);
+    this._setCSSVar("--ians-icon-background-color", resolve("icon_background_color", c.icon_background_color));
     this._setCSSVar("--ians-icon-background-opacity", c.icon_background_opacity !== undefined ? String(c.icon_background_opacity) : undefined);
     this._setCSSVar("--ians-icon-background-size", c.icon_background_size !== undefined ? `${c.icon_background_size}px` : undefined);
     this._setCSSVar("--ians-icon-background-width", c.icon_background_width !== undefined ? `${c.icon_background_width}px` : undefined);
@@ -350,7 +351,7 @@ export class IansCustomRoomCard extends LitElement {
     this._setCSSVar("--ians-icon-size", c.icon_size !== undefined ? `${c.icon_size}px` : undefined);
 
     this._setCSSVar("--ians-badge-color", resolve("badge_color", c.badge_color));
-    this._setCSSVar("--ians-badge-background-color", c.badge_background_color);
+    this._setCSSVar("--ians-badge-background-color", resolve("badge_background_color", c.badge_background_color));
     this._setCSSVar("--ians-badge-size", c.badge_size !== undefined ? `${c.badge_size}px` : undefined);
     this._setCSSVar("--ians-badge-opacity", c.badge_opacity !== undefined ? String(c.badge_opacity) : undefined);
 
@@ -374,6 +375,18 @@ export class IansCustomRoomCard extends LitElement {
       }
     } else {
       this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
+    }
+
+    // Column justify — only applies to left/right-column layouts
+    if (c.sub_buttons_layout === "left-column" || c.sub_buttons_layout === "right-column") {
+      const justifyMap: Record<string, string> = {
+        top: "flex-start", center: "center", bottom: "flex-end",
+        "space-between": "space-between", "space-around": "space-around",
+      };
+      const justify = c.sub_buttons_column_justify ? justifyMap[c.sub_buttons_column_justify] : undefined;
+      this._setCSSVar("--ians-sub-buttons-column-justify", justify);
+    } else {
+      this.style.removeProperty("--ians-sub-buttons-column-justify");
     }
   }
 

@@ -920,7 +920,7 @@ const cardStyles = i$3`
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    justify-content: flex-start;
+    justify-content: var(--ians-sub-buttons-column-justify, flex-start);
     gap: var(--ians-sub-button-gap);
     z-index: 3;
     pointer-events: none;
@@ -934,7 +934,7 @@ const cardStyles = i$3`
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: var(--ians-sub-buttons-column-justify, flex-start);
     gap: var(--ians-sub-button-gap);
     z-index: 3;
     pointer-events: none;
@@ -1251,10 +1251,18 @@ const SUB_BUTTON_POSITION_OPTIONS = [
   { value: "bottom-center", label: "Bottom Center" },
   { value: "bottom-right", label: "Bottom Right" }
 ];
+const COLUMN_JUSTIFY_OPTIONS = [
+  { value: "top", label: "Top (default)" },
+  { value: "center", label: "Center" },
+  { value: "bottom", label: "Bottom" },
+  { value: "space-between", label: "Space Between" },
+  { value: "space-around", label: "Space Around" }
+];
 const TEMPLATE_CAPABLE_FIELDS = /* @__PURE__ */ new Set([
   "title",
   "icon",
   "icon_color",
+  "icon_background_color",
   "badge_icon",
   "badge_color",
   "badge_background_color",
@@ -1278,6 +1286,8 @@ let IansCustomRoomCardEditor = class extends i {
     this._templateMode = /* @__PURE__ */ new Set();
     this._expandedSubButton = null;
     this._activeTab = "basic";
+    this._dragOverIndex = null;
+    this._dragIndex = null;
   }
   connectedCallback() {
     super.connectedCallback();
@@ -1352,6 +1362,44 @@ let IansCustomRoomCardEditor = class extends i {
     buttons.splice(index, 1);
     this._fieldChanged("sub_buttons", buttons);
     if (this._expandedSubButton === index) this._expandedSubButton = null;
+  }
+  _onDragHandleMousedown(e2, index) {
+    const row = e2.currentTarget.closest(".sub-btn-row");
+    if (row) row.setAttribute("draggable", "true");
+    this._dragIndex = index;
+  }
+  _onDragStart(e2, index) {
+    var _a2;
+    (_a2 = e2.dataTransfer) == null ? void 0 : _a2.setData("text/plain", String(index));
+    if (e2.dataTransfer) e2.dataTransfer.effectAllowed = "move";
+    this._dragIndex = index;
+  }
+  _onDragOver(e2, index) {
+    if (this._dragIndex === null || this._dragIndex === index) return;
+    e2.preventDefault();
+    if (e2.dataTransfer) e2.dataTransfer.dropEffect = "move";
+    if (this._dragOverIndex !== index) this._dragOverIndex = index;
+  }
+  _onDragLeave(index) {
+    if (this._dragOverIndex === index) this._dragOverIndex = null;
+  }
+  _onDrop(e2, toIndex) {
+    var _a2;
+    e2.preventDefault();
+    const fromIndex = this._dragIndex;
+    this._dragIndex = null;
+    this._dragOverIndex = null;
+    if (fromIndex === null || fromIndex === toIndex || !((_a2 = this._config) == null ? void 0 : _a2.sub_buttons)) return;
+    const buttons = [...this._config.sub_buttons];
+    const [moved] = buttons.splice(fromIndex, 1);
+    buttons.splice(toIndex, 0, moved);
+    this._fieldChanged("sub_buttons", buttons);
+    this._expandedSubButton = null;
+  }
+  _onDragEnd(e2) {
+    e2.currentTarget.removeAttribute("draggable");
+    this._dragIndex = null;
+    this._dragOverIndex = null;
   }
   _toggleTemplateMode(field) {
     const next = new Set(this._templateMode);
@@ -1829,7 +1877,7 @@ let IansCustomRoomCardEditor = class extends i {
     `;
   }
   _renderButtonsTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g;
     const c2 = this._config;
     const layout = (_a2 = c2.sub_buttons_layout) != null ? _a2 : "bottom-row";
     return b`
@@ -1856,6 +1904,14 @@ let IansCustomRoomCardEditor = class extends i {
             ></ha-selector>
           </div>
         ` : A}
+
+        ${layout === "left-column" || layout === "right-column" ? b`
+          <ha-selector .hass=${this.hass} .label=${"Column Alignment"}
+            .selector=${{ select: { options: COLUMN_JUSTIFY_OPTIONS, mode: "dropdown" } }}
+            .value=${(_d2 = c2.sub_buttons_column_justify) != null ? _d2 : "top"}
+            @value-changed=${(ev) => this._fieldChanged("sub_buttons_column_justify", ev.detail.value || void 0)}
+          ></ha-selector>
+        ` : A}
       </div>
 
       <!-- ── Global style ── -->
@@ -1865,12 +1921,12 @@ let IansCustomRoomCardEditor = class extends i {
         ${this._renderColorField("sub_button_background_color", "Background Color (default for all)")}
         <div class="two-col">
           <ha-selector .hass=${this.hass} .label=${"Opacity"}
-            .selector=${OPACITY_SELECTOR} .value=${(_d2 = c2.sub_button_opacity) != null ? _d2 : 1}
+            .selector=${OPACITY_SELECTOR} .value=${(_e2 = c2.sub_button_opacity) != null ? _e2 : 1}
             @value-changed=${(ev) => this._fieldChanged("sub_button_opacity", ev.detail.value)}
           ></ha-selector>
           <ha-selector .hass=${this.hass} .label=${"Button Gap"}
             .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
-            .value=${(_e2 = c2.sub_button_gap) != null ? _e2 : 6}
+            .value=${(_f2 = c2.sub_button_gap) != null ? _f2 : 6}
             @value-changed=${(ev) => this._fieldChanged("sub_button_gap", ev.detail.value)}
           ></ha-selector>
         </div>
@@ -1879,7 +1935,7 @@ let IansCustomRoomCardEditor = class extends i {
       <!-- ── Individual buttons ── -->
       <div class="section">
         <div class="section-label">Buttons</div>
-        ${((_f2 = c2.sub_buttons) != null ? _f2 : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
+        ${((_g = c2.sub_buttons) != null ? _g : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
         <button class="add-btn" @click=${this._addSubButton}>+ Add Button</button>
       </div>
     `;
@@ -1929,10 +1985,19 @@ let IansCustomRoomCardEditor = class extends i {
     const layout = (_e2 = (_d2 = this._config) == null ? void 0 : _d2.sub_buttons_layout) != null ? _e2 : "bottom-row";
     const showPosition = layout === "custom";
     return b`
-      <div class="sub-btn-row">
+      <div class="sub-btn-row ${this._dragOverIndex === index ? "drag-over" : ""}"
+        @dragstart=${(e2) => this._onDragStart(e2, index)}
+        @dragover=${(e2) => this._onDragOver(e2, index)}
+        @dragleave=${() => this._onDragLeave(index)}
+        @dragend=${(e2) => this._onDragEnd(e2)}
+        @drop=${(e2) => this._onDrop(e2, index)}
+      >
         <div class="sub-btn-header"
           @click=${() => this._expandedSubButton = isExpanded ? null : index}
         >
+          <ha-icon class="drag-handle" icon="mdi:drag-vertical"
+            @mousedown=${(e2) => this._onDragHandleMousedown(e2, index)}
+          ></ha-icon>
           <ha-icon .icon=${(_f2 = btn.icon) != null ? _f2 : "mdi:gesture-tap"}></ha-icon>
           <span class="sub-btn-label">${label}</span>
           <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
@@ -1941,7 +2006,7 @@ let IansCustomRoomCardEditor = class extends i {
       ev.stopPropagation();
       this._deleteSubButton(index);
     }}
-          >✕</button>
+          ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
         </div>
 
         ${isExpanded ? b`
@@ -2362,6 +2427,16 @@ let IansCustomRoomCardEditor = class extends i {
         border: 1px solid var(--divider-color);
         border-radius: 8px;
         overflow: hidden;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+
+      .sub-btn-row.drag-over {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 30%, transparent);
+      }
+
+      .sub-btn-row[draggable="true"] {
+        opacity: 0.5;
       }
 
       .sub-btn-header {
@@ -2375,6 +2450,16 @@ let IansCustomRoomCardEditor = class extends i {
       }
 
       .sub-btn-header:hover { background: var(--primary-background-color, #fff); }
+
+      .drag-handle {
+        cursor: grab;
+        color: var(--secondary-text-color);
+        --mdc-icon-size: 18px;
+        flex-shrink: 0;
+        opacity: 0.6;
+      }
+
+      .drag-handle:active { cursor: grabbing; }
 
       .sub-btn-label {
         flex: 1;
@@ -2405,14 +2490,27 @@ let IansCustomRoomCardEditor = class extends i {
 
       /* ── Buttons ── */
       .del-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
         color: var(--error-color, #db4437);
         border: 1px solid var(--error-color, #db4437);
-        border-radius: 4px;
-        padding: 2px 6px;
+        border-radius: 6px;
+        padding: 0;
         cursor: pointer;
         background: transparent;
-        font-size: 12px;
         flex-shrink: 0;
+        transition: background 0.15s;
+      }
+
+      .del-btn:hover {
+        background: color-mix(in srgb, var(--error-color, #db4437) 15%, transparent);
+      }
+
+      .del-icon {
+        --mdc-icon-size: 16px;
       }
 
       .add-btn {
@@ -2457,6 +2555,9 @@ __decorateClass$1([
 __decorateClass$1([
   r()
 ], IansCustomRoomCardEditor.prototype, "_activeTab", 2);
+__decorateClass$1([
+  r()
+], IansCustomRoomCardEditor.prototype, "_dragOverIndex", 2);
 IansCustomRoomCardEditor = __decorateClass$1([
   t(`${CARD_TYPE}-editor`)
 ], IansCustomRoomCardEditor);
@@ -2473,6 +2574,7 @@ var __decorateClass = (decorators, target, key, kind) => {
 const TEMPLATE_FIELDS = [
   "icon",
   "icon_color",
+  "icon_background_color",
   "badge_icon",
   "badge_color",
   "badge_background_color",
@@ -2744,7 +2846,7 @@ let IansCustomRoomCard = class extends i {
     }
     this._setCSSVar("--ians-icon-color", iconColor);
     this._setCSSVar("--ians-icon-opacity", c2.icon_opacity !== void 0 ? String(c2.icon_opacity) : void 0);
-    this._setCSSVar("--ians-icon-background-color", c2.icon_background_color);
+    this._setCSSVar("--ians-icon-background-color", resolve("icon_background_color", c2.icon_background_color));
     this._setCSSVar("--ians-icon-background-opacity", c2.icon_background_opacity !== void 0 ? String(c2.icon_background_opacity) : void 0);
     this._setCSSVar("--ians-icon-background-size", c2.icon_background_size !== void 0 ? `${c2.icon_background_size}px` : void 0);
     this._setCSSVar("--ians-icon-background-width", c2.icon_background_width !== void 0 ? `${c2.icon_background_width}px` : void 0);
@@ -2753,7 +2855,7 @@ let IansCustomRoomCard = class extends i {
     this._setCSSVar("--ians-icon-background-border-radius", borderRadius);
     this._setCSSVar("--ians-icon-size", c2.icon_size !== void 0 ? `${c2.icon_size}px` : void 0);
     this._setCSSVar("--ians-badge-color", resolve("badge_color", c2.badge_color));
-    this._setCSSVar("--ians-badge-background-color", c2.badge_background_color);
+    this._setCSSVar("--ians-badge-background-color", resolve("badge_background_color", c2.badge_background_color));
     this._setCSSVar("--ians-badge-size", c2.badge_size !== void 0 ? `${c2.badge_size}px` : void 0);
     this._setCSSVar("--ians-badge-opacity", c2.badge_opacity !== void 0 ? String(c2.badge_opacity) : void 0);
     this._setCSSVar("--ians-title-color", c2.title_color);
@@ -2773,6 +2875,19 @@ let IansCustomRoomCard = class extends i {
       }
     } else {
       this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
+    }
+    if (c2.sub_buttons_layout === "left-column" || c2.sub_buttons_layout === "right-column") {
+      const justifyMap = {
+        top: "flex-start",
+        center: "center",
+        bottom: "flex-end",
+        "space-between": "space-between",
+        "space-around": "space-around"
+      };
+      const justify = c2.sub_buttons_column_justify ? justifyMap[c2.sub_buttons_column_justify] : void 0;
+      this._setCSSVar("--ians-sub-buttons-column-justify", justify);
+    } else {
+      this.style.removeProperty("--ians-sub-buttons-column-justify");
     }
   }
   // ── Action handlers ────────────────────────────────────────────────────────

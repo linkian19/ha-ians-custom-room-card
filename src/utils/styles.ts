@@ -308,7 +308,7 @@ export const cardStyles = css`
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    justify-content: flex-start;
+    justify-content: var(--ians-sub-buttons-column-justify, flex-start);
     gap: var(--ians-sub-button-gap);
     z-index: 3;
     pointer-events: none;
@@ -322,7 +322,7 @@ export const cardStyles = css`
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: var(--ians-sub-buttons-column-justify, flex-start);
     gap: var(--ians-sub-button-gap);
     z-index: 3;
     pointer-events: none;
