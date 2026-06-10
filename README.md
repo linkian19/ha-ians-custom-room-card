@@ -7,13 +7,15 @@ A customizable room card for Home Assistant's Lovelace dashboard. Combines a roo
 - **Icon** with optional badge (entity-driven or static)
 - **Icon shapes** — circle, rounded-rect, squircle, square, or custom border-radius
 - **Icon positions** — top-left, top-right, bottom-left, bottom-right, center, and more
+- **Icon animations** — spin, pulse, blink, bounce, or shake; optionally triggered only when entity is active or inactive
 - **State-based icon colors** — auto-color icon and sub-button icons by entity state
 - **Background** color, opacity, and image (URL or HA area image)
 - **Title** with configurable position, alignment, size, and color
 - **Sub-buttons** with 7 layout presets and per-button tap/hold/double-tap actions
+- **Sub-button column alignment** — justify left/right-column layouts to top, center, bottom, or spaced
 - **Global action** — makes the entire card a single tap target (sub-buttons become decorative)
-- **HA Jinja2 templates** for icon, colors, badge, and title
-- **Full visual editor** with tabbed UI — no YAML required for basic use
+- **HA Jinja2 templates** for icon, colors, badge, title, and icon background color
+- **Full visual editor** with tabbed UI — no YAML required for basic use; drag-and-drop sub-button reordering
 - **card-mod compatible** — CSS custom properties and `::part()` selectors for every region
 
 ---
@@ -75,7 +77,7 @@ sub_buttons:
 | `icon` | string | — | ✓ | MDI icon string (e.g. `mdi:sofa`) |
 | `icon_color` | string | — | ✓ | CSS color for the main icon |
 | `icon_size` | number | — | — | MDI glyph size in px (overrides CSS default of 60% of container) |
-| `icon_background_color` | string | transparent | — | CSS color for icon container background |
+| `icon_background_color` | string | transparent | ✓ | CSS color for icon container background |
 | `icon_background_size` | number | `40` | — | Icon container base size in px (sets both width and height) |
 | `icon_background_width` | number | — | — | px width of icon container (overrides `icon_background_size`) |
 | `icon_background_height` | number | — | — | px height of icon container (overrides `icon_background_size`) |
@@ -100,6 +102,12 @@ sub_buttons:
 | `badge_position` | string | `top-right` | — | Badge position relative to icon: `top-left`, `top-right`, `bottom-left`, `bottom-right`, `custom` |
 | `badge_position_x` | string | — | — | CSS offset value for `badge_position: custom` |
 | `badge_position_y` | string | — | — | CSS offset value for `badge_position: custom` |
+| `icon_animation` | string | — | — | Animation for main icon: `spin`, `pulse`, `blink`, `bounce`, `shake` |
+| `icon_animation_when` | string | `always` | — | When to animate: `always`, `active` (entity on/open/playing), `inactive` (entity off/closed) |
+| `icon_animation_speed` | string | `normal` | — | Animation speed: `slow`, `normal`, `fast` |
+| `badge_animation` | string | — | — | Animation for the badge icon; same values as `icon_animation` |
+| `badge_animation_when` | string | `always` | — | When to animate the badge; same values as `icon_animation_when` |
+| `badge_animation_speed` | string | `normal` | — | Badge animation speed; same values as `icon_animation_speed` |
 | `background_color` | string | HA card bg | ✓ | CSS color for card background |
 | `background_opacity` | float | `1` | — | Opacity of background color layer (0–1) |
 | `background_image` | string | — | — | URL string, or `"area"` to use HA area image |
@@ -119,6 +127,7 @@ sub_buttons:
 | `sub_button_gap` | number | `6` | — | Gap between sub-buttons in px |
 | `sub_buttons_grid_columns` | number | — | — | Fixed column count for `grid` layout (overrides auto-fill) |
 | `sub_buttons_grid_min_width` | number | — | — | Min cell width in px for auto-fill `grid` layout |
+| `sub_buttons_column_justify` | string | `top` | — | Vertical alignment for `left-column` / `right-column` layouts: `top`, `center`, `bottom`, `space-between`, `space-around` |
 | `grid_options` | object | see below | — | Native sections-view grid sizing |
 | `sub_buttons_layout` | string | `bottom-row` | — | Layout preset for sub-buttons (see below) |
 | `sub_buttons` | list | `[]` | — | List of sub-button configs (see below) |
@@ -157,8 +166,8 @@ grid_options:
 |---|---|
 | `bottom-row` | Flex row at card bottom (default) |
 | `top-row` | Flex row at card top |
-| `left-column` | Flex column pinned to the left side |
-| `right-column` | Flex column pinned to the right side |
+| `left-column` | Flex column pinned to the left side (align with `sub_buttons_column_justify`) |
+| `right-column` | Flex column pinned to the right side (align with `sub_buttons_column_justify`) |
 | `corners` | Up to 4 buttons, one per corner |
 | `grid` | Auto-fill grid (configure with `sub_buttons_grid_columns` or `sub_buttons_grid_min_width`) |
 | `custom` | Per-button `position` field controls placement |
@@ -184,6 +193,9 @@ grid_options:
 | `tap_action` | action | `toggle` | Action on tap |
 | `hold_action` | action | `more-info` | Action on hold |
 | `double_tap_action` | action | `none` | Action on double-tap |
+| `animation` | string | — | Animation for this button's icon: `spin`, `pulse`, `blink`, `bounce`, `shake` |
+| `animation_when` | string | `always` | When to animate: `always`, `active`, `inactive` (uses button's `entity`) |
+| `animation_speed` | string | `normal` | Animation speed: `slow`, `normal`, `fast` |
 
 `position` values: `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
 
@@ -245,10 +257,34 @@ Fields marked ✓ in the reference table accept HA Jinja2 templates:
 ```yaml
 icon: "{{ 'mdi:lightbulb-on' if is_state('light.living_room', 'on') else 'mdi:lightbulb' }}"
 icon_color: "{{ '#ffff00' if is_state('light.living_room', 'on') else '#888888' }}"
+icon_background_color: "{{ 'rgba(255,200,0,0.3)' if is_state('light.living_room', 'on') else 'transparent' }}"
 title: "{{ states.light.living_room.attributes.friendly_name }}"
 ```
 
+Template-capable fields: `title`, `icon`, `icon_color`, `icon_background_color`, `badge_icon`, `badge_color`, `badge_background_color`, `background_color`, `border_color`.
+
 Templates update live when dependent entities change. Template errors show a red border and a console warning.
+
+---
+
+## Animations
+
+The main icon, badge, and each sub-button icon can be independently animated.
+
+```yaml
+# Spin the fan icon only when the fan is on
+entity: fan.living_room
+icon: mdi:fan
+icon_animation: spin
+icon_animation_when: active    # "always" | "active" | "inactive"
+icon_animation_speed: normal   # "slow" | "normal" | "fast"
+```
+
+Available animations: `spin`, `pulse` (scale breathe), `blink` (opacity flash), `bounce` (vertical hop), `shake` (horizontal wiggle).
+
+`animation_when: active` triggers when entity state is `on`, `open`, `home`, `playing`, `unlocked`, or `connected`. `animation_when: inactive` triggers on all other states. `always` (default) runs regardless of state.
+
+Sub-buttons each take their own `animation`, `animation_when`, and `animation_speed` fields driven by the button's `entity`.
 
 ---
 

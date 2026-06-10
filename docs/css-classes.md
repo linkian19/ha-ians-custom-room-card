@@ -138,6 +138,28 @@ These classes appear on elements inside the shadow DOM. They are set programmati
 | `has-background` | `.sub-button` | `background: true` (default) |
 | `display-only` | `.sub-button` | `global_action` is set (sub-button is non-interactive) |
 
+### Animation
+
+These classes are applied to `ha-icon` elements (main icon, badge icon, sub-button icons) when an animation is active. The `--ians-anim-dur` CSS variable is set on the icon's parent container and inherited by the icon.
+
+| Class | Animation |
+|---|---|
+| `anim-spin` | `@keyframes ians-spin` — continuous rotation |
+| `anim-pulse` | `@keyframes ians-pulse` — scale breathe (1× → 1.25×) |
+| `anim-blink` | `@keyframes ians-blink` — opacity flash (1 → 0.1) |
+| `anim-bounce` | `@keyframes ians-bounce` — vertical hop |
+| `anim-shake` | `@keyframes ians-shake` — horizontal wiggle |
+
+To override animation duration via card-mod:
+
+```yaml
+card_mod:
+  style: |
+    ha-card .icon-container {
+      --ians-anim-dur: 0.5s;
+    }
+```
+
 ### Sub-button custom positions
 
 | Class | Applied To | When |

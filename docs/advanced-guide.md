@@ -218,6 +218,23 @@ Sub-buttons stacked vertically, pinned to the right side.
 sub_buttons_layout: right-column
 ```
 
+### Column alignment
+
+For `left-column` and `right-column` layouts, control how buttons are distributed along the column axis with `sub_buttons_column_justify`:
+
+```yaml
+sub_buttons_layout: right-column
+sub_buttons_column_justify: bottom       # top | center | bottom | space-between | space-around
+```
+
+| Value | Behavior |
+|---|---|
+| `top` | Buttons packed at the top of the column (default) |
+| `center` | Buttons packed in the middle |
+| `bottom` | Buttons packed at the bottom |
+| `space-between` | First button at top, last at bottom, equal spacing between |
+| `space-around` | Equal space around every button |
+
 ### `corners`
 
 Up to 4 buttons, one per corner. Extra buttons beyond 4 are hidden. Buttons are placed top-left → top-right → bottom-left → bottom-right.
@@ -264,6 +281,85 @@ sub_buttons:
 ```
 
 Valid `position` values: `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
+
+---
+
+## Icon Animations
+
+The main icon, badge, and every sub-button icon can each be independently animated.
+
+### Available animations
+
+| Value | Effect |
+|---|---|
+| `spin` | Continuous rotation — good for fans, loading indicators |
+| `pulse` | Scale breathe (1× → 1.25× → 1×) — good for lights, active sensors |
+| `blink` | Opacity flash (full → dim → full) — good for alerts |
+| `bounce` | Vertical hop — good for notifications |
+| `shake` | Horizontal wiggle — good for alerts |
+
+### Basic usage
+
+```yaml
+icon_animation: spin
+```
+
+### State-aware triggering
+
+Use `icon_animation_when` to animate only when the entity is in a specific state:
+
+```yaml
+entity: fan.living_room
+icon: mdi:fan
+icon_animation: spin
+icon_animation_when: active    # only spin when fan is on
+```
+
+```yaml
+entity: binary_sensor.door
+icon: mdi:door
+icon_animation: shake
+icon_animation_when: active    # shake when door is open
+```
+
+`active` triggers when entity state is `on`, `open`, `home`, `playing`, `unlocked`, or `connected`. `inactive` triggers on all other states. `always` (default) runs continuously regardless of entity state.
+
+### Speed control
+
+```yaml
+icon_animation: spin
+icon_animation_speed: fast    # slow | normal | fast
+```
+
+Each animation has tuned natural durations per speed (e.g. spin normal = 2 s, shake normal = 0.6 s).
+
+### Badge animation
+
+The badge icon has its own independent animation fields — useful for blinking an alert badge:
+
+```yaml
+badge_icon: mdi:alert
+badge_animation: blink
+badge_animation_when: active
+badge_animation_speed: fast
+```
+
+### Per-sub-button animation
+
+Each sub-button has `animation`, `animation_when`, and `animation_speed` fields using the button's own `entity` for state-based triggering:
+
+```yaml
+sub_buttons:
+  - entity: fan.bedroom
+    icon: mdi:fan
+    animation: spin
+    animation_when: active      # spins only when fan.bedroom is on
+    animation_speed: normal
+  - entity: binary_sensor.motion
+    icon: mdi:motion-sensor
+    animation: pulse
+    animation_when: active      # pulses when motion is detected
+```
 
 ---
 

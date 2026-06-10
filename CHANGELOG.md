@@ -5,6 +5,95 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.20] - 2026-06-10
+
+### Added
+- **Icon animations** — animate the main icon, badge, and any sub-button icon with: `spin`, `pulse` (scale breathe), `blink` (opacity flash), `bounce` (vertical hop), `shake` (horizontal wiggle)
+- `icon_animation`, `icon_animation_when`, `icon_animation_speed` card-level fields
+- `badge_animation`, `badge_animation_when`, `badge_animation_speed` card-level fields
+- `animation`, `animation_when`, `animation_speed` per-sub-button fields
+- `animation_when` supports `always`, `active` (on/open/playing/home), and `inactive` — uses same entity-state logic as `state_based_color`
+- `animation_speed` supports `slow`, `normal` (default), `fast` — each animation type has tuned natural durations
+
+## [0.1.19] - 2026-06-10
+
+### Added
+- **`icon_background_color` now supports Jinja2 templates** (previously static only)
+- **Drag-and-drop sub-button reordering** in the visual editor — grip handle on each accordion row
+- **`sub_buttons_column_justify`** — vertical alignment for `left-column` / `right-column` layouts: `top` (default), `center`, `bottom`, `space-between`, `space-around`
+
+### Changed
+- Sub-button delete button changed from ✕ text to `mdi:delete` trash icon
+
+### Fixed
+- `badge_background_color` template was subscribed but not applied in `_applyConfigStyles` — template values now resolve correctly
+
+## [0.1.18] - 2026-06-10
+
+### Added
+- `badge_background_color` added to template-capable fields in the editor
+
+### Fixed
+- Template button for color fields now always lives inside `.color-row` (was incorrectly placed in a header row in some cases)
+
+## [0.1.17] - 2026-06-10
+
+### Fixed
+- Title field in editor replaced with native `<input>` (was `ha-selector text`) — HA's Material text field reserves ~16px for helper text even when empty, pushing the template toggle button below visual center
+
+## [0.1.16] - 2026-06-10
+
+### Fixed
+- Template toggle button centering — explicit `align-self: center` on the button and `align-self: flex-start` on `.template-input` to reliably center against input height regardless of `ha-selector` wrapper inflation
+
+## [0.1.15] - 2026-06-10
+
+### Fixed
+- Font Size and Title Color fields moved to separate rows (removed incorrect `two-col` pairing)
+- `.template-row { align-items: center }` corrected to `align-items: flex-start`
+
+## [0.1.14] - 2026-06-10
+
+### Fixed
+- Template button for color fields moved inside `.color-row` (was in `.color-field-header`); aligns correctly with swatch and input via `align-items: center`
+- `two-col` grid uses `align-items: end`
+
+## [0.1.13] - 2026-06-10
+
+### Fixed
+- Removed duplicate "Icon Color" label
+- Section bottom padding adjusted
+- Template button redesigned to live in `.color-field-header`
+
+## [0.1.12] - 2026-06-10
+
+### Fixed
+- All color fields in editor now use native `<input type="text">` instead of `ha-selector { text: {} }` — HA's Material Design text field reserves ~16–20px for helper text at the bottom even when empty, causing misalignment in color rows
+
+## [0.1.11] - 2026-06-10
+
+### Added
+- **Independent icon background position** (`icon_background_position`, `icon_background_position_x/y`) — renders the background shape at a separate location from the icon glyph
+- **Independent background width/height** (`icon_background_width`, `icon_background_height`) — non-square icon containers without custom `border-radius`
+
+### Fixed
+- Nested card compatibility: `min-height: 64px` on `:host` and `ha-card`; `touch-action: none` scoped to interactive cards only
+
+## [0.1.10] - 2026-06-10
+
+### Added
+- **Hover highlight ripple** (`hover_highlight`) — subtle white overlay on mouse-over; enabled by default when `global_action` is set
+- **`background_image_position`** — CSS `background-position` value for the background image layer
+
+### Fixed
+- Color picker alignment fix in editor
+
+## [0.1.9] - 2026-06-10
+
+### Fixed
+- Card action handlers and sub-button handlers now re-attach on DOM reconnect (`connectedCallback`) — previously `global_action` navigation only fired once per mount
+- Removed sub-button opacity dimming that incorrectly applied when `global_action` was set
+
 ## [0.1.5] - 2026-05-21
 
 ### Added
