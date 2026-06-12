@@ -1365,6 +1365,14 @@ const ICON_SHAPE_OPTIONS = [
   { value: "squircle", label: "Squircle" },
   { value: "square", label: "Square" }
 ];
+const CARD_SHAPE_OPTIONS = [
+  { value: "", label: "Default (from theme)" },
+  { value: "square", label: "Square (no rounding)" },
+  { value: "rounded-sm", label: "Rounded Small (8px)" },
+  { value: "rounded", label: "Rounded (12px)" },
+  { value: "rounded-lg", label: "Rounded Large (24px)" },
+  { value: "pill", label: "Pill (999px)" }
+];
 const SUB_BUTTON_LAYOUT_OPTIONS = [
   { value: "bottom-row", label: "Bottom Row" },
   { value: "top-row", label: "Top Row" },
@@ -2136,7 +2144,7 @@ let IansCustomRoomCardEditor = class extends i {
     `;
   }
   _renderCardTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k;
     const c2 = this._config;
     return b`
       <!-- ── Background ── -->
@@ -2162,12 +2170,28 @@ let IansCustomRoomCardEditor = class extends i {
         ` : A}
       </div>
 
+      <!-- ── Shape ── -->
+      <div class="section">
+        <div class="section-label">Shape</div>
+        <ha-selector .hass=${this.hass} .label=${"Card Shape"}
+          .selector=${{ select: { options: CARD_SHAPE_OPTIONS, mode: "dropdown" } }}
+          .value=${(_d2 = c2.card_shape) != null ? _d2 : ""}
+          @value-changed=${(ev) => this._fieldChanged("card_shape", ev.detail.value || void 0)}
+        ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${"Custom Border Radius (CSS — overrides shape)"}
+          .selector=${{ text: {} }}
+          .value=${(_e2 = c2.card_border_radius) != null ? _e2 : ""}
+          .placeholder=${"e.g. 12px, 50% 0 50% 0, 8px 24px"}
+          @value-changed=${(ev) => this._fieldChanged("card_border_radius", ev.detail.value || void 0)}
+        ></ha-selector>
+      </div>
+
       <!-- ── Hover highlight ── -->
       <div class="section">
         <div class="section-label">Interaction</div>
         <ha-form
           .hass=${this.hass}
-          .data=${{ hover_highlight: (_d2 = c2.hover_highlight) != null ? _d2 : true }}
+          .data=${{ hover_highlight: (_f2 = c2.hover_highlight) != null ? _f2 : true }}
           .schema=${[{
       name: "hover_highlight",
       label: "Show hover highlight (ripple overlay on mouse-over)",
@@ -2184,7 +2208,7 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="section-label">Border</div>
         ${this._renderColorField("border_color", "Border Color", void 0, false)}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
-          .selector=${OPACITY_SELECTOR} .value=${(_e2 = c2.border_opacity) != null ? _e2 : 1}
+          .selector=${OPACITY_SELECTOR} .value=${(_g = c2.border_opacity) != null ? _g : 1}
           @value-changed=${(ev) => this._fieldChanged("border_opacity", ev.detail.value)}
         ></ha-selector>
       </div>
@@ -2195,12 +2219,12 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="two-col">
           <ha-selector .hass=${this.hass} .label=${"Columns"}
             .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
-            .value=${(_g = (_f2 = c2.grid_options) == null ? void 0 : _f2.columns) != null ? _g : 6}
+            .value=${(_i = (_h = c2.grid_options) == null ? void 0 : _h.columns) != null ? _i : 6}
             @value-changed=${(ev) => this._gridFieldChanged("columns", ev.detail.value)}
           ></ha-selector>
           <ha-selector .hass=${this.hass} .label=${"Rows"}
             .selector=${{ number: { min: 1, max: 6, step: 1, mode: "box" } }}
-            .value=${(_i = (_h = c2.grid_options) == null ? void 0 : _h.rows) != null ? _i : 2}
+            .value=${(_k = (_j = c2.grid_options) == null ? void 0 : _j.rows) != null ? _k : 2}
             @value-changed=${(ev) => this._gridFieldChanged("rows", ev.detail.value)}
           ></ha-selector>
         </div>
@@ -3298,6 +3322,13 @@ const SHAPE_BORDER_RADIUS = {
   squircle: "30%",
   square: "0"
 };
+const CARD_SHAPE_BORDER_RADIUS = {
+  square: "0",
+  "rounded-sm": "8px",
+  rounded: "12px",
+  "rounded-lg": "24px",
+  pill: "999px"
+};
 const ANIM_DURATIONS = {
   spin: { slow: "4s", normal: "2s", fast: "0.8s" },
   pulse: { slow: "3s", normal: "1.5s", fast: "0.6s" },
@@ -3537,6 +3568,9 @@ let IansCustomRoomCard = class extends i {
     this._setCSSVar("--ians-card-background-opacity", c2.background_opacity !== void 0 ? String(c2.background_opacity) : void 0);
     this._setCSSVar("--ians-card-border-color", resolve("border_color", c2.border_color));
     this._setCSSVar("--ians-card-border-opacity", c2.border_opacity !== void 0 ? String(c2.border_opacity) : void 0);
+    const cardBorderRadius = c2.card_border_radius || (c2.card_shape ? CARD_SHAPE_BORDER_RADIUS[c2.card_shape] : void 0);
+    this._setCSSVar("--ians-card-border-radius", cardBorderRadius);
+    this._setCSSVar("--ha-card-border-radius", cardBorderRadius);
     let iconColor = resolve("icon_color", c2.icon_color);
     if (c2.state_based_color && c2.entity && this.hass) {
       const es = this.hass.states[c2.entity];

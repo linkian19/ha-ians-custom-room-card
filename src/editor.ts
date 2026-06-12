@@ -3,7 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import type {
   HomeAssistant, CardConfig, SubButtonConfig, SubButtonGroup,
   SubButtonsLayout, SubButtonGroupPosition, IconPosition, BadgePosition,
-  IconBackgroundShape, TitleAlign,
+  IconBackgroundShape, CardShape, TitleAlign,
 } from "./types";
 import { CARD_TYPE } from "./const";
 import { loadHaComponents } from "./utils/loader";
@@ -56,6 +56,15 @@ const ICON_SHAPE_OPTIONS = [
   { value: "rounded-rect", label: "Rounded Rectangle" },
   { value: "squircle",     label: "Squircle" },
   { value: "square",       label: "Square" },
+];
+
+const CARD_SHAPE_OPTIONS = [
+  { value: "",            label: "Default (from theme)" },
+  { value: "square",      label: "Square (no rounding)" },
+  { value: "rounded-sm",  label: "Rounded Small (8px)" },
+  { value: "rounded",     label: "Rounded (12px)" },
+  { value: "rounded-lg",  label: "Rounded Large (24px)" },
+  { value: "pill",        label: "Pill (999px)" },
 ];
 
 const SUB_BUTTON_LAYOUT_OPTIONS = [
@@ -925,6 +934,24 @@ export class IansCustomRoomCardEditor extends LitElement {
               this._fieldChanged("background_image_position", ev.detail.value || undefined)}
           ></ha-selector>
         ` : nothing}
+      </div>
+
+      <!-- ── Shape ── -->
+      <div class="section">
+        <div class="section-label">Shape</div>
+        <ha-selector .hass=${this.hass} .label=${"Card Shape"}
+          .selector=${{ select: { options: CARD_SHAPE_OPTIONS, mode: "dropdown" } }}
+          .value=${c.card_shape ?? ""}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("card_shape", ev.detail.value as CardShape || undefined)}
+        ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${"Custom Border Radius (CSS — overrides shape)"}
+          .selector=${{ text: {} }}
+          .value=${c.card_border_radius ?? ""}
+          .placeholder=${"e.g. 12px, 50% 0 50% 0, 8px 24px"}
+          @value-changed=${(ev: CustomEvent) =>
+            this._fieldChanged("card_border_radius", ev.detail.value || undefined)}
+        ></ha-selector>
       </div>
 
       <!-- ── Hover highlight ── -->

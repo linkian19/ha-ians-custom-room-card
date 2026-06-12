@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape, SubButtonGroup, SubButtonsLayout, SubButtonConfig } from "./types";
+import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape, CardShape, SubButtonGroup, SubButtonsLayout, SubButtonConfig } from "./types";
 import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION } from "./const";
 import { cardStyles } from "./utils/styles";
 import { resolveAreaImage } from "./utils/area-image";
@@ -78,6 +78,14 @@ const SHAPE_BORDER_RADIUS: Record<IconBackgroundShape, string> = {
   "rounded-rect": "8px",
   squircle: "30%",
   square: "0",
+};
+
+const CARD_SHAPE_BORDER_RADIUS: Record<CardShape, string> = {
+  square:       "0",
+  "rounded-sm": "8px",
+  rounded:      "12px",
+  "rounded-lg": "24px",
+  pill:         "999px",
 };
 
 // Animation durations by type and speed
@@ -351,6 +359,11 @@ export class IansCustomRoomCard extends LitElement {
     this._setCSSVar("--ians-card-background-opacity", c.background_opacity !== undefined ? String(c.background_opacity) : undefined);
     this._setCSSVar("--ians-card-border-color", resolve("border_color", c.border_color));
     this._setCSSVar("--ians-card-border-opacity", c.border_opacity !== undefined ? String(c.border_opacity) : undefined);
+
+    const cardBorderRadius = c.card_border_radius
+      || (c.card_shape ? CARD_SHAPE_BORDER_RADIUS[c.card_shape] : undefined);
+    this._setCSSVar("--ians-card-border-radius", cardBorderRadius);
+    this._setCSSVar("--ha-card-border-radius", cardBorderRadius);
 
     // State-based icon color: resolves dynamically from entity state when enabled
     let iconColor = resolve("icon_color", c.icon_color);

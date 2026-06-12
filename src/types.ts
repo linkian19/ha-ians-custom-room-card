@@ -170,6 +170,8 @@ export type BadgePosition =
 
 export type IconBackgroundShape = "circle" | "rounded-rect" | "squircle" | "square";
 
+export type CardShape = "square" | "rounded-sm" | "rounded" | "rounded-lg" | "pill";
+
 export type IconAnimationType = "none" | "spin" | "pulse" | "blink" | "bounce" | "shake";
 export type IconAnimationWhen = "always" | "active" | "inactive";
 export type IconAnimationSpeed = "slow" | "normal" | "fast";
@@ -239,6 +241,9 @@ export interface CardConfig {
   background_image_position?: string; // CSS background-position (default: center)
   border_color?: string;
   border_opacity?: number;
+  // Card shape
+  card_shape?: CardShape;
+  card_border_radius?: string;        // CSS value; overrides card_shape preset
   // Hover highlight
   hover_highlight?: boolean;          // ripple overlay on hover; default true when global_action set
   // Icon shape & dimensions
