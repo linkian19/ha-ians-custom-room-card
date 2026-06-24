@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-06-24
+
+### Fixed
+- Icon and title no longer sit at the top of a tall card — `.card-inner` now uses `justify-content: center` and `.card-header` no longer force-grows with `flex: 1`, so content is vertically centered within the card height
+- When `icon_position` is set to a left-side value (`top-left`, `center-left`, `bottom-left`), the title (in default inline position) now renders to the right of the icon rather than overlapping it — an invisible spacer reserves the icon's width in the header flow
+
 ## [0.2.6] - 2026-06-24
 
 ### Fixed

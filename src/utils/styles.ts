@@ -81,6 +81,7 @@ export const cardStyles = css`
     height: 100%;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     padding: 12px;
     box-sizing: border-box;
     gap: 8px;
@@ -91,9 +92,15 @@ export const cardStyles = css`
     display: flex;
     align-items: center;
     gap: 10px;
-    flex: 1;
     min-width: 0;
     order: 1;
+  }
+
+  /* Placeholder reserves the icon's width in the header when the icon is
+     absolutely positioned on the left side, so the title stays to its right */
+  .icon-spacer {
+    width: var(--ians-icon-background-width);
+    flex-shrink: 0;
   }
 
   /* ── Icon ────────────────────────────────────────────────────────────────── */

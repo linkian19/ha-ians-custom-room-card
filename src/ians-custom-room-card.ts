@@ -689,7 +689,11 @@ export class IansCustomRoomCard extends LitElement {
 
         <div class="card-inner">
           <div part="header" class="card-header">
-            ${!iconPosition ? iconEl : nothing}
+            ${!iconPosition
+              ? iconEl
+              : (title && !titlePosition && (iconPosition === "top-left" || iconPosition === "center-left" || iconPosition === "bottom-left")
+                  ? html`<div class="icon-spacer"></div>`
+                  : nothing)}
             ${title && !titlePosition
               ? html`<span part="title" class="card-title">${title}</span>`
               : nothing}
