@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-06-24
+
+### Fixed
+- Card overflows its sections grid cell when set to a single row — removed `min-height: 64px` from both `:host` and `ha-card`. The card now fits exactly within its allocated grid rows. Minimum visible height in masonry/ungridded layouts is still provided naturally by the card's internal content.
+
 ## [0.2.5] - 2026-06-24
 
 ### Added

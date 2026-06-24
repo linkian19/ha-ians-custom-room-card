@@ -4,7 +4,6 @@ export const cardStyles = css`
   :host {
     display: block;
     height: 100%;
-    min-height: 64px;
     padding: var(--ians-card-margin, 0px);
     box-sizing: border-box;
     /* ── CSS custom property defaults (all overridable via card-mod or external CSS) ── */
@@ -44,7 +43,6 @@ export const cardStyles = css`
     --ha-card-background: transparent;
     position: relative;
     height: 100%;
-    min-height: 64px;
     overflow: hidden;
     cursor: default;
     border-color: color-mix(
