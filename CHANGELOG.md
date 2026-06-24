@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-06-24
+
+### Added
+- **`card_margin`** — padding in px around the card within its grid cell, creating visual space between adjacent cards. Defaults to `0` (no change to existing layouts). Set via the visual editor under Shape, or in YAML as `card_margin: 4`.
+
 ## [0.2.4] - 2026-06-24
 
 ### Added

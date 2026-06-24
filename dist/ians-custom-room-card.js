@@ -617,6 +617,8 @@ const cardStyles = i$3`
     display: block;
     height: 100%;
     min-height: 64px;
+    padding: var(--ians-card-margin, 0px);
+    box-sizing: border-box;
     /* ── CSS custom property defaults (all overridable via card-mod or external CSS) ── */
     --ians-card-background-color: var(--ha-card-background, var(--card-background-color, #fff));
     --ians-card-background-opacity: 1;
@@ -2176,7 +2178,7 @@ let IansCustomRoomCardEditor = class extends i {
     `;
   }
   _renderCardTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l;
     const c2 = this._config;
     return b`
       <!-- ── Background ── -->
@@ -2216,6 +2218,11 @@ let IansCustomRoomCardEditor = class extends i {
           .placeholder=${"e.g. 12px, 50% 0 50% 0, 8px 24px"}
           @value-changed=${(ev) => this._fieldChanged("card_border_radius", ev.detail.value || void 0)}
         ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${"Card Margin (space around card within grid cell)"}
+          .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
+          .value=${(_f2 = c2.card_margin) != null ? _f2 : 0}
+          @value-changed=${(ev) => this._fieldChanged("card_margin", ev.detail.value || void 0)}
+        ></ha-selector>
       </div>
 
       <!-- ── Hover highlight ── -->
@@ -2223,7 +2230,7 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="section-label">Interaction</div>
         <ha-form
           .hass=${this.hass}
-          .data=${{ hover_highlight: (_f2 = c2.hover_highlight) != null ? _f2 : true }}
+          .data=${{ hover_highlight: (_g = c2.hover_highlight) != null ? _g : true }}
           .schema=${[{
       name: "hover_highlight",
       label: "Show hover highlight (ripple overlay on mouse-over)",
@@ -2240,7 +2247,7 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="section-label">Border</div>
         ${this._renderColorField("border_color", "Border Color", void 0, false)}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
-          .selector=${OPACITY_SELECTOR} .value=${(_g = c2.border_opacity) != null ? _g : 1}
+          .selector=${OPACITY_SELECTOR} .value=${(_h = c2.border_opacity) != null ? _h : 1}
           @value-changed=${(ev) => this._fieldChanged("border_opacity", ev.detail.value)}
         ></ha-selector>
       </div>
@@ -2251,12 +2258,12 @@ let IansCustomRoomCardEditor = class extends i {
         <div class="two-col">
           <ha-selector .hass=${this.hass} .label=${"Columns"}
             .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
-            .value=${(_i = (_h = c2.grid_options) == null ? void 0 : _h.columns) != null ? _i : 6}
+            .value=${(_j = (_i = c2.grid_options) == null ? void 0 : _i.columns) != null ? _j : 6}
             @value-changed=${(ev) => this._gridFieldChanged("columns", ev.detail.value)}
           ></ha-selector>
           <ha-selector .hass=${this.hass} .label=${"Rows"}
             .selector=${{ number: { min: 1, max: 6, step: 1, mode: "box" } }}
-            .value=${(_k = (_j = c2.grid_options) == null ? void 0 : _j.rows) != null ? _k : 2}
+            .value=${(_l = (_k = c2.grid_options) == null ? void 0 : _k.rows) != null ? _l : 2}
             @value-changed=${(ev) => this._gridFieldChanged("rows", ev.detail.value)}
           ></ha-selector>
         </div>
@@ -3605,6 +3612,7 @@ let IansCustomRoomCard = class extends i {
       var _a3;
       return (_a3 = this._templateResults[field]) != null ? _a3 : configValue;
     };
+    this._setCSSVar("--ians-card-margin", c2.card_margin !== void 0 ? `${c2.card_margin}px` : void 0);
     this._setCSSVar("--ians-card-background-color", resolve("background_color", c2.background_color));
     this._setCSSVar("--ians-card-background-opacity", c2.background_opacity !== void 0 ? String(c2.background_opacity) : void 0);
     this._setCSSVar("--ians-card-border-color", resolve("border_color", c2.border_color));

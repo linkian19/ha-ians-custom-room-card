@@ -974,6 +974,11 @@ export class IansCustomRoomCardEditor extends LitElement {
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("card_border_radius", ev.detail.value || undefined)}
         ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${"Card Margin (space around card within grid cell)"}
+          .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
+          .value=${c.card_margin ?? 0}
+          @value-changed=${(ev: CustomEvent) => this._fieldChanged("card_margin", ev.detail.value || undefined)}
+        ></ha-selector>
       </div>
 
       <!-- ── Hover highlight ── -->

@@ -238,6 +238,8 @@ export interface CardConfig {
   badge_position?: BadgePosition;
   badge_position_x?: string;     // CSS value; used when badge_position: "custom"
   badge_position_y?: string;     // CSS value; used when badge_position: "custom"
+  // Card spacing
+  card_margin?: number;                // px padding around the card within its grid cell
   // Card background & border
   background_color?: string;
   background_opacity?: number;

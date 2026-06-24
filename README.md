@@ -111,6 +111,7 @@ sub_buttons:
 | `badge_animation` | string | — | — | Animation for the badge icon; same values as `icon_animation` |
 | `badge_animation_when` | string | `always` | — | When to animate the badge; same values as `icon_animation_when` |
 | `badge_animation_speed` | string | `normal` | — | Badge animation speed; same values as `icon_animation_speed` |
+| `card_margin` | number | `0` | — | Padding in px around the card within its grid cell — useful for adding space between adjacent cards |
 | `background_color` | string | HA card bg | ✓ | CSS color for card background |
 | `background_opacity` | float | `1` | — | Opacity of background color layer (0–1) |
 | `background_image` | string | — | — | URL string, or `"area"` to use HA area image |

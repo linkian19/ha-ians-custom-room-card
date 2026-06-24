@@ -355,6 +355,7 @@ export class IansCustomRoomCard extends LitElement {
     const resolve = (field: TemplateField, configValue: string | undefined) =>
       this._templateResults[field] ?? configValue;
 
+    this._setCSSVar("--ians-card-margin", c.card_margin !== undefined ? `${c.card_margin}px` : undefined);
     this._setCSSVar("--ians-card-background-color", resolve("background_color", c.background_color));
     this._setCSSVar("--ians-card-background-opacity", c.background_opacity !== undefined ? String(c.background_opacity) : undefined);
     this._setCSSVar("--ians-card-border-color", resolve("border_color", c.border_color));
