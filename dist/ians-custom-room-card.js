@@ -1700,7 +1700,7 @@ let IansCustomRoomCardEditor = class extends i {
   }
   /** Shared button accordion body used by both single-group and multi-group editors. */
   _renderButtonBody(btn, showPosition, onChange, onColorChange) {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s;
     return b`
       <div class="sub-group-label">Entity &amp; Display</div>
 
@@ -1784,26 +1784,45 @@ let IansCustomRoomCardEditor = class extends i {
         </div>
       ` : A}
 
+      <div class="sub-group-label">Text Style</div>
+      <div class="two-col">
+        <ha-selector .hass=${this.hass} .label=${"State Font Size"}
+          .selector=${{ number: { min: 8, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
+          .value=${(_m = btn.state_font_size) != null ? _m : 11}
+          @value-changed=${(ev) => onChange({ state_font_size: ev.detail.value !== 11 ? ev.detail.value : void 0 })}
+        ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${"State Font Weight"}
+          .selector=${{ number: { min: 100, max: 900, step: 100, mode: "box" } }}
+          .value=${(_n = btn.state_font_weight) != null ? _n : 500}
+          @value-changed=${(ev) => onChange({ state_font_weight: ev.detail.value !== 500 ? ev.detail.value : void 0 })}
+        ></ha-selector>
+      </div>
+      <ha-selector .hass=${this.hass} .label=${"State/Label Max Width (0 = auto)"}
+        .selector=${{ number: { min: 0, max: 400, step: 1, mode: "box", unit_of_measurement: "px" } }}
+        .value=${(_o = btn.text_max_width) != null ? _o : 0}
+        @value-changed=${(ev) => onChange({ text_max_width: ev.detail.value || void 0 })}
+      ></ha-selector>
+
       ${showPosition ? b`
         <div class="sub-group-label">Position</div>
         <ha-selector .hass=${this.hass} .label=${"Position"}
           .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_m = btn.position) != null ? _m : "bottom-left"}
+          .value=${(_p = btn.position) != null ? _p : "bottom-left"}
           @value-changed=${(ev) => onChange({ position: ev.detail.value })}
         ></ha-selector>
       ` : A}
 
       <div class="sub-group-label">Actions</div>
       <ha-selector .hass=${this.hass} .label=${"Tap Action"}
-        .selector=${{ ui_action: {} }} .value=${(_n = btn.tap_action) != null ? _n : { action: "toggle" }}
+        .selector=${{ ui_action: {} }} .value=${(_q = btn.tap_action) != null ? _q : { action: "toggle" }}
         @value-changed=${(ev) => onChange({ tap_action: ev.detail.value })}
       ></ha-selector>
       <ha-selector .hass=${this.hass} .label=${"Hold Action"}
-        .selector=${{ ui_action: {} }} .value=${(_o = btn.hold_action) != null ? _o : { action: "more-info" }}
+        .selector=${{ ui_action: {} }} .value=${(_r = btn.hold_action) != null ? _r : { action: "more-info" }}
         @value-changed=${(ev) => onChange({ hold_action: ev.detail.value })}
       ></ha-selector>
       <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
-        .selector=${{ ui_action: {} }} .value=${(_p = btn.double_tap_action) != null ? _p : { action: "none" }}
+        .selector=${{ ui_action: {} }} .value=${(_s = btn.double_tap_action) != null ? _s : { action: "none" }}
         @value-changed=${(ev) => onChange({ double_tap_action: ev.detail.value })}
       ></ha-selector>
     `;
@@ -1953,7 +1972,10 @@ let IansCustomRoomCardEditor = class extends i {
           ></ha-selector>
         ` : A}
 
-        ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
+        <div class="two-col">
+          ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
+          ${this._renderNumField("title_font_weight", "Font Weight", 100, 900, 100, 500)}
+        </div>
         ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
       </div>
 
@@ -2242,7 +2264,7 @@ let IansCustomRoomCardEditor = class extends i {
     `;
   }
   _renderButtonsTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
     const c2 = this._config;
     const isGroupsMode = !!((_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length);
     if (isGroupsMode) {
@@ -2321,12 +2343,21 @@ let IansCustomRoomCardEditor = class extends i {
             @value-changed=${(ev) => this._fieldChanged("sub_button_gap", ev.detail.value)}
           ></ha-selector>
         </div>
+        <div class="two-col">
+          ${this._renderNumField("sub_button_state_font_size", "State Font Size", 8, 32, 1, 11, "px")}
+          ${this._renderNumField("sub_button_state_font_weight", "State Font Weight", 100, 900, 100, 500)}
+        </div>
+        <ha-selector .hass=${this.hass} .label=${"State/Label Max Width (0 = auto)"}
+          .selector=${{ number: { min: 0, max: 400, step: 1, mode: "box", unit_of_measurement: "px" } }}
+          .value=${(_l = c2.sub_button_text_max_width) != null ? _l : 0}
+          @value-changed=${(ev) => this._fieldChanged("sub_button_text_max_width", ev.detail.value || void 0)}
+        ></ha-selector>
       </div>
 
       <!-- ── Individual buttons ── -->
       <div class="section">
         <div class="section-label">Buttons</div>
-        ${((_l = c2.sub_buttons) != null ? _l : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
+        ${((_m = c2.sub_buttons) != null ? _m : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
         <button class="add-btn" @click=${this._addSubButton}>+ Add Button</button>
       </div>
 

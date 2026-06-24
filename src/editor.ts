@@ -518,6 +518,25 @@ export class IansCustomRoomCardEditor extends LitElement {
         </div>
       ` : nothing}
 
+      <div class="sub-group-label">Text Style</div>
+      <div class="two-col">
+        <ha-selector .hass=${this.hass} .label=${"State Font Size"}
+          .selector=${{ number: { min: 8, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
+          .value=${btn.state_font_size ?? 11}
+          @value-changed=${(ev: CustomEvent) => onChange({ state_font_size: ev.detail.value !== 11 ? ev.detail.value : undefined })}
+        ></ha-selector>
+        <ha-selector .hass=${this.hass} .label=${"State Font Weight"}
+          .selector=${{ number: { min: 100, max: 900, step: 100, mode: "box" } }}
+          .value=${btn.state_font_weight ?? 500}
+          @value-changed=${(ev: CustomEvent) => onChange({ state_font_weight: ev.detail.value !== 500 ? ev.detail.value : undefined })}
+        ></ha-selector>
+      </div>
+      <ha-selector .hass=${this.hass} .label=${"State/Label Max Width (0 = auto)"}
+        .selector=${{ number: { min: 0, max: 400, step: 1, mode: "box", unit_of_measurement: "px" } }}
+        .value=${btn.text_max_width ?? 0}
+        @value-changed=${(ev: CustomEvent) => onChange({ text_max_width: ev.detail.value || undefined })}
+      ></ha-selector>
+
       ${showPosition ? html`
         <div class="sub-group-label">Position</div>
         <ha-selector .hass=${this.hass} .label=${"Position"}
@@ -699,7 +718,10 @@ export class IansCustomRoomCardEditor extends LitElement {
           ></ha-selector>
         ` : nothing}
 
-        ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
+        <div class="two-col">
+          ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
+          ${this._renderNumField("title_font_weight", "Font Weight", 100, 900, 100, 500)}
+        </div>
         ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
       </div>
 
@@ -1089,6 +1111,15 @@ export class IansCustomRoomCardEditor extends LitElement {
             @value-changed=${(ev: CustomEvent) => this._fieldChanged("sub_button_gap", ev.detail.value)}
           ></ha-selector>
         </div>
+        <div class="two-col">
+          ${this._renderNumField("sub_button_state_font_size", "State Font Size", 8, 32, 1, 11, "px")}
+          ${this._renderNumField("sub_button_state_font_weight", "State Font Weight", 100, 900, 100, 500)}
+        </div>
+        <ha-selector .hass=${this.hass} .label=${"State/Label Max Width (0 = auto)"}
+          .selector=${{ number: { min: 0, max: 400, step: 1, mode: "box", unit_of_measurement: "px" } }}
+          .value=${c.sub_button_text_max_width ?? 0}
+          @value-changed=${(ev: CustomEvent) => this._fieldChanged("sub_button_text_max_width", ev.detail.value || undefined)}
+        ></ha-selector>
       </div>
 
       <!-- ── Individual buttons ── -->

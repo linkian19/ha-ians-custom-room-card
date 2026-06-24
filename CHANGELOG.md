@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-06-24
+
+### Added
+- Visual editor support for all v0.2.3 fields: `title_font_weight` (paired with Font Size in a two-column row), `sub_button_state_font_size`, `sub_button_state_font_weight`, `sub_button_text_max_width` (global button style section), and per-sub-button `state_font_size`, `state_font_weight`, `text_max_width` (Text Style sub-group in each button accordion)
+
 ## [0.2.3] - 2026-06-24
 
 ### Added
