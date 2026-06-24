@@ -26,12 +26,16 @@ export const cardStyles = css`
     --ians-badge-opacity: 1;
     --ians-title-color: var(--primary-text-color);
     --ians-title-font-size: 14px;
+    --ians-title-font-weight: 500;
     --ians-title-align: left;
     --ians-sub-button-icon-color: var(--primary-text-color);
     --ians-sub-button-background-color: rgba(255, 255, 255, 0.1);
     --ians-sub-button-size: 32px;
     --ians-sub-button-gap: 6px;
     --ians-sub-button-opacity: 1;
+    --ians-sub-button-state-font-size: 11px;
+    --ians-sub-button-state-font-weight: 500;
+    --ians-sub-button-text-max-width: none;
   }
 
   ha-card {
@@ -194,7 +198,7 @@ export const cardStyles = css`
   .card-title {
     color: var(--ians-title-color);
     font-size: var(--ians-title-font-size);
-    font-weight: 500;
+    font-weight: var(--ians-title-font-weight);
     line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -211,7 +215,7 @@ export const cardStyles = css`
     z-index: 4;
     color: var(--ians-title-color);
     font-size: var(--ians-title-font-size);
-    font-weight: 500;
+    font-weight: var(--ians-title-font-weight);
     line-height: 1.3;
     pointer-events: none;
     max-width: calc(100% - 24px);
@@ -369,18 +373,24 @@ export const cardStyles = css`
     flex-shrink: 0;
   }
 
-  .sub-button-label,
-  .sub-button-state {
+  .sub-button-label {
     font-size: 11px;
     font-weight: 500;
     color: var(--ians-sub-button-icon-color);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 60px;
+    max-width: var(--ians-sub-button-text-max-width);
   }
 
   .sub-button-state {
+    font-size: var(--ians-sub-button-state-font-size);
+    font-weight: var(--ians-sub-button-state-font-weight);
+    color: var(--ians-sub-button-icon-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: var(--ians-sub-button-text-max-width);
     opacity: 0.75;
   }
 

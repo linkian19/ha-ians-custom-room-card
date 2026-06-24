@@ -5,7 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.2.1] - 2026-06-10
+## [0.2.3] - 2026-06-24
+
+### Added
+- **`title_font_weight`** — CSS font-weight for the card title (`500`, `600`, `700`, `"bold"`, etc.)
+- **`sub_button_state_font_size`** — Global font size (px) for all sub-button state text; default `11`
+- **`sub_button_state_font_weight`** — Global CSS font-weight for all sub-button state text; default `500`
+- **`sub_button_text_max_width`** — Global max-width (px) for label/state text spans; previously hard-capped at `60px`, now defaults to **none** (auto-sizes to content)
+- **Per-button `state_font_size`** — Override state text font size (px) on an individual sub-button
+- **Per-button `state_font_weight`** — Override state text font-weight on an individual sub-button
+- **Per-button `text_max_width`** — Override max-width (px) for label/state spans on an individual sub-button
+
+### Changed
+- Sub-button label/state text no longer has a hard-coded `max-width: 60px` — text auto-sizes to content by default
+
+## [0.2.2] - 2026-06-10
 
 ### Fixed
 - `_setupSubButtonHandlers` no longer re-runs on every entity state update that drives a template — previously fired on every `_subTemplateResults` or `_templateResults` change, causing unnecessary event listener churn on dashboards with many cards. Now only re-runs when `_config` changes.

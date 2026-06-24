@@ -638,12 +638,16 @@ const cardStyles = i$3`
     --ians-badge-opacity: 1;
     --ians-title-color: var(--primary-text-color);
     --ians-title-font-size: 14px;
+    --ians-title-font-weight: 500;
     --ians-title-align: left;
     --ians-sub-button-icon-color: var(--primary-text-color);
     --ians-sub-button-background-color: rgba(255, 255, 255, 0.1);
     --ians-sub-button-size: 32px;
     --ians-sub-button-gap: 6px;
     --ians-sub-button-opacity: 1;
+    --ians-sub-button-state-font-size: 11px;
+    --ians-sub-button-state-font-weight: 500;
+    --ians-sub-button-text-max-width: none;
   }
 
   ha-card {
@@ -806,7 +810,7 @@ const cardStyles = i$3`
   .card-title {
     color: var(--ians-title-color);
     font-size: var(--ians-title-font-size);
-    font-weight: 500;
+    font-weight: var(--ians-title-font-weight);
     line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -823,7 +827,7 @@ const cardStyles = i$3`
     z-index: 4;
     color: var(--ians-title-color);
     font-size: var(--ians-title-font-size);
-    font-weight: 500;
+    font-weight: var(--ians-title-font-weight);
     line-height: 1.3;
     pointer-events: none;
     max-width: calc(100% - 24px);
@@ -981,18 +985,24 @@ const cardStyles = i$3`
     flex-shrink: 0;
   }
 
-  .sub-button-label,
-  .sub-button-state {
+  .sub-button-label {
     font-size: 11px;
     font-weight: 500;
     color: var(--ians-sub-button-icon-color);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 60px;
+    max-width: var(--ians-sub-button-text-max-width);
   }
 
   .sub-button-state {
+    font-size: var(--ians-sub-button-state-font-size);
+    font-weight: var(--ians-sub-button-state-font-weight);
+    color: var(--ians-sub-button-icon-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: var(--ians-sub-button-text-max-width);
     opacity: 0.75;
   }
 
@@ -3596,11 +3606,15 @@ let IansCustomRoomCard = class extends i {
     this._setCSSVar("--ians-badge-opacity", c2.badge_opacity !== void 0 ? String(c2.badge_opacity) : void 0);
     this._setCSSVar("--ians-title-color", c2.title_color);
     this._setCSSVar("--ians-title-font-size", c2.title_font_size !== void 0 ? `${c2.title_font_size}px` : void 0);
+    this._setCSSVar("--ians-title-font-weight", c2.title_font_weight !== void 0 ? String(c2.title_font_weight) : void 0);
     this._setCSSVar("--ians-title-align", c2.title_align);
     this._setCSSVar("--ians-sub-button-icon-color", c2.sub_button_icon_color);
     this._setCSSVar("--ians-sub-button-background-color", c2.sub_button_background_color);
     this._setCSSVar("--ians-sub-button-opacity", c2.sub_button_opacity !== void 0 ? String(c2.sub_button_opacity) : void 0);
     this._setCSSVar("--ians-sub-button-gap", c2.sub_button_gap !== void 0 ? `${c2.sub_button_gap}px` : void 0);
+    this._setCSSVar("--ians-sub-button-state-font-size", c2.sub_button_state_font_size !== void 0 ? `${c2.sub_button_state_font_size}px` : void 0);
+    this._setCSSVar("--ians-sub-button-state-font-weight", c2.sub_button_state_font_weight !== void 0 ? String(c2.sub_button_state_font_weight) : void 0);
+    this._setCSSVar("--ians-sub-button-text-max-width", c2.sub_button_text_max_width !== void 0 ? `${c2.sub_button_text_max_width}px` : void 0);
     if (!((_d2 = c2.sub_button_groups) == null ? void 0 : _d2.length)) {
       if (c2.sub_buttons_layout === "grid") {
         if (c2.sub_buttons_grid_columns) {
@@ -3941,7 +3955,10 @@ let IansCustomRoomCard = class extends i {
       btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
       btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
       btn.opacity !== void 0 ? `opacity: ${btn.opacity}` : "",
-      btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : ""
+      btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : "",
+      btn.state_font_size !== void 0 ? `--ians-sub-button-state-font-size: ${btn.state_font_size}px` : "",
+      btn.state_font_weight !== void 0 ? `--ians-sub-button-state-font-weight: ${btn.state_font_weight}` : "",
+      btn.text_max_width !== void 0 ? `--ians-sub-button-text-max-width: ${btn.text_max_width}px` : ""
     ].filter(Boolean).join("; ");
     return b`
       <div class=${classes} part="sub-button" style=${btnStyle || A}

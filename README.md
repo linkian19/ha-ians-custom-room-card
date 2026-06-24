@@ -121,6 +121,7 @@ sub_buttons:
 | `title_align` | string | `left` | — | Title text alignment: `left`, `center`, `right` |
 | `title_color` | string | — | — | CSS color for title text |
 | `title_font_size` | number | `14` | — | Title font size in px |
+| `title_font_weight` | string/number | `500` | — | CSS font-weight for title text (e.g. `600`, `700`, `"bold"`) |
 | `title_position` | string | — | — | Absolute title position within card (see icon_position values); default is inline in header |
 | `title_position_x` | string | — | — | CSS offset for `title_position: custom` |
 | `title_position_y` | string | — | — | CSS offset for `title_position: custom` |
@@ -128,6 +129,9 @@ sub_buttons:
 | `sub_button_background_color` | string | — | — | Global background color for all sub-buttons |
 | `sub_button_opacity` | float | `1` | — | Global opacity for all sub-buttons (0–1) |
 | `sub_button_gap` | number | `6` | — | Gap between sub-buttons in px |
+| `sub_button_state_font_size` | number | `11` | — | Global font size in px for sub-button state text |
+| `sub_button_state_font_weight` | string/number | `500` | — | Global CSS font-weight for sub-button state text |
+| `sub_button_text_max_width` | number | — | — | Global max-width in px for label/state text; auto-sizes to content by default |
 | `sub_buttons_grid_columns` | number | — | — | Fixed column count for `grid` layout (overrides auto-fill) |
 | `sub_buttons_grid_min_width` | number | — | — | Min cell width in px for auto-fill `grid` layout |
 | `sub_buttons_grid_cell_layout` | string | `vertical` | — | Grid cell shape: `vertical` (icon above label) or `horizontal` (icon beside label, pill) |
@@ -201,6 +205,9 @@ grid_options:
 | `animation` | string | — | Animation for this button's icon: `spin`, `pulse`, `blink`, `bounce`, `shake` |
 | `animation_when` | string | `always` | When to animate: `always`, `active`, `inactive` (uses button's `entity`) |
 | `animation_speed` | string | `normal` | Animation speed: `slow`, `normal`, `fast` |
+| `state_font_size` | number | — | Font size in px for this button's state text (overrides global `sub_button_state_font_size`) |
+| `state_font_weight` | string/number | — | CSS font-weight for this button's state text (overrides global `sub_button_state_font_weight`) |
+| `text_max_width` | number | — | Max-width in px for this button's label/state text (overrides global `sub_button_text_max_width`) |
 
 `position` values (for `sub_buttons_layout: custom`): `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
 

@@ -125,6 +125,10 @@ export interface SubButtonConfig {
   animation?: IconAnimationType;
   animation_when?: IconAnimationWhen;
   animation_speed?: IconAnimationSpeed;
+  // Text styling
+  state_font_size?: number;           // px override for state text
+  state_font_weight?: string | number; // CSS font-weight override for state text
+  text_max_width?: number;            // px max-width for label/state spans; default none
 }
 
 export interface GridOptions {
@@ -276,13 +280,17 @@ export interface CardConfig {
   title_position?: IconPosition;
   title_position_x?: string;
   title_position_y?: string;
-  title_font_size?: number;       // px
+  title_font_size?: number;        // px
+  title_font_weight?: string | number; // CSS font-weight (e.g. 600, "bold")
   title_color?: string;
   // Sub-button global styles
   sub_button_icon_color?: string;
   sub_button_background_color?: string;
   sub_button_opacity?: number;
   sub_button_gap?: number;              // px between buttons
+  sub_button_state_font_size?: number;  // px font-size for all sub-button state text
+  sub_button_state_font_weight?: string | number; // CSS font-weight for all sub-button state text
+  sub_button_text_max_width?: number;   // px max-width for label/state spans; default none (auto)
   // Grid sub-button layout options
   sub_buttons_grid_columns?: number;    // fixed column count for grid layout
   sub_buttons_grid_min_width?: number;  // px min cell width for auto-fill grid

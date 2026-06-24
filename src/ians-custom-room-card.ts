@@ -397,12 +397,16 @@ export class IansCustomRoomCard extends LitElement {
 
     this._setCSSVar("--ians-title-color", c.title_color);
     this._setCSSVar("--ians-title-font-size", c.title_font_size !== undefined ? `${c.title_font_size}px` : undefined);
+    this._setCSSVar("--ians-title-font-weight", c.title_font_weight !== undefined ? String(c.title_font_weight) : undefined);
     this._setCSSVar("--ians-title-align", c.title_align);
 
     this._setCSSVar("--ians-sub-button-icon-color", c.sub_button_icon_color);
     this._setCSSVar("--ians-sub-button-background-color", c.sub_button_background_color);
     this._setCSSVar("--ians-sub-button-opacity", c.sub_button_opacity !== undefined ? String(c.sub_button_opacity) : undefined);
     this._setCSSVar("--ians-sub-button-gap", c.sub_button_gap !== undefined ? `${c.sub_button_gap}px` : undefined);
+    this._setCSSVar("--ians-sub-button-state-font-size", c.sub_button_state_font_size !== undefined ? `${c.sub_button_state_font_size}px` : undefined);
+    this._setCSSVar("--ians-sub-button-state-font-weight", c.sub_button_state_font_weight !== undefined ? String(c.sub_button_state_font_weight) : undefined);
+    this._setCSSVar("--ians-sub-button-text-max-width", c.sub_button_text_max_width !== undefined ? `${c.sub_button_text_max_width}px` : undefined);
 
     // Grid/column vars — single-group mode only; multi-group sets these per-group via inline style
     if (!c.sub_button_groups?.length) {
@@ -845,6 +849,9 @@ export class IansCustomRoomCard extends LitElement {
       btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
       btn.opacity !== undefined ? `opacity: ${btn.opacity}` : "",
       btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : "",
+      btn.state_font_size !== undefined ? `--ians-sub-button-state-font-size: ${btn.state_font_size}px` : "",
+      btn.state_font_weight !== undefined ? `--ians-sub-button-state-font-weight: ${btn.state_font_weight}` : "",
+      btn.text_max_width !== undefined ? `--ians-sub-button-text-max-width: ${btn.text_max_width}px` : "",
     ].filter(Boolean).join("; ");
 
     return html`
