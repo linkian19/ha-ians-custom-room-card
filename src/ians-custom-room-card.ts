@@ -105,6 +105,17 @@ const CORNER_POSITIONS = [
   "bottom-right",
 ] as const;
 
+// Module-level cache: preserves last known template results across card
+// reconnects (e.g. HA dashboard navigation destroys and recreates cards).
+// Key = template field values; TTL = 2s covers any navigation round-trip.
+const _templateResultsCache = new Map<string, Partial<Record<TemplateField, string>>>();
+const _CACHE_TTL = 2000;
+
+function _templateCacheKey(config: CardConfig): string {
+  const c = config as unknown as Record<string, unknown>;
+  return TEMPLATE_FIELDS.map((f) => `${f}:${c[f] ?? ""}`).join("\x00");
+}
+
 @customElement(CARD_TYPE)
 export class IansCustomRoomCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -174,6 +185,12 @@ export class IansCustomRoomCard extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    // Restore cached results before subscribing so the first render has correct
+    // values — prevents blank flash on HA dashboard navigation
+    if (this._config) {
+      const cached = _templateResultsCache.get(_templateCacheKey(this._config));
+      if (cached) this._templateResults = { ...cached };
+    }
     if (this._config && this.hass) {
       this._subscribeTemplates();
       this._subscribeSubButtonTemplates();
@@ -190,6 +207,13 @@ export class IansCustomRoomCard extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    // Snapshot results to module-level cache before teardown so the next
+    // connectedCallback (HA page navigation) can restore them immediately
+    if (this._config && Object.keys(this._templateResults).length > 0) {
+      const key = _templateCacheKey(this._config);
+      _templateResultsCache.set(key, { ...this._templateResults });
+      window.setTimeout(() => _templateResultsCache.delete(key), _CACHE_TTL);
+    }
     this._unsubscribeTemplates();
     this._unsubscribeSubButtonTemplates();
     this._cardActionCleanup?.();

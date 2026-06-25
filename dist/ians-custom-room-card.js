@@ -3403,6 +3403,15 @@ const CORNER_POSITIONS = [
   "bottom-left",
   "bottom-right"
 ];
+const _templateResultsCache = /* @__PURE__ */ new Map();
+const _CACHE_TTL = 2e3;
+function _templateCacheKey(config) {
+  const c2 = config;
+  return TEMPLATE_FIELDS.map((f2) => {
+    var _a2;
+    return `${f2}:${(_a2 = c2[f2]) != null ? _a2 : ""}`;
+  }).join("\0");
+}
 let IansCustomRoomCard = class extends i {
   constructor() {
     super(...arguments);
@@ -3459,6 +3468,10 @@ let IansCustomRoomCard = class extends i {
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   connectedCallback() {
     super.connectedCallback();
+    if (this._config) {
+      const cached = _templateResultsCache.get(_templateCacheKey(this._config));
+      if (cached) this._templateResults = { ...cached };
+    }
     if (this._config && this.hass) {
       this._subscribeTemplates();
       this._subscribeSubButtonTemplates();
@@ -3474,6 +3487,11 @@ let IansCustomRoomCard = class extends i {
   disconnectedCallback() {
     var _a2;
     super.disconnectedCallback();
+    if (this._config && Object.keys(this._templateResults).length > 0) {
+      const key = _templateCacheKey(this._config);
+      _templateResultsCache.set(key, { ...this._templateResults });
+      window.setTimeout(() => _templateResultsCache.delete(key), _CACHE_TTL);
+    }
     this._unsubscribeTemplates();
     this._unsubscribeSubButtonTemplates();
     (_a2 = this._cardActionCleanup) == null ? void 0 : _a2.call(this);

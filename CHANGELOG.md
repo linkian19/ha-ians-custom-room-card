@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-06-25
+
+### Fixed
+- Template results are now cached in a module-level Map (2s TTL) on disconnect and restored in `connectedCallback` before the first render — the same technique Mushroom uses. On HA dashboard navigation (the most common cause of flash) the card is destroyed and recreated within the TTL window, so the first render already has the correct template values and no blank or transition is visible.
+
 ## [0.2.10] - 2026-06-25
 
 ### Fixed
