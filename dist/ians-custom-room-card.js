@@ -3495,6 +3495,14 @@ let IansCustomRoomCard = class extends i {
     await this._unsubscribeTemplates();
     const c2 = this._config;
     if (!c2 || !this.hass) return;
+    const staleResults = { ...this._templateResults };
+    for (const field of TEMPLATE_FIELDS) {
+      const value = c2[field];
+      if (!value || !isTemplate(value)) {
+        delete staleResults[field];
+      }
+    }
+    this._templateResults = staleResults;
     const variables = {
       config: c2,
       user: (_b2 = (_a2 = this.hass.user) == null ? void 0 : _a2.name) != null ? _b2 : "",
@@ -3538,7 +3546,6 @@ let IansCustomRoomCard = class extends i {
       }
     }
     this._templateUnsubs.clear();
-    this._templateResults = {};
     this._templateErrors = {};
   }
   async _subscribeSubButtonTemplates() {

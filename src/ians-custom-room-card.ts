@@ -228,6 +228,19 @@ export class IansCustomRoomCard extends LitElement {
     const c = this._config;
     if (!c || !this.hass) return;
 
+    // Evict stale results only for fields that are no longer templates in this
+    // config — fields that remain templates keep their previous resolved value
+    // so the card shows the old text instead of blank/raw-template during the
+    // brief window before the new subscription fires.
+    const staleResults = { ...this._templateResults };
+    for (const field of TEMPLATE_FIELDS) {
+      const value = c[field as keyof CardConfig] as string | undefined;
+      if (!value || !isTemplate(value)) {
+        delete staleResults[field];
+      }
+    }
+    this._templateResults = staleResults;
+
     const variables: Record<string, unknown> = {
       config: c,
       user: this.hass.user?.name ?? "",
@@ -278,7 +291,8 @@ export class IansCustomRoomCard extends LitElement {
       }
     }
     this._templateUnsubs.clear();
-    this._templateResults = {};
+    // Do NOT clear _templateResults here — stale values are preserved across
+    // config transitions so _subscribeTemplates can selectively evict them
     this._templateErrors = {};
   }
 

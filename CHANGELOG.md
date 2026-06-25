@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-06-25
+
+### Fixed
+- Template fields no longer flash blank or raw Jinja2 during config changes (editor saves) — previous resolved values are now preserved across config transitions and only evicted when a field is no longer a template in the new config. New subscription results overwrite stale values as they arrive.
+
 ## [0.2.8] - 2026-06-25
 
 ### Fixed
