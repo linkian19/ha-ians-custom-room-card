@@ -213,6 +213,7 @@ export const cardStyles = css`
     flex: 1;
     min-width: 0;
     text-align: var(--ians-title-align);
+    transition: opacity 0.15s ease;
   }
 
   /* Title with absolute position — rendered as direct child of ha-card, same
@@ -229,6 +230,13 @@ export const cardStyles = css`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: opacity 0.15s ease;
+  }
+
+  /* Template result not yet available — invisible but in layout flow */
+  .card-title.pending,
+  .card-title-absolute.pending {
+    opacity: 0;
   }
 
   .card-title-abs-top-left     { top: 12px;  left: 12px; }

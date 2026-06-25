@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.10] - 2026-06-25
+
+### Fixed
+- Template title no longer produces a visible blank on initial page load — the title span is now always rendered when `title` is configured, but with `opacity: 0` and a 0.15s CSS transition while the template subscription is pending. When the first result arrives the title fades in smoothly instead of popping in from nothing.
+
 ## [0.2.9] - 2026-06-25
 
 ### Fixed

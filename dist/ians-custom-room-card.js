@@ -825,6 +825,7 @@ const cardStyles = i$3`
     flex: 1;
     min-width: 0;
     text-align: var(--ians-title-align);
+    transition: opacity 0.15s ease;
   }
 
   /* Title with absolute position — rendered as direct child of ha-card, same
@@ -841,6 +842,13 @@ const cardStyles = i$3`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: opacity 0.15s ease;
+  }
+
+  /* Template result not yet available — invisible but in layout flow */
+  .card-title.pending,
+  .card-title-absolute.pending {
+    opacity: 0;
   }
 
   .card-title-abs-top-left     { top: 12px;  left: 12px; }
@@ -3780,6 +3788,7 @@ let IansCustomRoomCard = class extends i {
     const icon = (_a2 = this._templateResults.icon) != null ? _a2 : c2.icon;
     const badgeIcon = (_b2 = this._templateResults.badge_icon) != null ? _b2 : c2.badge_icon;
     const title = this._resolveTitle();
+    const titleConfigured = !!c2.title;
     let bgImageUrl;
     if (c2.background_image === "area") {
       bgImageUrl = this.hass ? resolveAreaImage(this.hass, c2.entity) : void 0;
@@ -3852,15 +3861,16 @@ let IansCustomRoomCard = class extends i {
                 ${badgeEl}
               </div>
             ` : A;
-    const titleAbsoluteEl = title && titlePosition ? b`
+    const titleAbsoluteEl = titleConfigured && titlePosition ? b`
           <span
             part="title"
             class=${[
       "card-title-absolute",
-      titlePosition !== "custom" ? `card-title-abs-${titlePosition}` : ""
+      titlePosition !== "custom" ? `card-title-abs-${titlePosition}` : "",
+      title ? "" : "pending"
     ].filter(Boolean).join(" ")}
             style=${titlePosition === "custom" ? `top: ${(_l = c2.title_position_y) != null ? _l : "auto"}; left: ${(_m = c2.title_position_x) != null ? _m : "auto"};` : ""}
-          >${title}</span>` : A;
+          >${title != null ? title : ""}</span>` : A;
     return b`
       <ha-card
         part="card"
@@ -3882,8 +3892,8 @@ let IansCustomRoomCard = class extends i {
 
         <div class="card-inner">
           <div part="header" class="card-header">
-            ${!iconPosition ? iconEl : title && !titlePosition && (iconPosition === "top-left" || iconPosition === "center-left" || iconPosition === "bottom-left") ? b`<div class="icon-spacer"></div>` : A}
-            ${title && !titlePosition ? b`<span part="title" class="card-title">${title}</span>` : A}
+            ${!iconPosition ? iconEl : titleConfigured && !titlePosition && (iconPosition === "top-left" || iconPosition === "center-left" || iconPosition === "bottom-left") ? b`<div class="icon-spacer"></div>` : A}
+            ${titleConfigured && !titlePosition ? b`<span part="title" class=${["card-title", title ? "" : "pending"].filter(Boolean).join(" ")}>${title != null ? title : ""}</span>` : A}
           </div>
 
           ${hasErrors ? b`

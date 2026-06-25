@@ -558,6 +558,8 @@ export class IansCustomRoomCard extends LitElement {
     const icon = this._templateResults.icon ?? c.icon;
     const badgeIcon = this._templateResults.badge_icon ?? c.badge_icon;
     const title = this._resolveTitle();
+    // True when a title is configured at all (even if template not yet resolved)
+    const titleConfigured = !!(c.title);
 
     // Resolve background image
     let bgImageUrl: string | undefined;
@@ -664,18 +666,19 @@ export class IansCustomRoomCard extends LitElement {
         : nothing;
 
     // Title rendered absolutely (outside card-inner flow)
-    const titleAbsoluteEl = title && titlePosition
+    const titleAbsoluteEl = titleConfigured && titlePosition
       ? html`
           <span
             part="title"
             class=${[
               "card-title-absolute",
               titlePosition !== "custom" ? `card-title-abs-${titlePosition}` : "",
+              title ? "" : "pending",
             ].filter(Boolean).join(" ")}
             style=${titlePosition === "custom"
               ? `top: ${c.title_position_y ?? "auto"}; left: ${c.title_position_x ?? "auto"};`
               : ""}
-          >${title}</span>`
+          >${title ?? ""}</span>`
       : nothing;
 
     return html`
@@ -705,11 +708,11 @@ export class IansCustomRoomCard extends LitElement {
           <div part="header" class="card-header">
             ${!iconPosition
               ? iconEl
-              : (title && !titlePosition && (iconPosition === "top-left" || iconPosition === "center-left" || iconPosition === "bottom-left")
+              : (titleConfigured && !titlePosition && (iconPosition === "top-left" || iconPosition === "center-left" || iconPosition === "bottom-left")
                   ? html`<div class="icon-spacer"></div>`
                   : nothing)}
-            ${title && !titlePosition
-              ? html`<span part="title" class="card-title">${title}</span>`
+            ${titleConfigured && !titlePosition
+              ? html`<span part="title" class=${["card-title", title ? "" : "pending"].filter(Boolean).join(" ")}>${title ?? ""}</span>`
               : nothing}
           </div>
 
