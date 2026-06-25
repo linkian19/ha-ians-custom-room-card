@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-06-25
+
+### Fixed
+- Template titles no longer flash raw Jinja2 text during initial card load or config reload — `_resolveTitle` now returns `undefined` while the template subscription is pending, so the title area is briefly empty instead of showing the template source
+
 ## [0.2.7] - 2026-06-24
 
 ### Fixed

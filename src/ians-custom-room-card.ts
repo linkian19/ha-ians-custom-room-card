@@ -885,6 +885,9 @@ export class IansCustomRoomCard extends LitElement {
     if (this._templateResults.title) return this._templateResults.title;
 
     if (!c.title) return undefined;
+    // If title is a template, subscription hasn't returned yet — render nothing
+    // rather than flashing the raw Jinja2 string
+    if (isTemplate(c.title)) return undefined;
     if (c.title === "entity" && c.entity && this.hass) {
       return (
         (this.hass.states[c.entity]?.attributes.friendly_name as string) ??

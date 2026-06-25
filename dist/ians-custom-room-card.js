@@ -4021,6 +4021,7 @@ let IansCustomRoomCard = class extends i {
     if (!c2) return void 0;
     if (this._templateResults.title) return this._templateResults.title;
     if (!c2.title) return void 0;
+    if (isTemplate(c2.title)) return void 0;
     if (c2.title === "entity" && c2.entity && this.hass) {
       return (_b2 = (_a2 = this.hass.states[c2.entity]) == null ? void 0 : _a2.attributes.friendly_name) != null ? _b2 : c2.entity;
     }
