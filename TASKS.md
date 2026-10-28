@@ -6,7 +6,7 @@
 
 ## In Progress
 
-_Nothing in progress — v0.1.0 implementation complete._
+_Nothing in progress — current release v0.3.1 (2026-10-28 audit batch: v0.2.12 fixes, v0.3.0 HA best practices, v0.3.1 editor/CI). See CHANGELOG.md for per-version detail._
 
 ---
 
@@ -98,20 +98,17 @@ _Nothing in progress — v0.1.0 implementation complete._
 
 ---
 
-## Remaining (post v0.1.0)
+## Remaining
 
-- [ ] Create v0.1.0 tag and release (push tag to trigger GitHub Actions workflow)
-- [ ] Test HACS install from custom repository after release is published
-- [ ] Verify `hass.areas[id]?.picture` property path in HA 2026.x via dev console
-- [ ] Verify `ha-colorpicker` vs `ha-color-picker` element name in HA DevTools
-- [ ] Test double-tap gesture detection on iOS/Android
+- [ ] Check on a real phone/tablet: hold and double-tap on iOS/Android, and that swiping on cards now scrolls (`touch-action: manipulation`, v0.3.0)
+- [ ] Check keyboard focus ring and Enter/Space in the HA frontend (v0.3.0)
+- [ ] Watch `hui-tile-card` editor-loader workaround (`src/utils/loader.ts`) after major HA releases
 
 ---
 
-## Open Questions
+## Resolved Questions
 
-1. **`hass.areas[id]?.picture` path** — Verify correct property path in HA 2026.x via dev console
-2. **`fire-dom-event` action** — Omitted for now; add if card-mod users need it
-3. **`ha-colorpicker` vs `ha-color-picker`** — Verify exact element name in HA DevTools
-4. **`hui-tile-card` loader stability** — Undocumented workaround; may break on HA updates
-5. **Double-tap mobile conflicts** — Verify hold/double-tap on iOS/Android
+1. **Area picture path** — `hass.areas[id].picture`; area comes from the entity registry entry, falling back to its device's area (fixed v0.2.12)
+2. **`fire-dom-event` action** — still omitted; add if card-mod users need it
+3. **Entity/icon pickers** — editor uses `ha-selector` (entity/icon selectors) since v0.3.1 instead of the internal picker elements
+4. **Release/version drift** — release workflow fails if tag ≠ package.json version or committed dist ≠ build (v0.3.1)

@@ -160,6 +160,12 @@ function cssToHex(value: string): string {
   return "#000000";
 }
 
+// ha-selector is the documented, lazy-load-safe way to get HA pickers in a
+// custom editor (ha-entity-picker / ha-icon-picker internals change between
+// HA releases). Module constants so the selector object identity is stable.
+const ENTITY_SELECTOR = { entity: {} };
+const ICON_SELECTOR = { icon: {} };
+
 // ── Editor component ──────────────────────────────────────────────────────────
 
 export class IansCustomRoomCardEditor extends LitElement {
@@ -246,6 +252,42 @@ export class IansCustomRoomCardEditor extends LitElement {
     buttons.splice(index, 1);
     this._fieldChanged("sub_buttons", buttons);
     if (this._expandedSubButton === index) this._expandedSubButton = null;
+  }
+
+  private _moveSubButton(from: number, to: number): void {
+    const buttons = [...(this._config?.sub_buttons ?? [])];
+    if (to < 0 || to >= buttons.length) return;
+    [buttons[from], buttons[to]] = [buttons[to], buttons[from]];
+    this._fieldChanged("sub_buttons", buttons);
+    this._expandedSubButton = null;
+  }
+
+  private _moveGroupButton(groupIndex: number, from: number, to: number): void {
+    const groups = [...(this._config?.sub_button_groups ?? [])];
+    const buttons = [...(groups[groupIndex]?.buttons ?? [])];
+    if (to < 0 || to >= buttons.length) return;
+    [buttons[from], buttons[to]] = [buttons[to], buttons[from]];
+    groups[groupIndex] = { ...groups[groupIndex], buttons };
+    this._fieldChanged("sub_button_groups", groups);
+    this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: null };
+  }
+
+  /** Up/down reorder buttons — work on touch and keyboard, where HTML5 drag-and-drop doesn't. */
+  private _renderMoveButtons(index: number, count: number, move: (from: number, to: number) => void) {
+    return html`
+      <div class="move-btns">
+        ${index > 0 ? html`
+          <button class="icon-btn" title="Move up"
+            @click=${(e: Event) => { e.stopPropagation(); move(index, index - 1); }}
+          ><ha-icon icon="mdi:arrow-up" style="--mdc-icon-size:14px;"></ha-icon></button>
+        ` : nothing}
+        ${index < count - 1 ? html`
+          <button class="icon-btn" title="Move down"
+            @click=${(e: Event) => { e.stopPropagation(); move(index, index + 1); }}
+          ><ha-icon icon="mdi:arrow-down" style="--mdc-icon-size:14px;"></ha-icon></button>
+        ` : nothing}
+      </div>
+    `;
   }
 
   private _onDragHandleMousedown(e: MouseEvent, index: number): void {
@@ -436,16 +478,19 @@ export class IansCustomRoomCardEditor extends LitElement {
     return html`
       <div class="sub-group-label">Entity &amp; Display</div>
 
-      <ha-entity-picker .hass=${this.hass} .label=${"Entity"}
-        .value=${btn.entity ?? ""} allow-custom-entity
+      <ha-selector .hass=${this.hass} .label=${"Entity"}
+        .selector=${ENTITY_SELECTOR}
+        .value=${btn.entity ?? ""}
         @value-changed=${(ev: CustomEvent) => onChange({ entity: ev.detail.value || undefined })}
-      ></ha-entity-picker>
+      ></ha-selector>
 
-      <ha-icon-picker .hass=${this.hass}
-        .label=${"Icon (blank = auto-pick from entity domain)"}
+      <ha-selector .hass=${this.hass}
+        .label=${"Icon (blank = Home Assistant's icon for the entity)"}
+        .selector=${ICON_SELECTOR}
         .value=${btn.icon ?? ""}
+        .context=${{ icon_entity: btn.entity }}
         @value-changed=${(ev: CustomEvent) => onChange({ icon: ev.detail.value || undefined })}
-      ></ha-icon-picker>
+      ></ha-selector>
 
       <ha-selector .hass=${this.hass}
         .label=${"Label (blank to hide, or type 'entity' for entity name)"}
@@ -670,14 +715,14 @@ export class IansCustomRoomCardEditor extends LitElement {
     return html`
       <div class="section">
         <div class="section-label">Entity</div>
-        <ha-entity-picker
+        <ha-selector
           .hass=${this.hass}
           .label=${"Entity (optional)"}
+          .selector=${ENTITY_SELECTOR}
           .value=${c.entity ?? ""}
-          allow-custom-entity
           @value-changed=${(ev: CustomEvent) =>
             this._fieldChanged("entity", ev.detail.value || undefined)}
-        ></ha-entity-picker>
+        ></ha-selector>
       </div>
 
       <div class="section">
@@ -728,11 +773,12 @@ export class IansCustomRoomCardEditor extends LitElement {
         <div class="section-label">Icon</div>
         ${this._renderTemplateField("icon", "Icon",
           () => html`
-            <ha-icon-picker .hass=${this.hass} .label=${"Icon"}
+            <ha-selector .hass=${this.hass} .label=${"Icon"}
+              .selector=${ICON_SELECTOR}
               .value=${c.icon ?? ""}
               @value-changed=${(ev: CustomEvent) =>
                 this._fieldChanged("icon", ev.detail.value || undefined)}
-            ></ha-icon-picker>
+            ></ha-selector>
           `
         )}
       </div>
@@ -865,11 +911,12 @@ export class IansCustomRoomCardEditor extends LitElement {
         <div class="section-label">Badge</div>
         ${this._renderTemplateField("badge_icon", "Badge Icon",
           () => html`
-            <ha-icon-picker .hass=${this.hass} .label=${"Badge Icon (blank to hide)"}
+            <ha-selector .hass=${this.hass} .label=${"Badge Icon (blank to hide)"}
+              .selector=${ICON_SELECTOR}
               .value=${c.badge_icon ?? ""}
               @value-changed=${(ev: CustomEvent) =>
                 this._fieldChanged("badge_icon", ev.detail.value || undefined)}
-            ></ha-icon-picker>
+            ></ha-selector>
           `
         )}
 
@@ -1207,6 +1254,8 @@ export class IansCustomRoomCardEditor extends LitElement {
           ></ha-icon>
           <ha-icon .icon=${btn.icon ?? "mdi:gesture-tap"}></ha-icon>
           <span class="sub-btn-label">${label}</span>
+          ${this._renderMoveButtons(index, this._config?.sub_buttons?.length ?? 0,
+            (from, to) => this._moveSubButton(from, to))}
           <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
           <button class="del-btn"
             @click=${(ev: Event) => { ev.stopPropagation(); this._deleteSubButton(index); }}
@@ -1410,6 +1459,8 @@ export class IansCustomRoomCardEditor extends LitElement {
           ></ha-icon>
           <ha-icon .icon=${btn.icon ?? "mdi:gesture-tap"}></ha-icon>
           <span class="sub-btn-label">${label}</span>
+          ${this._renderMoveButtons(btnIndex, this._config?.sub_button_groups?.[groupIndex]?.buttons?.length ?? 0,
+            (from, to) => this._moveGroupButton(groupIndex, from, to))}
           <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
           <button class="del-btn"
             @click=${(ev: Event) => { ev.stopPropagation(); this._deleteGroupButton(groupIndex, btnIndex); }}
@@ -2001,6 +2052,12 @@ export class IansCustomRoomCardEditor extends LitElement {
         font-size: 13px;
         cursor: pointer;
         color: var(--primary-text-color);
+      }
+
+      .move-btns {
+        display: flex;
+        gap: 2px;
+        flex-shrink: 0;
       }
 
       .icon-btn {

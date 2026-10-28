@@ -19,7 +19,7 @@ A highly customizable room card for Home Assistant's Lovelace dashboard. Combine
 - **Sub-button column alignment** — justify left/right-column layouts to top, center, bottom, or spaced
 - **Global action** — makes the entire card a single tap target (sub-buttons become decorative)
 - **HA Jinja2 templates** for icon, colors, badge, title, and icon background color
-- **Full visual editor** with tabbed UI — no YAML required for basic use; drag-and-drop sub-button reordering
+- **Full visual editor** with tabbed UI — no YAML required for basic use; sub-button reordering by drag-and-drop or up/down buttons (touch-friendly)
 - **card-mod compatible** — CSS custom properties and `::part()` selectors for every region
 
 ---
