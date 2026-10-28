@@ -25,6 +25,8 @@ A highly customizable room card for Home Assistant's Lovelace dashboard. Combine
 
 ## Installation
 
+Requires Home Assistant **2024.11** or newer.
+
 ### Via HACS (recommended)
 
 1. In HACS → Integrations → ⋮ → Custom Repositories
@@ -114,7 +116,7 @@ sub_buttons:
 | `card_margin` | number | `0` | — | Padding in px around the card within its grid cell — useful for adding space between adjacent cards |
 | `background_color` | string | HA card bg | ✓ | CSS color for card background |
 | `background_opacity` | float | `1` | — | Opacity of background color layer (0–1) |
-| `background_image` | string | — | — | URL string, or `"area"` to use HA area image |
+| `background_image` | string | — | — | URL string, or `"area"` to use the picture of the entity's area (the entity's own area, or its device's area) |
 | `background_image_position` | string | `center` | — | CSS `background-position` value for the background image (e.g. `top right`, `75% 25%`) |
 | `border_color` | string | HA divider | ✓ | CSS color for card border |
 | `border_opacity` | float | `1` | — | Opacity of border (0–1) |
@@ -336,6 +338,13 @@ title: "{{ states.light.living_room.attributes.friendly_name }}"
 Template-capable fields: `title`, `icon`, `icon_color`, `icon_background_color`, `badge_icon`, `badge_color`, `badge_background_color`, `background_color`, `border_color`.
 
 Templates update live when dependent entities change. Template errors show a red border and a console warning.
+
+Templates also get these variables: `config` (the card config), `user` (logged-in user name), and `entity` — the **entity ID string** of the card's `entity` (or the sub-button's `entity`). Use it with HA helpers so the result stays live:
+
+```yaml
+title: "{{ states(entity) }}"
+icon_color: "{{ '#ffcc00' if is_state(entity, 'on') else '#888' }}"
+```
 
 ---
 

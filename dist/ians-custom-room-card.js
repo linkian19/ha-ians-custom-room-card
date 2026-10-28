@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 var _a, _b, _c, _d, _e, _f;
-const t$2 = globalThis, e$2 = t$2.ShadowRoot && (void 0 === t$2.ShadyCSS || t$2.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, s$2 = Symbol(), o$4 = /* @__PURE__ */ new WeakMap();
+const t$1 = globalThis, e$2 = t$1.ShadowRoot && (void 0 === t$1.ShadyCSS || t$1.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, s$2 = Symbol(), o$4 = /* @__PURE__ */ new WeakMap();
 let n$3 = class n {
   constructor(t2, e2, o2) {
     if (this._$cssResult$ = true, o2 !== s$2) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
@@ -33,7 +33,7 @@ const r$4 = (t2) => new n$3("string" == typeof t2 ? t2 : t2 + "", void 0, s$2), 
 }, S$1 = (s2, o2) => {
   if (e$2) s2.adoptedStyleSheets = o2.map((t2) => t2 instanceof CSSStyleSheet ? t2 : t2.styleSheet);
   else for (const e2 of o2) {
-    const o3 = document.createElement("style"), n3 = t$2.litNonce;
+    const o3 = document.createElement("style"), n3 = t$1.litNonce;
     void 0 !== n3 && o3.setAttribute("nonce", n3), o3.textContent = e2.cssText, s2.appendChild(o3);
   }
 }, c$2 = e$2 ? (t2) => t2 : (t2) => t2 instanceof CSSStyleSheet ? ((t3) => {
@@ -290,7 +290,7 @@ y$1.elementStyles = [], y$1.shadowRootOptions = { mode: "open" }, y$1[d$1("eleme
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t$1 = globalThis, i$1 = (t2) => t2, s$1 = t$1.trustedTypes, e = s$1 ? s$1.createPolicy("lit-html", { createHTML: (t2) => t2 }) : void 0, h = "$lit$", o$2 = `lit$${Math.random().toFixed(9).slice(2)}$`, n$1 = "?" + o$2, r$2 = `<${n$1}>`, l = document, c = () => l.createComment(""), a = (t2) => null === t2 || "object" != typeof t2 && "function" != typeof t2, u = Array.isArray, d = (t2) => u(t2) || "function" == typeof (t2 == null ? void 0 : t2[Symbol.iterator]), f = "[ 	\n\f\r]", v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, _ = /-->/g, m = />/g, p = RegExp(`>|${f}(?:([^\\s"'>=/]+)(${f}*=${f}*(?:[^ 	
+const t = globalThis, i$1 = (t2) => t2, s$1 = t.trustedTypes, e = s$1 ? s$1.createPolicy("lit-html", { createHTML: (t2) => t2 }) : void 0, h = "$lit$", o$2 = `lit$${Math.random().toFixed(9).slice(2)}$`, n$1 = "?" + o$2, r$2 = `<${n$1}>`, l = document, c = () => l.createComment(""), a = (t2) => null === t2 || "object" != typeof t2 && "function" != typeof t2, u = Array.isArray, d = (t2) => u(t2) || "function" == typeof (t2 == null ? void 0 : t2[Symbol.iterator]), f = "[ 	\n\f\r]", v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, _ = /-->/g, m = />/g, p = RegExp(`>|${f}(?:([^\\s"'>=/]+)(${f}*=${f}*(?:[^ 	
 \f\r"'\`<>=]|("|')|))|$)`, "g"), g = /'/g, $ = /"/g, y2 = /^(?:script|style|textarea|title)$/i, x = (t2) => (i2, ...s2) => ({ _$litType$: t2, strings: i2, values: s2 }), b = x(1), E = Symbol.for("lit-noChange"), A = Symbol.for("lit-nothing"), C = /* @__PURE__ */ new WeakMap(), P = l.createTreeWalker(l, 129);
 function V(t2, i2) {
   if (!u(t2) || !t2.hasOwnProperty("raw")) throw Error("invalid template strings array");
@@ -512,8 +512,8 @@ class Z {
     M(this, t2);
   }
 }
-const B = t$1.litHtmlPolyfillSupport;
-B == null ? void 0 : B(S, k), ((_d = t$1.litHtmlVersions) != null ? _d : t$1.litHtmlVersions = []).push("3.3.3");
+const B = t.litHtmlPolyfillSupport;
+B == null ? void 0 : B(S, k), ((_d = t.litHtmlVersions) != null ? _d : t.litHtmlVersions = []).push("3.3.3");
 const D = (t2, i2, s2) => {
   var _a2, _b2;
   const e2 = (_a2 = s2 == null ? void 0 : s2.renderBefore) != null ? _a2 : i2;
@@ -564,16 +564,6 @@ o$1 == null ? void 0 : o$1({ LitElement: i });
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t = (t2) => (e2, o2) => {
-  void 0 !== o2 ? o2.addInitializer(() => {
-    customElements.define(t2, e2);
-  }) : customElements.define(t2, e2);
-};
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
 const o = { attribute: true, type: String, converter: u$1, reflect: false, hasChanged: f$1 }, r$1 = (t2 = o, e2, r2) => {
   const { kind: n3, metadata: i2 } = r2;
   let s2 = globalThis.litPropertyMetadata.get(i2);
@@ -612,6 +602,7 @@ function r(r2) {
 const CARD_TYPE = "ians-custom-room-card";
 const CARD_NAME = "Ian's Custom Room Card";
 const CARD_DESCRIPTION = "A highly customizable room card with icon, badge, sub-button groups, animations, templates, and more";
+const VERSION = "0.2.12";
 const cardStyles = i$3`
   :host {
     display: block;
@@ -1180,12 +1171,12 @@ const cardStyles = i$3`
   }
 `;
 function resolveAreaImage(hass, entityId) {
-  var _a2, _b2;
+  var _a2, _b2, _c2, _d2, _e2;
   if (!entityId) return void 0;
   const entityEntry = (_a2 = hass.entities) == null ? void 0 : _a2[entityId];
-  const areaId = entityEntry == null ? void 0 : entityEntry.area_id;
+  const areaId = (_d2 = entityEntry == null ? void 0 : entityEntry.area_id) != null ? _d2 : (entityEntry == null ? void 0 : entityEntry.device_id) ? (_c2 = (_b2 = hass.devices) == null ? void 0 : _b2[entityEntry.device_id]) == null ? void 0 : _c2.area_id : void 0;
   if (!areaId) return void 0;
-  const area = (_b2 = hass.areas) == null ? void 0 : _b2[areaId];
+  const area = (_e2 = hass.areas) == null ? void 0 : _e2[areaId];
   if (!(area == null ? void 0 : area.picture)) return void 0;
   return area.picture;
 }
@@ -1339,13 +1330,12 @@ async function loadHaComponents() {
   await Promise.resolve();
 }
 var __defProp$1 = Object.defineProperty;
-var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
 var __decorateClass$1 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$1(target, key) : target;
+  var result = void 0;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
-      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
-  if (kind && result) __defProp$1(target, key, result);
+      result = decorator(target, key, result) || result;
+  if (result) __defProp$1(target, key, result);
   return result;
 };
 const ICON_POSITION_OPTIONS = [
@@ -1482,7 +1472,7 @@ function cssToHex(value) {
   }
   return "#000000";
 }
-let IansCustomRoomCardEditor = class extends i {
+class IansCustomRoomCardEditor extends i {
   constructor() {
     super(...arguments);
     this._loaded = false;
@@ -3280,45 +3270,44 @@ let IansCustomRoomCardEditor = class extends i {
       }
     `;
   }
-};
+}
 __decorateClass$1([
   n2({ attribute: false })
-], IansCustomRoomCardEditor.prototype, "hass", 2);
+], IansCustomRoomCardEditor.prototype, "hass");
 __decorateClass$1([
   r()
-], IansCustomRoomCardEditor.prototype, "_config", 2);
+], IansCustomRoomCardEditor.prototype, "_config");
 __decorateClass$1([
   r()
-], IansCustomRoomCardEditor.prototype, "_loaded", 2);
+], IansCustomRoomCardEditor.prototype, "_loaded");
 __decorateClass$1([
   r()
-], IansCustomRoomCardEditor.prototype, "_templateMode", 2);
+], IansCustomRoomCardEditor.prototype, "_templateMode");
 __decorateClass$1([
   r()
-], IansCustomRoomCardEditor.prototype, "_expandedSubButton", 2);
+], IansCustomRoomCardEditor.prototype, "_expandedSubButton");
 __decorateClass$1([
   r()
-], IansCustomRoomCardEditor.prototype, "_activeTab", 2);
+], IansCustomRoomCardEditor.prototype, "_activeTab");
 __decorateClass$1([
   r()
-], IansCustomRoomCardEditor.prototype, "_dragOverIndex", 2);
+], IansCustomRoomCardEditor.prototype, "_dragOverIndex");
 __decorateClass$1([
   r()
-], IansCustomRoomCardEditor.prototype, "_expandedGroup", 2);
+], IansCustomRoomCardEditor.prototype, "_expandedGroup");
 __decorateClass$1([
   r()
-], IansCustomRoomCardEditor.prototype, "_expandedGroupButton", 2);
-IansCustomRoomCardEditor = __decorateClass$1([
-  t(`${CARD_TYPE}-editor`)
-], IansCustomRoomCardEditor);
+], IansCustomRoomCardEditor.prototype, "_expandedGroupButton");
+if (!customElements.get(`${CARD_TYPE}-editor`)) {
+  customElements.define(`${CARD_TYPE}-editor`, IansCustomRoomCardEditor);
+}
 var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  var result = void 0;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
-      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
-  if (kind && result) __defProp(target, key, result);
+      result = decorator(target, key, result) || result;
+  if (result) __defProp(target, key, result);
   return result;
 };
 const TEMPLATE_FIELDS = [
@@ -3406,13 +3395,9 @@ const CORNER_POSITIONS = [
 const _templateResultsCache = /* @__PURE__ */ new Map();
 const _CACHE_TTL = 2e3;
 function _templateCacheKey(config) {
-  const c2 = config;
-  return TEMPLATE_FIELDS.map((f2) => {
-    var _a2;
-    return `${f2}:${(_a2 = c2[f2]) != null ? _a2 : ""}`;
-  }).join("\0");
+  return JSON.stringify(config);
 }
-let IansCustomRoomCard = class extends i {
+const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
   constructor() {
     super(...arguments);
     this._templateResults = {};
@@ -3421,6 +3406,8 @@ let IansCustomRoomCard = class extends i {
     this._subTemplateResults = {};
     this._subTemplateUnsubs = /* @__PURE__ */ new Map();
     this._subButtonCleanups = [];
+    this._templateGen = 0;
+    this._subTemplateGen = 0;
   }
   // ── Static card metadata ───────────────────────────────────────────────────
   static getStubConfig(hass) {
@@ -3455,7 +3442,7 @@ let IansCustomRoomCard = class extends i {
   // HA calls getGridOptions() on the element instance (not as static) to drive
   // the resize UI. Delegate to the static implementation.
   getGridOptions() {
-    return IansCustomRoomCard.getGridOptions(this._config);
+    return _IansCustomRoomCard2.getGridOptions(this._config);
   }
   static getConfigElement() {
     return document.createElement(`${CARD_TYPE}-editor`);
@@ -3472,6 +3459,7 @@ let IansCustomRoomCard = class extends i {
       const cached = _templateResultsCache.get(_templateCacheKey(this._config));
       if (cached) this._templateResults = { ...cached };
     }
+    if (!this.hasUpdated) return;
     if (this._config && this.hass) {
       this._subscribeTemplates();
       this._subscribeSubButtonTemplates();
@@ -3492,6 +3480,8 @@ let IansCustomRoomCard = class extends i {
       _templateResultsCache.set(key, { ...this._templateResults });
       window.setTimeout(() => _templateResultsCache.delete(key), _CACHE_TTL);
     }
+    this._templateGen++;
+    this._subTemplateGen++;
     this._unsubscribeTemplates();
     this._unsubscribeSubButtonTemplates();
     (_a2 = this._cardActionCleanup) == null ? void 0 : _a2.call(this);
@@ -3503,9 +3493,12 @@ let IansCustomRoomCard = class extends i {
     const configChanged = changedProps.has("_config");
     const templateResultsChanged = changedProps.has("_templateResults");
     const hassChanged = changedProps.has("hass");
-    if (configChanged) {
+    const hassArrived = hassChanged && changedProps.get("hass") === void 0;
+    if (configChanged || hassArrived) {
       this._subscribeTemplates();
       this._subscribeSubButtonTemplates();
+    }
+    if (configChanged) {
       this._setupCardActionHandler();
     }
     if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults") || hassChanged) {
@@ -3518,7 +3511,9 @@ let IansCustomRoomCard = class extends i {
   // ── Template subscriptions ─────────────────────────────────────────────────
   async _subscribeTemplates() {
     var _a2, _b2;
+    const gen = ++this._templateGen;
     await this._unsubscribeTemplates();
+    if (gen !== this._templateGen) return;
     const c2 = this._config;
     if (!c2 || !this.hass) return;
     const staleResults = { ...this._templateResults };
@@ -3532,114 +3527,121 @@ let IansCustomRoomCard = class extends i {
     const variables = {
       config: c2,
       user: (_b2 = (_a2 = this.hass.user) == null ? void 0 : _a2.name) != null ? _b2 : "",
-      entity: c2.entity ? this.hass.states[c2.entity] : void 0
+      entity: c2.entity
     };
-    const templateErrors = {};
-    for (const field of TEMPLATE_FIELDS) {
+    const fields = TEMPLATE_FIELDS.filter((field) => {
       const value = c2[field];
-      if (!value || !isTemplate(value)) continue;
+      return !!value && isTemplate(value);
+    });
+    await Promise.all(fields.map(async (field) => {
+      const value = c2[field];
       try {
         const unsub = await subscribeTemplate(
           this.hass,
           value,
           variables,
           (result) => {
+            if (gen !== this._templateGen) return;
             this._templateResults = { ...this._templateResults, [field]: result };
-            const errs = { ...this._templateErrors };
-            delete errs[field];
-            this._templateErrors = errs;
+            if (field in this._templateErrors) {
+              const errs = { ...this._templateErrors };
+              delete errs[field];
+              this._templateErrors = errs;
+            }
           },
           (error) => {
+            if (gen !== this._templateGen) return;
             console.warn(`[ians-room-card] Template error in ${field}:`, error);
             this._templateErrors = { ...this._templateErrors, [field]: error };
           }
         );
+        if (gen !== this._templateGen) {
+          unsub().catch(() => void 0);
+          return;
+        }
         this._templateUnsubs.set(field, unsub);
       } catch (e2) {
+        if (gen !== this._templateGen) return;
         console.error(`[ians-room-card] Failed to subscribe template for ${field}:`, e2);
-        templateErrors[field] = String(e2);
+        this._templateErrors = { ...this._templateErrors, [field]: String(e2) };
       }
-    }
-    if (Object.keys(templateErrors).length > 0) {
-      this._templateErrors = { ...this._templateErrors, ...templateErrors };
-    }
+    }));
   }
   async _unsubscribeTemplates() {
-    for (const unsub of this._templateUnsubs.values()) {
+    const unsubs = [...this._templateUnsubs.values()];
+    this._templateUnsubs.clear();
+    this._templateErrors = {};
+    for (const unsub of unsubs) {
       try {
         await unsub();
       } catch (e2) {
       }
     }
-    this._templateUnsubs.clear();
-    this._templateErrors = {};
   }
   async _subscribeSubButtonTemplates() {
     var _a2, _b2, _c2, _d2;
+    const gen = ++this._subTemplateGen;
     await this._unsubscribeSubButtonTemplates();
+    if (gen !== this._subTemplateGen) return;
     const c2 = this._config;
-    if (!this.hass) return;
+    if (!c2 || !this.hass) return;
     const variables = {
       config: c2,
       user: (_b2 = (_a2 = this.hass.user) == null ? void 0 : _a2.name) != null ? _b2 : ""
     };
-    if ((_c2 = c2 == null ? void 0 : c2.sub_button_groups) == null ? void 0 : _c2.length) {
-      for (const [g2, group] of c2.sub_button_groups.slice(0, 4).entries()) {
-        for (const [i2, btn] of ((_d2 = group.buttons) != null ? _d2 : []).entries()) {
-          const btnVars = { ...variables, entity: btn.entity ? this.hass.states[btn.entity] : void 0 };
-          for (const field of ["icon", "label"]) {
-            const value = btn[field];
-            if (!value || !isTemplate(value)) continue;
-            const key = `g${g2}_sub_${i2}_${field}`;
-            try {
-              const unsub = await subscribeTemplate(
-                this.hass,
-                value,
-                btnVars,
-                (result) => {
-                  this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
-                }
-              );
-              this._subTemplateUnsubs.set(key, unsub);
-            } catch (e2) {
-              console.warn(`[ians-room-card] Group button template error (${key}):`, e2);
-            }
-          }
-        }
-      }
-    } else if (c2 == null ? void 0 : c2.sub_buttons) {
-      for (const [i2, btn] of c2.sub_buttons.entries()) {
-        const btnVars = { ...variables, entity: btn.entity ? this.hass.states[btn.entity] : void 0 };
+    const jobs = [];
+    const collect = (buttons, prefix) => {
+      for (const [i2, btn] of buttons.entries()) {
         for (const field of ["icon", "label"]) {
           const value = btn[field];
           if (!value || !isTemplate(value)) continue;
-          const key = `sub_${i2}_${field}`;
-          try {
-            const unsub = await subscribeTemplate(
-              this.hass,
-              value,
-              btnVars,
-              (result) => {
-                this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
-              }
-            );
-            this._subTemplateUnsubs.set(key, unsub);
-          } catch (e2) {
-            console.warn(`[ians-room-card] Sub-button template error (${key}):`, e2);
-          }
+          jobs.push({ key: `${prefix}sub_${i2}_${field}`, template: value, entity: btn.entity });
         }
       }
+    };
+    if ((_c2 = c2.sub_button_groups) == null ? void 0 : _c2.length) {
+      for (const [g2, group] of c2.sub_button_groups.slice(0, 4).entries()) {
+        collect((_d2 = group.buttons) != null ? _d2 : [], `g${g2}_`);
+      }
+    } else if (c2.sub_buttons) {
+      collect(c2.sub_buttons, "");
     }
+    const liveKeys = new Set(jobs.map((j) => j.key));
+    const staleResults = {};
+    for (const [key, val] of Object.entries(this._subTemplateResults)) {
+      if (liveKeys.has(key)) staleResults[key] = val;
+    }
+    this._subTemplateResults = staleResults;
+    await Promise.all(jobs.map(async ({ key, template, entity }) => {
+      try {
+        const unsub = await subscribeTemplate(
+          this.hass,
+          template,
+          { ...variables, entity },
+          (result) => {
+            if (gen !== this._subTemplateGen) return;
+            this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
+          }
+        );
+        if (gen !== this._subTemplateGen) {
+          unsub().catch(() => void 0);
+          return;
+        }
+        this._subTemplateUnsubs.set(key, unsub);
+      } catch (e2) {
+        console.warn(`[ians-room-card] Sub-button template error (${key}):`, e2);
+      }
+    }));
   }
   async _unsubscribeSubButtonTemplates() {
-    for (const unsub of this._subTemplateUnsubs.values()) {
+    const unsubs = [...this._subTemplateUnsubs.values()];
+    this._subTemplateUnsubs.clear();
+    for (const unsub of unsubs) {
       try {
         await unsub();
       } catch (e2) {
       }
     }
-    this._subTemplateUnsubs.clear();
-    this._subTemplateResults = {};
   }
   // ── CSS variable application ───────────────────────────────────────────────
   _applyConfigStyles() {
@@ -4069,30 +4071,38 @@ let IansCustomRoomCard = class extends i {
 };
 __decorateClass([
   n2({ attribute: false })
-], IansCustomRoomCard.prototype, "hass", 2);
+], _IansCustomRoomCard.prototype, "hass");
 __decorateClass([
   r()
-], IansCustomRoomCard.prototype, "_config", 2);
+], _IansCustomRoomCard.prototype, "_config");
 __decorateClass([
   r()
-], IansCustomRoomCard.prototype, "_templateResults", 2);
+], _IansCustomRoomCard.prototype, "_templateResults");
 __decorateClass([
   r()
-], IansCustomRoomCard.prototype, "_templateErrors", 2);
+], _IansCustomRoomCard.prototype, "_templateErrors");
 __decorateClass([
   r()
-], IansCustomRoomCard.prototype, "_subTemplateResults", 2);
-IansCustomRoomCard = __decorateClass([
-  t(CARD_TYPE)
-], IansCustomRoomCard);
+], _IansCustomRoomCard.prototype, "_subTemplateResults");
+let IansCustomRoomCard = _IansCustomRoomCard;
+if (!customElements.get(CARD_TYPE)) {
+  customElements.define(CARD_TYPE, IansCustomRoomCard);
+  console.info(
+    `%c IANS-CUSTOM-ROOM-CARD %c v${VERSION} `,
+    "color: white; background: #03a9f4; font-weight: 700;",
+    "color: #03a9f4; background: white; font-weight: 700;"
+  );
+}
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: CARD_TYPE,
-  name: CARD_NAME,
-  description: CARD_DESCRIPTION,
-  preview: false,
-  documentationURL: "https://github.com/linkian19/ha-ians-custom-room-card"
-});
+if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
+  window.customCards.push({
+    type: CARD_TYPE,
+    name: CARD_NAME,
+    description: CARD_DESCRIPTION,
+    preview: false,
+    documentationURL: "https://github.com/linkian19/ha-ians-custom-room-card"
+  });
+}
 export {
   IansCustomRoomCard
 };

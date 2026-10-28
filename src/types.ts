@@ -27,11 +27,19 @@ export interface HassEntityRegistryEntry {
   icon?: string | null;
 }
 
+// Device registry entry — available via hass.devices
+export interface HassDeviceRegistryEntry {
+  id: string;
+  area_id?: string | null;
+  name?: string | null;
+}
+
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
   areas: Record<string, HassArea>;
   // Entity registry (may be undefined on older HA versions)
   entities?: Record<string, HassEntityRegistryEntry>;
+  devices?: Record<string, HassDeviceRegistryEntry>;
   connection: {
     subscribeMessage<T>(
       callback: (msg: T) => void,
