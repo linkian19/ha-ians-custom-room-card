@@ -16,6 +16,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Release workflow: Node 24, fails if the tag doesn't match `package.json` or the committed `dist/` is stale.
 - Build tooling: Vite 5 → 8, TypeScript 5 → 7, terser 5.51. Bundle is ~17% smaller (168 kB → 140 kB).
 
+- `LICENSE` file (MIT, matching `package.json`).
+
 ### Removed
 - `info.md` — HACS 2.x shows the README instead.
 
