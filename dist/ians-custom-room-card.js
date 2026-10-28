@@ -1,609 +1,4 @@
-/**
- * @license
- * Copyright 2019 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-var _a, _b, _c, _d, _e, _f;
-const t$1 = globalThis, e$2 = t$1.ShadowRoot && (void 0 === t$1.ShadyCSS || t$1.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, s$2 = Symbol(), o$4 = /* @__PURE__ */ new WeakMap();
-let n$3 = class n {
-  constructor(t2, e2, o2) {
-    if (this._$cssResult$ = true, o2 !== s$2) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-    this.cssText = t2, this.t = e2;
-  }
-  get styleSheet() {
-    let t2 = this.o;
-    const s2 = this.t;
-    if (e$2 && void 0 === t2) {
-      const e2 = void 0 !== s2 && 1 === s2.length;
-      e2 && (t2 = o$4.get(s2)), void 0 === t2 && ((this.o = t2 = new CSSStyleSheet()).replaceSync(this.cssText), e2 && o$4.set(s2, t2));
-    }
-    return t2;
-  }
-  toString() {
-    return this.cssText;
-  }
-};
-const r$4 = (t2) => new n$3("string" == typeof t2 ? t2 : t2 + "", void 0, s$2), i$3 = (t2, ...e2) => {
-  const o2 = 1 === t2.length ? t2[0] : e2.reduce((e3, s2, o3) => e3 + ((t3) => {
-    if (true === t3._$cssResult$) return t3.cssText;
-    if ("number" == typeof t3) return t3;
-    throw Error("Value passed to 'css' function must be a 'css' function result: " + t3 + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
-  })(s2) + t2[o3 + 1], t2[0]);
-  return new n$3(o2, t2, s$2);
-}, S$1 = (s2, o2) => {
-  if (e$2) s2.adoptedStyleSheets = o2.map((t2) => t2 instanceof CSSStyleSheet ? t2 : t2.styleSheet);
-  else for (const e2 of o2) {
-    const o3 = document.createElement("style"), n3 = t$1.litNonce;
-    void 0 !== n3 && o3.setAttribute("nonce", n3), o3.textContent = e2.cssText, s2.appendChild(o3);
-  }
-}, c$2 = e$2 ? (t2) => t2 : (t2) => t2 instanceof CSSStyleSheet ? ((t3) => {
-  let e2 = "";
-  for (const s2 of t3.cssRules) e2 += s2.cssText;
-  return r$4(e2);
-})(t2) : t2;
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const { is: i$2, defineProperty: e$1, getOwnPropertyDescriptor: h$1, getOwnPropertyNames: r$3, getOwnPropertySymbols: o$3, getPrototypeOf: n$2 } = Object, a$1 = globalThis, c$1 = a$1.trustedTypes, l$1 = c$1 ? c$1.emptyScript : "", p$1 = a$1.reactiveElementPolyfillSupport, d$1 = (t2, s2) => t2, u$1 = { toAttribute(t2, s2) {
-  switch (s2) {
-    case Boolean:
-      t2 = t2 ? l$1 : null;
-      break;
-    case Object:
-    case Array:
-      t2 = null == t2 ? t2 : JSON.stringify(t2);
-  }
-  return t2;
-}, fromAttribute(t2, s2) {
-  let i2 = t2;
-  switch (s2) {
-    case Boolean:
-      i2 = null !== t2;
-      break;
-    case Number:
-      i2 = null === t2 ? null : Number(t2);
-      break;
-    case Object:
-    case Array:
-      try {
-        i2 = JSON.parse(t2);
-      } catch (t3) {
-        i2 = null;
-      }
-  }
-  return i2;
-} }, f$1 = (t2, s2) => !i$2(t2, s2), b$1 = { attribute: true, type: String, converter: u$1, reflect: false, useDefault: false, hasChanged: f$1 };
-(_a = Symbol.metadata) != null ? _a : Symbol.metadata = Symbol("metadata"), (_b = a$1.litPropertyMetadata) != null ? _b : a$1.litPropertyMetadata = /* @__PURE__ */ new WeakMap();
-let y$1 = class y extends HTMLElement {
-  static addInitializer(t2) {
-    var _a2;
-    this._$Ei(), ((_a2 = this.l) != null ? _a2 : this.l = []).push(t2);
-  }
-  static get observedAttributes() {
-    return this.finalize(), this._$Eh && [...this._$Eh.keys()];
-  }
-  static createProperty(t2, s2 = b$1) {
-    if (s2.state && (s2.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t2) && ((s2 = Object.create(s2)).wrapped = true), this.elementProperties.set(t2, s2), !s2.noAccessor) {
-      const i2 = Symbol(), h2 = this.getPropertyDescriptor(t2, i2, s2);
-      void 0 !== h2 && e$1(this.prototype, t2, h2);
-    }
-  }
-  static getPropertyDescriptor(t2, s2, i2) {
-    var _a2;
-    const { get: e2, set: r2 } = (_a2 = h$1(this.prototype, t2)) != null ? _a2 : { get() {
-      return this[s2];
-    }, set(t3) {
-      this[s2] = t3;
-    } };
-    return { get: e2, set(s3) {
-      const h2 = e2 == null ? void 0 : e2.call(this);
-      r2 == null ? void 0 : r2.call(this, s3), this.requestUpdate(t2, h2, i2);
-    }, configurable: true, enumerable: true };
-  }
-  static getPropertyOptions(t2) {
-    var _a2;
-    return (_a2 = this.elementProperties.get(t2)) != null ? _a2 : b$1;
-  }
-  static _$Ei() {
-    if (this.hasOwnProperty(d$1("elementProperties"))) return;
-    const t2 = n$2(this);
-    t2.finalize(), void 0 !== t2.l && (this.l = [...t2.l]), this.elementProperties = new Map(t2.elementProperties);
-  }
-  static finalize() {
-    if (this.hasOwnProperty(d$1("finalized"))) return;
-    if (this.finalized = true, this._$Ei(), this.hasOwnProperty(d$1("properties"))) {
-      const t3 = this.properties, s2 = [...r$3(t3), ...o$3(t3)];
-      for (const i2 of s2) this.createProperty(i2, t3[i2]);
-    }
-    const t2 = this[Symbol.metadata];
-    if (null !== t2) {
-      const s2 = litPropertyMetadata.get(t2);
-      if (void 0 !== s2) for (const [t3, i2] of s2) this.elementProperties.set(t3, i2);
-    }
-    this._$Eh = /* @__PURE__ */ new Map();
-    for (const [t3, s2] of this.elementProperties) {
-      const i2 = this._$Eu(t3, s2);
-      void 0 !== i2 && this._$Eh.set(i2, t3);
-    }
-    this.elementStyles = this.finalizeStyles(this.styles);
-  }
-  static finalizeStyles(s2) {
-    const i2 = [];
-    if (Array.isArray(s2)) {
-      const e2 = new Set(s2.flat(1 / 0).reverse());
-      for (const s3 of e2) i2.unshift(c$2(s3));
-    } else void 0 !== s2 && i2.push(c$2(s2));
-    return i2;
-  }
-  static _$Eu(t2, s2) {
-    const i2 = s2.attribute;
-    return false === i2 ? void 0 : "string" == typeof i2 ? i2 : "string" == typeof t2 ? t2.toLowerCase() : void 0;
-  }
-  constructor() {
-    super(), this._$Ep = void 0, this.isUpdatePending = false, this.hasUpdated = false, this._$Em = null, this._$Ev();
-  }
-  _$Ev() {
-    var _a2;
-    this._$ES = new Promise((t2) => this.enableUpdating = t2), this._$AL = /* @__PURE__ */ new Map(), this._$E_(), this.requestUpdate(), (_a2 = this.constructor.l) == null ? void 0 : _a2.forEach((t2) => t2(this));
-  }
-  addController(t2) {
-    var _a2, _b2;
-    ((_a2 = this._$EO) != null ? _a2 : this._$EO = /* @__PURE__ */ new Set()).add(t2), void 0 !== this.renderRoot && this.isConnected && ((_b2 = t2.hostConnected) == null ? void 0 : _b2.call(t2));
-  }
-  removeController(t2) {
-    var _a2;
-    (_a2 = this._$EO) == null ? void 0 : _a2.delete(t2);
-  }
-  _$E_() {
-    const t2 = /* @__PURE__ */ new Map(), s2 = this.constructor.elementProperties;
-    for (const i2 of s2.keys()) this.hasOwnProperty(i2) && (t2.set(i2, this[i2]), delete this[i2]);
-    t2.size > 0 && (this._$Ep = t2);
-  }
-  createRenderRoot() {
-    var _a2;
-    const t2 = (_a2 = this.shadowRoot) != null ? _a2 : this.attachShadow(this.constructor.shadowRootOptions);
-    return S$1(t2, this.constructor.elementStyles), t2;
-  }
-  connectedCallback() {
-    var _a2, _b2;
-    (_a2 = this.renderRoot) != null ? _a2 : this.renderRoot = this.createRenderRoot(), this.enableUpdating(true), (_b2 = this._$EO) == null ? void 0 : _b2.forEach((t2) => {
-      var _a3;
-      return (_a3 = t2.hostConnected) == null ? void 0 : _a3.call(t2);
-    });
-  }
-  enableUpdating(t2) {
-  }
-  disconnectedCallback() {
-    var _a2;
-    (_a2 = this._$EO) == null ? void 0 : _a2.forEach((t2) => {
-      var _a3;
-      return (_a3 = t2.hostDisconnected) == null ? void 0 : _a3.call(t2);
-    });
-  }
-  attributeChangedCallback(t2, s2, i2) {
-    this._$AK(t2, i2);
-  }
-  _$ET(t2, s2) {
-    var _a2;
-    const i2 = this.constructor.elementProperties.get(t2), e2 = this.constructor._$Eu(t2, i2);
-    if (void 0 !== e2 && true === i2.reflect) {
-      const h2 = (void 0 !== ((_a2 = i2.converter) == null ? void 0 : _a2.toAttribute) ? i2.converter : u$1).toAttribute(s2, i2.type);
-      this._$Em = t2, null == h2 ? this.removeAttribute(e2) : this.setAttribute(e2, h2), this._$Em = null;
-    }
-  }
-  _$AK(t2, s2) {
-    var _a2, _b2, _c2;
-    const i2 = this.constructor, e2 = i2._$Eh.get(t2);
-    if (void 0 !== e2 && this._$Em !== e2) {
-      const t3 = i2.getPropertyOptions(e2), h2 = "function" == typeof t3.converter ? { fromAttribute: t3.converter } : void 0 !== ((_a2 = t3.converter) == null ? void 0 : _a2.fromAttribute) ? t3.converter : u$1;
-      this._$Em = e2;
-      const r2 = h2.fromAttribute(s2, t3.type);
-      this[e2] = (_c2 = r2 != null ? r2 : (_b2 = this._$Ej) == null ? void 0 : _b2.get(e2)) != null ? _c2 : r2, this._$Em = null;
-    }
-  }
-  requestUpdate(t2, s2, i2, e2 = false, h2) {
-    var _a2, _b2;
-    if (void 0 !== t2) {
-      const r2 = this.constructor;
-      if (false === e2 && (h2 = this[t2]), i2 != null ? i2 : i2 = r2.getPropertyOptions(t2), !(((_a2 = i2.hasChanged) != null ? _a2 : f$1)(h2, s2) || i2.useDefault && i2.reflect && h2 === ((_b2 = this._$Ej) == null ? void 0 : _b2.get(t2)) && !this.hasAttribute(r2._$Eu(t2, i2)))) return;
-      this.C(t2, s2, i2);
-    }
-    false === this.isUpdatePending && (this._$ES = this._$EP());
-  }
-  C(t2, s2, { useDefault: i2, reflect: e2, wrapped: h2 }, r2) {
-    var _a2, _b2, _c2;
-    i2 && !((_a2 = this._$Ej) != null ? _a2 : this._$Ej = /* @__PURE__ */ new Map()).has(t2) && (this._$Ej.set(t2, (_b2 = r2 != null ? r2 : s2) != null ? _b2 : this[t2]), true !== h2 || void 0 !== r2) || (this._$AL.has(t2) || (this.hasUpdated || i2 || (s2 = void 0), this._$AL.set(t2, s2)), true === e2 && this._$Em !== t2 && ((_c2 = this._$Eq) != null ? _c2 : this._$Eq = /* @__PURE__ */ new Set()).add(t2));
-  }
-  async _$EP() {
-    this.isUpdatePending = true;
-    try {
-      await this._$ES;
-    } catch (t3) {
-      Promise.reject(t3);
-    }
-    const t2 = this.scheduleUpdate();
-    return null != t2 && await t2, !this.isUpdatePending;
-  }
-  scheduleUpdate() {
-    return this.performUpdate();
-  }
-  performUpdate() {
-    var _a2, _b2;
-    if (!this.isUpdatePending) return;
-    if (!this.hasUpdated) {
-      if ((_a2 = this.renderRoot) != null ? _a2 : this.renderRoot = this.createRenderRoot(), this._$Ep) {
-        for (const [t4, s3] of this._$Ep) this[t4] = s3;
-        this._$Ep = void 0;
-      }
-      const t3 = this.constructor.elementProperties;
-      if (t3.size > 0) for (const [s3, i2] of t3) {
-        const { wrapped: t4 } = i2, e2 = this[s3];
-        true !== t4 || this._$AL.has(s3) || void 0 === e2 || this.C(s3, void 0, i2, e2);
-      }
-    }
-    let t2 = false;
-    const s2 = this._$AL;
-    try {
-      t2 = this.shouldUpdate(s2), t2 ? (this.willUpdate(s2), (_b2 = this._$EO) == null ? void 0 : _b2.forEach((t3) => {
-        var _a3;
-        return (_a3 = t3.hostUpdate) == null ? void 0 : _a3.call(t3);
-      }), this.update(s2)) : this._$EM();
-    } catch (s3) {
-      throw t2 = false, this._$EM(), s3;
-    }
-    t2 && this._$AE(s2);
-  }
-  willUpdate(t2) {
-  }
-  _$AE(t2) {
-    var _a2;
-    (_a2 = this._$EO) == null ? void 0 : _a2.forEach((t3) => {
-      var _a3;
-      return (_a3 = t3.hostUpdated) == null ? void 0 : _a3.call(t3);
-    }), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t2)), this.updated(t2);
-  }
-  _$EM() {
-    this._$AL = /* @__PURE__ */ new Map(), this.isUpdatePending = false;
-  }
-  get updateComplete() {
-    return this.getUpdateComplete();
-  }
-  getUpdateComplete() {
-    return this._$ES;
-  }
-  shouldUpdate(t2) {
-    return true;
-  }
-  update(t2) {
-    this._$Eq && (this._$Eq = this._$Eq.forEach((t3) => this._$ET(t3, this[t3]))), this._$EM();
-  }
-  updated(t2) {
-  }
-  firstUpdated(t2) {
-  }
-};
-y$1.elementStyles = [], y$1.shadowRootOptions = { mode: "open" }, y$1[d$1("elementProperties")] = /* @__PURE__ */ new Map(), y$1[d$1("finalized")] = /* @__PURE__ */ new Map(), p$1 == null ? void 0 : p$1({ ReactiveElement: y$1 }), ((_c = a$1.reactiveElementVersions) != null ? _c : a$1.reactiveElementVersions = []).push("2.1.2");
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const t = globalThis, i$1 = (t2) => t2, s$1 = t.trustedTypes, e = s$1 ? s$1.createPolicy("lit-html", { createHTML: (t2) => t2 }) : void 0, h = "$lit$", o$2 = `lit$${Math.random().toFixed(9).slice(2)}$`, n$1 = "?" + o$2, r$2 = `<${n$1}>`, l = document, c = () => l.createComment(""), a = (t2) => null === t2 || "object" != typeof t2 && "function" != typeof t2, u = Array.isArray, d = (t2) => u(t2) || "function" == typeof (t2 == null ? void 0 : t2[Symbol.iterator]), f = "[ 	\n\f\r]", v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, _ = /-->/g, m = />/g, p = RegExp(`>|${f}(?:([^\\s"'>=/]+)(${f}*=${f}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), g = /'/g, $ = /"/g, y2 = /^(?:script|style|textarea|title)$/i, x = (t2) => (i2, ...s2) => ({ _$litType$: t2, strings: i2, values: s2 }), b = x(1), E = Symbol.for("lit-noChange"), A = Symbol.for("lit-nothing"), C = /* @__PURE__ */ new WeakMap(), P = l.createTreeWalker(l, 129);
-function V(t2, i2) {
-  if (!u(t2) || !t2.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return void 0 !== e ? e.createHTML(i2) : i2;
-}
-const N = (t2, i2) => {
-  const s2 = t2.length - 1, e2 = [];
-  let n3, l2 = 2 === i2 ? "<svg>" : 3 === i2 ? "<math>" : "", c2 = v;
-  for (let i3 = 0; i3 < s2; i3++) {
-    const s3 = t2[i3];
-    let a2, u2, d2 = -1, f2 = 0;
-    for (; f2 < s3.length && (c2.lastIndex = f2, u2 = c2.exec(s3), null !== u2); ) f2 = c2.lastIndex, c2 === v ? "!--" === u2[1] ? c2 = _ : void 0 !== u2[1] ? c2 = m : void 0 !== u2[2] ? (y2.test(u2[2]) && (n3 = RegExp("</" + u2[2], "g")), c2 = p) : void 0 !== u2[3] && (c2 = p) : c2 === p ? ">" === u2[0] ? (c2 = n3 != null ? n3 : v, d2 = -1) : void 0 === u2[1] ? d2 = -2 : (d2 = c2.lastIndex - u2[2].length, a2 = u2[1], c2 = void 0 === u2[3] ? p : '"' === u2[3] ? $ : g) : c2 === $ || c2 === g ? c2 = p : c2 === _ || c2 === m ? c2 = v : (c2 = p, n3 = void 0);
-    const x2 = c2 === p && t2[i3 + 1].startsWith("/>") ? " " : "";
-    l2 += c2 === v ? s3 + r$2 : d2 >= 0 ? (e2.push(a2), s3.slice(0, d2) + h + s3.slice(d2) + o$2 + x2) : s3 + o$2 + (-2 === d2 ? i3 : x2);
-  }
-  return [V(t2, l2 + (t2[s2] || "<?>") + (2 === i2 ? "</svg>" : 3 === i2 ? "</math>" : "")), e2];
-};
-class S {
-  constructor({ strings: t2, _$litType$: i2 }, e2) {
-    let r2;
-    this.parts = [];
-    let l2 = 0, a2 = 0;
-    const u2 = t2.length - 1, d2 = this.parts, [f2, v2] = N(t2, i2);
-    if (this.el = S.createElement(f2, e2), P.currentNode = this.el.content, 2 === i2 || 3 === i2) {
-      const t3 = this.el.content.firstChild;
-      t3.replaceWith(...t3.childNodes);
-    }
-    for (; null !== (r2 = P.nextNode()) && d2.length < u2; ) {
-      if (1 === r2.nodeType) {
-        if (r2.hasAttributes()) for (const t3 of r2.getAttributeNames()) if (t3.endsWith(h)) {
-          const i3 = v2[a2++], s2 = r2.getAttribute(t3).split(o$2), e3 = /([.?@])?(.*)/.exec(i3);
-          d2.push({ type: 1, index: l2, name: e3[2], strings: s2, ctor: "." === e3[1] ? I : "?" === e3[1] ? L : "@" === e3[1] ? z : H }), r2.removeAttribute(t3);
-        } else t3.startsWith(o$2) && (d2.push({ type: 6, index: l2 }), r2.removeAttribute(t3));
-        if (y2.test(r2.tagName)) {
-          const t3 = r2.textContent.split(o$2), i3 = t3.length - 1;
-          if (i3 > 0) {
-            r2.textContent = s$1 ? s$1.emptyScript : "";
-            for (let s2 = 0; s2 < i3; s2++) r2.append(t3[s2], c()), P.nextNode(), d2.push({ type: 2, index: ++l2 });
-            r2.append(t3[i3], c());
-          }
-        }
-      } else if (8 === r2.nodeType) if (r2.data === n$1) d2.push({ type: 2, index: l2 });
-      else {
-        let t3 = -1;
-        for (; -1 !== (t3 = r2.data.indexOf(o$2, t3 + 1)); ) d2.push({ type: 7, index: l2 }), t3 += o$2.length - 1;
-      }
-      l2++;
-    }
-  }
-  static createElement(t2, i2) {
-    const s2 = l.createElement("template");
-    return s2.innerHTML = t2, s2;
-  }
-}
-function M(t2, i2, s2 = t2, e2) {
-  var _a2, _b2, _c2;
-  if (i2 === E) return i2;
-  let h2 = void 0 !== e2 ? (_a2 = s2._$Co) == null ? void 0 : _a2[e2] : s2._$Cl;
-  const o2 = a(i2) ? void 0 : i2._$litDirective$;
-  return (h2 == null ? void 0 : h2.constructor) !== o2 && ((_b2 = h2 == null ? void 0 : h2._$AO) == null ? void 0 : _b2.call(h2, false), void 0 === o2 ? h2 = void 0 : (h2 = new o2(t2), h2._$AT(t2, s2, e2)), void 0 !== e2 ? ((_c2 = s2._$Co) != null ? _c2 : s2._$Co = [])[e2] = h2 : s2._$Cl = h2), void 0 !== h2 && (i2 = M(t2, h2._$AS(t2, i2.values), h2, e2)), i2;
-}
-class R {
-  constructor(t2, i2) {
-    this._$AV = [], this._$AN = void 0, this._$AD = t2, this._$AM = i2;
-  }
-  get parentNode() {
-    return this._$AM.parentNode;
-  }
-  get _$AU() {
-    return this._$AM._$AU;
-  }
-  u(t2) {
-    var _a2;
-    const { el: { content: i2 }, parts: s2 } = this._$AD, e2 = ((_a2 = t2 == null ? void 0 : t2.creationScope) != null ? _a2 : l).importNode(i2, true);
-    P.currentNode = e2;
-    let h2 = P.nextNode(), o2 = 0, n3 = 0, r2 = s2[0];
-    for (; void 0 !== r2; ) {
-      if (o2 === r2.index) {
-        let i3;
-        2 === r2.type ? i3 = new k(h2, h2.nextSibling, this, t2) : 1 === r2.type ? i3 = new r2.ctor(h2, r2.name, r2.strings, this, t2) : 6 === r2.type && (i3 = new Z(h2, this, t2)), this._$AV.push(i3), r2 = s2[++n3];
-      }
-      o2 !== (r2 == null ? void 0 : r2.index) && (h2 = P.nextNode(), o2++);
-    }
-    return P.currentNode = l, e2;
-  }
-  p(t2) {
-    let i2 = 0;
-    for (const s2 of this._$AV) void 0 !== s2 && (void 0 !== s2.strings ? (s2._$AI(t2, s2, i2), i2 += s2.strings.length - 2) : s2._$AI(t2[i2])), i2++;
-  }
-}
-class k {
-  get _$AU() {
-    var _a2, _b2;
-    return (_b2 = (_a2 = this._$AM) == null ? void 0 : _a2._$AU) != null ? _b2 : this._$Cv;
-  }
-  constructor(t2, i2, s2, e2) {
-    var _a2;
-    this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t2, this._$AB = i2, this._$AM = s2, this.options = e2, this._$Cv = (_a2 = e2 == null ? void 0 : e2.isConnected) != null ? _a2 : true;
-  }
-  get parentNode() {
-    let t2 = this._$AA.parentNode;
-    const i2 = this._$AM;
-    return void 0 !== i2 && 11 === (t2 == null ? void 0 : t2.nodeType) && (t2 = i2.parentNode), t2;
-  }
-  get startNode() {
-    return this._$AA;
-  }
-  get endNode() {
-    return this._$AB;
-  }
-  _$AI(t2, i2 = this) {
-    t2 = M(this, t2, i2), a(t2) ? t2 === A || null == t2 || "" === t2 ? (this._$AH !== A && this._$AR(), this._$AH = A) : t2 !== this._$AH && t2 !== E && this._(t2) : void 0 !== t2._$litType$ ? this.$(t2) : void 0 !== t2.nodeType ? this.T(t2) : d(t2) ? this.k(t2) : this._(t2);
-  }
-  O(t2) {
-    return this._$AA.parentNode.insertBefore(t2, this._$AB);
-  }
-  T(t2) {
-    this._$AH !== t2 && (this._$AR(), this._$AH = this.O(t2));
-  }
-  _(t2) {
-    this._$AH !== A && a(this._$AH) ? this._$AA.nextSibling.data = t2 : this.T(l.createTextNode(t2)), this._$AH = t2;
-  }
-  $(t2) {
-    var _a2;
-    const { values: i2, _$litType$: s2 } = t2, e2 = "number" == typeof s2 ? this._$AC(t2) : (void 0 === s2.el && (s2.el = S.createElement(V(s2.h, s2.h[0]), this.options)), s2);
-    if (((_a2 = this._$AH) == null ? void 0 : _a2._$AD) === e2) this._$AH.p(i2);
-    else {
-      const t3 = new R(e2, this), s3 = t3.u(this.options);
-      t3.p(i2), this.T(s3), this._$AH = t3;
-    }
-  }
-  _$AC(t2) {
-    let i2 = C.get(t2.strings);
-    return void 0 === i2 && C.set(t2.strings, i2 = new S(t2)), i2;
-  }
-  k(t2) {
-    u(this._$AH) || (this._$AH = [], this._$AR());
-    const i2 = this._$AH;
-    let s2, e2 = 0;
-    for (const h2 of t2) e2 === i2.length ? i2.push(s2 = new k(this.O(c()), this.O(c()), this, this.options)) : s2 = i2[e2], s2._$AI(h2), e2++;
-    e2 < i2.length && (this._$AR(s2 && s2._$AB.nextSibling, e2), i2.length = e2);
-  }
-  _$AR(t2 = this._$AA.nextSibling, s2) {
-    var _a2;
-    for ((_a2 = this._$AP) == null ? void 0 : _a2.call(this, false, true, s2); t2 !== this._$AB; ) {
-      const s3 = i$1(t2).nextSibling;
-      i$1(t2).remove(), t2 = s3;
-    }
-  }
-  setConnected(t2) {
-    var _a2;
-    void 0 === this._$AM && (this._$Cv = t2, (_a2 = this._$AP) == null ? void 0 : _a2.call(this, t2));
-  }
-}
-class H {
-  get tagName() {
-    return this.element.tagName;
-  }
-  get _$AU() {
-    return this._$AM._$AU;
-  }
-  constructor(t2, i2, s2, e2, h2) {
-    this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t2, this.name = i2, this._$AM = e2, this.options = h2, s2.length > 2 || "" !== s2[0] || "" !== s2[1] ? (this._$AH = Array(s2.length - 1).fill(new String()), this.strings = s2) : this._$AH = A;
-  }
-  _$AI(t2, i2 = this, s2, e2) {
-    const h2 = this.strings;
-    let o2 = false;
-    if (void 0 === h2) t2 = M(this, t2, i2, 0), o2 = !a(t2) || t2 !== this._$AH && t2 !== E, o2 && (this._$AH = t2);
-    else {
-      const e3 = t2;
-      let n3, r2;
-      for (t2 = h2[0], n3 = 0; n3 < h2.length - 1; n3++) r2 = M(this, e3[s2 + n3], i2, n3), r2 === E && (r2 = this._$AH[n3]), o2 || (o2 = !a(r2) || r2 !== this._$AH[n3]), r2 === A ? t2 = A : t2 !== A && (t2 += (r2 != null ? r2 : "") + h2[n3 + 1]), this._$AH[n3] = r2;
-    }
-    o2 && !e2 && this.j(t2);
-  }
-  j(t2) {
-    t2 === A ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t2 != null ? t2 : "");
-  }
-}
-class I extends H {
-  constructor() {
-    super(...arguments), this.type = 3;
-  }
-  j(t2) {
-    this.element[this.name] = t2 === A ? void 0 : t2;
-  }
-}
-class L extends H {
-  constructor() {
-    super(...arguments), this.type = 4;
-  }
-  j(t2) {
-    this.element.toggleAttribute(this.name, !!t2 && t2 !== A);
-  }
-}
-class z extends H {
-  constructor(t2, i2, s2, e2, h2) {
-    super(t2, i2, s2, e2, h2), this.type = 5;
-  }
-  _$AI(t2, i2 = this) {
-    var _a2;
-    if ((t2 = (_a2 = M(this, t2, i2, 0)) != null ? _a2 : A) === E) return;
-    const s2 = this._$AH, e2 = t2 === A && s2 !== A || t2.capture !== s2.capture || t2.once !== s2.once || t2.passive !== s2.passive, h2 = t2 !== A && (s2 === A || e2);
-    e2 && this.element.removeEventListener(this.name, this, s2), h2 && this.element.addEventListener(this.name, this, t2), this._$AH = t2;
-  }
-  handleEvent(t2) {
-    var _a2, _b2;
-    "function" == typeof this._$AH ? this._$AH.call((_b2 = (_a2 = this.options) == null ? void 0 : _a2.host) != null ? _b2 : this.element, t2) : this._$AH.handleEvent(t2);
-  }
-}
-class Z {
-  constructor(t2, i2, s2) {
-    this.element = t2, this.type = 6, this._$AN = void 0, this._$AM = i2, this.options = s2;
-  }
-  get _$AU() {
-    return this._$AM._$AU;
-  }
-  _$AI(t2) {
-    M(this, t2);
-  }
-}
-const B = t.litHtmlPolyfillSupport;
-B == null ? void 0 : B(S, k), ((_d = t.litHtmlVersions) != null ? _d : t.litHtmlVersions = []).push("3.3.3");
-const D = (t2, i2, s2) => {
-  var _a2, _b2;
-  const e2 = (_a2 = s2 == null ? void 0 : s2.renderBefore) != null ? _a2 : i2;
-  let h2 = e2._$litPart$;
-  if (void 0 === h2) {
-    const t3 = (_b2 = s2 == null ? void 0 : s2.renderBefore) != null ? _b2 : null;
-    e2._$litPart$ = h2 = new k(i2.insertBefore(c(), t3), t3, void 0, s2 != null ? s2 : {});
-  }
-  return h2._$AI(t2), h2;
-};
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const s = globalThis;
-class i extends y$1 {
-  constructor() {
-    super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
-  }
-  createRenderRoot() {
-    var _a2, _b2;
-    const t2 = super.createRenderRoot();
-    return (_b2 = (_a2 = this.renderOptions).renderBefore) != null ? _b2 : _a2.renderBefore = t2.firstChild, t2;
-  }
-  update(t2) {
-    const r2 = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t2), this._$Do = D(r2, this.renderRoot, this.renderOptions);
-  }
-  connectedCallback() {
-    var _a2;
-    super.connectedCallback(), (_a2 = this._$Do) == null ? void 0 : _a2.setConnected(true);
-  }
-  disconnectedCallback() {
-    var _a2;
-    super.disconnectedCallback(), (_a2 = this._$Do) == null ? void 0 : _a2.setConnected(false);
-  }
-  render() {
-    return E;
-  }
-}
-i._$litElement$ = true, i["finalized"] = true, (_e = s.litElementHydrateSupport) == null ? void 0 : _e.call(s, { LitElement: i });
-const o$1 = s.litElementPolyfillSupport;
-o$1 == null ? void 0 : o$1({ LitElement: i });
-((_f = s.litElementVersions) != null ? _f : s.litElementVersions = []).push("4.2.2");
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const o = { attribute: true, type: String, converter: u$1, reflect: false, hasChanged: f$1 }, r$1 = (t2 = o, e2, r2) => {
-  const { kind: n3, metadata: i2 } = r2;
-  let s2 = globalThis.litPropertyMetadata.get(i2);
-  if (void 0 === s2 && globalThis.litPropertyMetadata.set(i2, s2 = /* @__PURE__ */ new Map()), "setter" === n3 && ((t2 = Object.create(t2)).wrapped = true), s2.set(r2.name, t2), "accessor" === n3) {
-    const { name: o2 } = r2;
-    return { set(r3) {
-      const n4 = e2.get.call(this);
-      e2.set.call(this, r3), this.requestUpdate(o2, n4, t2, true, r3);
-    }, init(e3) {
-      return void 0 !== e3 && this.C(o2, void 0, t2, e3), e3;
-    } };
-  }
-  if ("setter" === n3) {
-    const { name: o2 } = r2;
-    return function(r3) {
-      const n4 = this[o2];
-      e2.call(this, r3), this.requestUpdate(o2, n4, t2, true, r3);
-    };
-  }
-  throw Error("Unsupported decorator location: " + n3);
-};
-function n2(t2) {
-  return (e2, o2) => "object" == typeof o2 ? r$1(t2, e2, o2) : ((t3, e3, o3) => {
-    const r2 = e3.hasOwnProperty(o3);
-    return e3.constructor.createProperty(o3, t3), r2 ? Object.getOwnPropertyDescriptor(e3, o3) : void 0;
-  })(t2, e2, o2);
-}
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-function r(r2) {
-  return n2({ ...r2, state: true, attribute: false });
-}
-const CARD_TYPE = "ians-custom-room-card";
-const CARD_NAME = "Ian's Custom Room Card";
-const CARD_DESCRIPTION = "A highly customizable room card with icon, badge, sub-button groups, animations, templates, and more";
-const VERSION = "0.3.0";
-const cardStyles = i$3`
+var t,e,o,i,n=globalThis,a=n.ShadowRoot&&(void 0===n.ShadyCSS||n.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),l=/* @__PURE__ */new WeakMap,r=class{constructor(t,e,o){if(this._$cssResult$=!0,o!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const e=this.t;if(a&&void 0===t){const o=void 0!==e&&1===e.length;o&&(t=l.get(e)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),o&&l.set(e,t))}return t}toString(){return this.cssText}},d=(t,...e)=>{const o=1===t.length?t[0]:e.reduce((e,o,i)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(o)+t[i+1],t[0]);return new r(o,t,s)},c=a?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const o of t.cssRules)e+=o.cssText;return(t=>new r("string"==typeof t?t:t+"",void 0,s))(e)})(t):t,{is:u,defineProperty:h,getOwnPropertyDescriptor:p,getOwnPropertyNames:b,getOwnPropertySymbols:v,getPrototypeOf:_}=Object,g=globalThis,m=g.trustedTypes,f=m?m.emptyScript:"",$=g.reactiveElementPolyfillSupport,x=(t,e)=>t,y={toAttribute(t,e){switch(e){case Boolean:t=t?f:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let o=t;switch(e){case Boolean:o=null!==t;break;case Number:o=null===t?null:Number(t);break;case Object:case Array:try{o=JSON.parse(t)}catch(t){o=null}}return o}},w=(t,e)=>!u(t,e),C={attribute:!0,type:String,converter:y,reflect:!1,useDefault:!1,hasChanged:w};null!==(e=(t=Symbol).metadata)&&void 0!==e||(t.metadata=Symbol("metadata")),null!==(o=g.litPropertyMetadata)&&void 0!==o||(g.litPropertyMetadata=/* @__PURE__ */new WeakMap);var k,S=class extends HTMLElement{static addInitializer(t){var e;this._$Ei(),(null!==(e=this.l)&&void 0!==e?e:this.l=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=C){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const o=Symbol(),i=this.getPropertyDescriptor(t,o,e);void 0!==i&&h(this.prototype,t,i)}}static getPropertyDescriptor(t,e,o){var i;const{get:n,set:a}=null!==(i=p(this.prototype,t))&&void 0!==i?i:{get(){return this[e]},set(t){this[e]=t}};return{get:n,set(e){const i=null==n?void 0:n.call(this);null==a||a.call(this,e),this.requestUpdate(t,i,o)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){var e;return null!==(e=this.elementProperties.get(t))&&void 0!==e?e:C}static _$Ei(){if(this.hasOwnProperty(x("elementProperties")))return;const t=_(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(x("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(x("properties"))){const t=this.properties,e=[...b(t),...v(t)];for(const o of e)this.createProperty(o,t[o])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,o]of e)this.elementProperties.set(t,o)}this._$Eh=/* @__PURE__ */new Map;for(const[e,o]of this.elementProperties){const t=this._$Eu(e,o);void 0!==t&&this._$Eh.set(t,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const o=new Set(t.flat(1/0).reverse());for(const t of o)e.unshift(c(t))}else void 0!==t&&e.push(c(t));return e}static _$Eu(t,e){const o=e.attribute;return!1===o?void 0:"string"==typeof o?o:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){var t;this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=/* @__PURE__ */new Map,this._$E_(),this.requestUpdate(),null===(t=this.constructor.l)||void 0===t||t.forEach(t=>t(this))}addController(t){var e,o;(null!==(e=this._$EO)&&void 0!==e?e:this._$EO=/* @__PURE__ */new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&(null===(o=t.hostConnected)||void 0===o||o.call(t))}removeController(t){var e;null===(e=this._$EO)||void 0===e||e.delete(t)}_$E_(){const t=/* @__PURE__ */new Map,e=this.constructor.elementProperties;for(const o of e.keys())this.hasOwnProperty(o)&&(t.set(o,this[o]),delete this[o]);t.size>0&&(this._$Ep=t)}createRenderRoot(){var t;const e=null!==(t=this.shadowRoot)&&void 0!==t?t:this.attachShadow(this.constructor.shadowRootOptions);return((t,e)=>{if(a)t.adoptedStyleSheets=e.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const o of e){const e=document.createElement("style"),i=n.litNonce;void 0!==i&&e.setAttribute("nonce",i),e.textContent=o.cssText,t.appendChild(e)}})(e,this.constructor.elementStyles),e}connectedCallback(){var t,e;null!==(t=this.renderRoot)&&void 0!==t||(this.renderRoot=this.createRenderRoot()),this.enableUpdating(!0),null===(e=this._$EO)||void 0===e||e.forEach(t=>{var e;return null===(e=t.hostConnected)||void 0===e?void 0:e.call(t)})}enableUpdating(t){}disconnectedCallback(){var t;null===(t=this._$EO)||void 0===t||t.forEach(t=>{var e;return null===(e=t.hostDisconnected)||void 0===e?void 0:e.call(t)})}attributeChangedCallback(t,e,o){this._$AK(t,o)}_$ET(t,e){const o=this.constructor.elementProperties.get(t),i=this.constructor._$Eu(t,o);if(void 0!==i&&!0===o.reflect){var n;const a=(void 0!==(null===(n=o.converter)||void 0===n?void 0:n.toAttribute)?o.converter:y).toAttribute(e,o.type);this._$Em=t,null==a?this.removeAttribute(i):this.setAttribute(i,a),this._$Em=null}}_$AK(t,e){const o=this.constructor,i=o._$Eh.get(t);if(void 0!==i&&this._$Em!==i){var n,a,s;const t=o.getPropertyOptions(i),l="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==(null===(n=t.converter)||void 0===n?void 0:n.fromAttribute)?t.converter:y;this._$Em=i;const r=l.fromAttribute(e,t.type);this[i]=null!==(a=null!=r?r:null===(s=this._$Ej)||void 0===s?void 0:s.get(i))&&void 0!==a?a:r,this._$Em=null}}requestUpdate(t,e,o,i=!1,n){if(void 0!==t){var a,s,l;const r=this.constructor;if(!1===i&&(n=this[t]),null!==(a=o)&&void 0!==a||(o=r.getPropertyOptions(t)),!((null!==(s=o.hasChanged)&&void 0!==s?s:w)(n,e)||o.useDefault&&o.reflect&&n===(null===(l=this._$Ej)||void 0===l?void 0:l.get(t))&&!this.hasAttribute(r._$Eu(t,o))))return;this.C(t,e,o)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:o,reflect:i,wrapped:n},a){var s,l,r;o&&!(null!==(s=this._$Ej)&&void 0!==s?s:this._$Ej=/* @__PURE__ */new Map).has(t)&&(this._$Ej.set(t,null!==(l=null!=a?a:e)&&void 0!==l?l:this[t]),!0!==n||void 0!==a)||(this._$AL.has(t)||(this.hasUpdated||o||(e=void 0),this._$AL.set(t,e)),!0===i&&this._$Em!==t&&(null!==(r=this._$Eq)&&void 0!==r?r:this._$Eq=/* @__PURE__ */new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){var t;if(null!==(t=this.renderRoot)&&void 0!==t||(this.renderRoot=this.createRenderRoot()),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const e=this.constructor.elementProperties;if(e.size>0)for(const[t,o]of e){const{wrapped:e}=o,i=this[t];!0!==e||this._$AL.has(t)||void 0===i||this.C(t,void 0,o,i)}}let e=!1;const o=this._$AL;try{var i;e=this.shouldUpdate(o),e?(this.willUpdate(o),null===(i=this._$EO)||void 0===i||i.forEach(t=>{var e;return null===(e=t.hostUpdate)||void 0===e?void 0:e.call(t)}),this.update(o)):this._$EM()}catch(o){throw e=!1,this._$EM(),o}e&&this._$AE(o)}willUpdate(t){}_$AE(t){var e;null===(e=this._$EO)||void 0===e||e.forEach(t=>{var e;return null===(e=t.hostUpdated)||void 0===e?void 0:e.call(t)}),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=/* @__PURE__ */new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&(this._$Eq=this._$Eq.forEach(t=>this._$ET(t,this[t]))),this._$EM()}updated(t){}firstUpdated(t){}};S.elementStyles=[],S.shadowRootOptions={mode:"open"},S[x("elementProperties")]=/* @__PURE__ */new Map,S[x("finalized")]=/* @__PURE__ */new Map,null==$||$({ReactiveElement:S}),(null!==(i=g.reactiveElementVersions)&&void 0!==i?i:g.reactiveElementVersions=[]).push("2.1.2");var A=globalThis,B=t=>t,T=A.trustedTypes,E=T?T.createPolicy("lit-html",{createHTML:t=>t}):void 0,z="$lit$",R=`lit$${Math.random().toFixed(9).slice(2)}$`,G="?"+R,O=`<${G}>`,I=document,P=()=>I.createComment(""),j=t=>null===t||"object"!=typeof t&&"function"!=typeof t,F=Array.isArray,M="[ \t\n\f\r]",D=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,L=/-->/g,H=/>/g,U=RegExp(`>|${M}(?:([^\\s"'>=/]+)(${M}*=${M}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),N=/'/g,V=/"/g,W=/^(?:script|style|textarea|title)$/i,q=t=>(e,...o)=>({_$litType$:t,strings:e,values:o}),Y=q(1),X=(q(2),q(3),Symbol.for("lit-noChange")),J=Symbol.for("lit-nothing"),K=/* @__PURE__ */new WeakMap,Z=I.createTreeWalker(I,129);function Q(t,e){if(!F(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==E?E.createHTML(e):e}var tt=(t,e)=>{const o=t.length-1,i=[];let n,a=2===e?"<svg>":3===e?"<math>":"",s=D;for(let r=0;r<o;r++){var l;const e=t[r];let o,d,c=-1,u=0;for(;u<e.length&&(s.lastIndex=u,d=s.exec(e),null!==d);)u=s.lastIndex,s===D?"!--"===d[1]?s=L:void 0!==d[1]?s=H:void 0!==d[2]?(W.test(d[2])&&(n=RegExp("</"+d[2],"g")),s=U):void 0!==d[3]&&(s=U):s===U?">"===d[0]?(s=null!==(l=n)&&void 0!==l?l:D,c=-1):void 0===d[1]?c=-2:(c=s.lastIndex-d[2].length,o=d[1],s=void 0===d[3]?U:'"'===d[3]?V:N):s===V||s===N?s=U:s===L||s===H?s=D:(s=U,n=void 0);const h=s===U&&t[r+1].startsWith("/>")?" ":"";a+=s===D?e+O:c>=0?(i.push(o),e.slice(0,c)+z+e.slice(c)+R+h):e+R+(-2===c?r:h)}return[Q(t,a+(t[o]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),i]},et=class t{constructor({strings:e,_$litType$:o},i){let n;this.parts=[];let a=0,s=0;const l=e.length-1,r=this.parts,[d,c]=tt(e,o);if(this.el=t.createElement(d,i),Z.currentNode=this.el.content,2===o||3===o){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(n=Z.nextNode())&&r.length<l;){if(1===n.nodeType){if(n.hasAttributes())for(const t of n.getAttributeNames())if(t.endsWith(z)){const e=c[s++],o=n.getAttribute(t).split(R),i=/([.?@])?(.*)/.exec(e);r.push({type:1,index:a,name:i[2],strings:o,ctor:"."===i[1]?st:"?"===i[1]?lt:"@"===i[1]?rt:at}),n.removeAttribute(t)}else t.startsWith(R)&&(r.push({type:6,index:a}),n.removeAttribute(t));if(W.test(n.tagName)){const t=n.textContent.split(R),e=t.length-1;if(e>0){n.textContent=T?T.emptyScript:"";for(let o=0;o<e;o++)n.append(t[o],P()),Z.nextNode(),r.push({type:2,index:++a});n.append(t[e],P())}}}else if(8===n.nodeType)if(n.data===G)r.push({type:2,index:a});else{let t=-1;for(;-1!==(t=n.data.indexOf(R,t+1));)r.push({type:7,index:a}),t+=R.length-1}a++}}static createElement(t,e){const o=I.createElement("template");return o.innerHTML=t,o}};function ot(t,e,o=t,i){var n,a,s;if(e===X)return e;let l=void 0!==i?null===(n=o._$Co)||void 0===n?void 0:n[i]:o._$Cl;const r=j(e)?void 0:e._$litDirective$;return(null==l?void 0:l.constructor)!==r&&(null==l||null===(a=l._$AO)||void 0===a||a.call(l,!1),void 0===r?l=void 0:(l=new r(t),l._$AT(t,o,i)),void 0!==i?(null!==(s=o._$Co)&&void 0!==s?s:o._$Co=[])[i]=l:o._$Cl=l),void 0!==l&&(e=ot(t,l._$AS(t,e.values),l,i)),e}var it=class{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){var e;const{el:{content:o},parts:i}=this._$AD,n=(null!==(e=null==t?void 0:t.creationScope)&&void 0!==e?e:I).importNode(o,!0);Z.currentNode=n;let a=Z.nextNode(),s=0,l=0,r=i[0];for(;void 0!==r;){if(s===r.index){let e;2===r.type?e=new nt(a,a.nextSibling,this,t):1===r.type?e=new r.ctor(a,r.name,r.strings,this,t):6===r.type&&(e=new dt(a,this,t)),this._$AV.push(e),r=i[++l]}s!==(null==r?void 0:r.index)&&(a=Z.nextNode(),s++)}return Z.currentNode=I,n}p(t){let e=0;for(const o of this._$AV)void 0!==o&&(void 0!==o.strings?(o._$AI(t,o,e),e+=o.strings.length-2):o._$AI(t[e])),e++}},nt=class t{get _$AU(){var t,e;return null!==(t=null===(e=this._$AM)||void 0===e?void 0:e._$AU)&&void 0!==t?t:this._$Cv}constructor(t,e,o,i){var n;this.type=2,this._$AH=J,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=o,this.options=i,this._$Cv=null===(n=null==i?void 0:i.isConnected)||void 0===n||n}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===(null==t?void 0:t.nodeType)&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=ot(this,t,e),j(t)?t===J||null==t||""===t?(this._$AH!==J&&this._$AR(),this._$AH=J):t!==this._$AH&&t!==X&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>F(t)||"function"==typeof(null==t?void 0:t[Symbol.iterator]))(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==J&&j(this._$AH)?this._$AA.nextSibling.data=t:this.T(I.createTextNode(t)),this._$AH=t}$(t){var e;const{values:o,_$litType$:i}=t,n="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=et.createElement(Q(i.h,i.h[0]),this.options)),i);if((null===(e=this._$AH)||void 0===e?void 0:e._$AD)===n)this._$AH.p(o);else{const t=new it(n,this),e=t.u(this.options);t.p(o),this.T(e),this._$AH=t}}_$AC(t){let e=K.get(t.strings);return void 0===e&&K.set(t.strings,e=new et(t)),e}k(e){F(this._$AH)||(this._$AH=[],this._$AR());const o=this._$AH;let i,n=0;for(const a of e)n===o.length?o.push(i=new t(this.O(P()),this.O(P()),this,this.options)):i=o[n],i._$AI(a),n++;n<o.length&&(this._$AR(i&&i._$AB.nextSibling,n),o.length=n)}_$AR(t=this._$AA.nextSibling,e){var o;for(null===(o=this._$AP)||void 0===o||o.call(this,!1,!0,e);t!==this._$AB;){const e=B(t).nextSibling;B(t).remove(),t=e}}setConnected(t){var e;void 0===this._$AM&&(this._$Cv=t,null===(e=this._$AP)||void 0===e||e.call(this,t))}},at=class{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,o,i,n){this.type=1,this._$AH=J,this._$AN=void 0,this.element=t,this.name=e,this._$AM=i,this.options=n,o.length>2||""!==o[0]||""!==o[1]?(this._$AH=Array(o.length-1).fill(/* @__PURE__ */new String),this.strings=o):this._$AH=J}_$AI(t,e=this,o,i){const n=this.strings;let a=!1;if(void 0===n)t=ot(this,t,e,0),a=!j(t)||t!==this._$AH&&t!==X,a&&(this._$AH=t);else{var s;const i=t;let l,r;for(t=n[0],l=0;l<n.length-1;l++)r=ot(this,i[o+l],e,l),r===X&&(r=this._$AH[l]),a||(a=!j(r)||r!==this._$AH[l]),r===J?t=J:t!==J&&(t+=(null!==(s=r)&&void 0!==s?s:"")+n[l+1]),this._$AH[l]=r}a&&!i&&this.j(t)}j(t){t===J?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,null!=t?t:"")}},st=class extends at{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===J?void 0:t}},lt=class extends at{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==J)}},rt=class extends at{constructor(t,e,o,i,n){super(t,e,o,i,n),this.type=5}_$AI(t,e=this){var o;if((t=null!==(o=ot(this,t,e,0))&&void 0!==o?o:J)===X)return;const i=this._$AH,n=t===J&&i!==J||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,a=t!==J&&(i===J||n);n&&this.element.removeEventListener(this.name,this,i),a&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){var e,o;"function"==typeof this._$AH?this._$AH.call(null!==(e=null===(o=this.options)||void 0===o?void 0:o.host)&&void 0!==e?e:this.element,t):this._$AH.handleEvent(t)}},dt=class{constructor(t,e,o){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=o}get _$AU(){return this._$AM._$AU}_$AI(t){ot(this,t)}},ct=A.litHtmlPolyfillSupport;null==ct||ct(et,nt),(null!==(k=A.litHtmlVersions)&&void 0!==k?k:A.litHtmlVersions=[]).push("3.3.3");var ut,ht,pt=globalThis,bt=class extends S{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){var t,e;const o=super.createRenderRoot();return null!==(e=(t=this.renderOptions).renderBefore)&&void 0!==e||(t.renderBefore=o.firstChild),o}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,o)=>{var i;const n=null!==(i=null==o?void 0:o.renderBefore)&&void 0!==i?i:e;let a=n._$litPart$;if(void 0===a){var s;const t=null!==(s=null==o?void 0:o.renderBefore)&&void 0!==s?s:null;n._$litPart$=a=new nt(e.insertBefore(P(),t),t,void 0,null!=o?o:{})}return a._$AI(t),a})(e,this.renderRoot,this.renderOptions)}connectedCallback(){var t;super.connectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(!0)}disconnectedCallback(){var t;super.disconnectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(!1)}render(){return X}};bt._$litElement$=!0,bt.finalized=!0,null===(ut=pt.litElementHydrateSupport)||void 0===ut||ut.call(pt,{LitElement:bt});var vt=pt.litElementPolyfillSupport;null==vt||vt({LitElement:bt}),(null!==(ht=pt.litElementVersions)&&void 0!==ht?ht:pt.litElementVersions=[]).push("4.2.2");var _t={attribute:!0,type:String,converter:y,reflect:!1,hasChanged:w},gt=(t=_t,e,o)=>{const{kind:i,metadata:n}=o;let a=globalThis.litPropertyMetadata.get(n);if(void 0===a&&globalThis.litPropertyMetadata.set(n,a=/* @__PURE__ */new Map),"setter"===i&&((t=Object.create(t)).wrapped=!0),a.set(o.name,t),"accessor"===i){const{name:i}=o;return{set(o){const n=e.get.call(this);e.set.call(this,o),this.requestUpdate(i,n,t,!0,o)},init(e){return void 0!==e&&this.C(i,void 0,t,e),e}}}if("setter"===i){const{name:i}=o;return function(o){const n=this[i];e.call(this,o),this.requestUpdate(i,n,t,!0,o)}}throw Error("Unsupported decorator location: "+i)};function mt(t){return(e,o)=>"object"==typeof o?gt(t,e,o):((t,e,o)=>{const i=e.hasOwnProperty(o);return e.constructor.createProperty(o,t),i?Object.getOwnPropertyDescriptor(e,o):void 0})(t,e,o)}function ft(t){return mt({...t,state:!0,attribute:!1})}var $t="ians-custom-room-card",xt=d`
   :host {
     display: block;
     height: 100%;
@@ -1185,875 +580,343 @@ const cardStyles = i$3`
     --mdc-icon-size: 14px;
     flex-shrink: 0;
   }
-`;
-function resolveAreaImage(hass, entityId) {
-  var _a2, _b2, _c2, _d2, _e2;
-  if (!entityId) return void 0;
-  const entityEntry = (_a2 = hass.entities) == null ? void 0 : _a2[entityId];
-  const areaId = (_d2 = entityEntry == null ? void 0 : entityEntry.area_id) != null ? _d2 : (entityEntry == null ? void 0 : entityEntry.device_id) ? (_c2 = (_b2 = hass.devices) == null ? void 0 : _b2[entityEntry.device_id]) == null ? void 0 : _c2.area_id : void 0;
-  if (!areaId) return void 0;
-  const area = (_e2 = hass.areas) == null ? void 0 : _e2[areaId];
-  if (!(area == null ? void 0 : area.picture)) return void 0;
-  return area.picture;
-}
-function isTemplate(value) {
-  const trimmed = value.trim();
-  return trimmed.startsWith("{{") || trimmed.startsWith("{%");
-}
-function subscribeTemplate(hass, template, variables, onResult, onError) {
-  return hass.connection.subscribeMessage(
-    (msg) => {
-      if ("error" in msg) {
-        onError == null ? void 0 : onError(msg.error);
-      } else {
-        onResult(msg.result);
-      }
-    },
-    {
-      type: "render_template",
-      template,
-      variables,
-      strict: false,
-      report_errors: true
-    }
-  );
-}
-const HOLD_DELAY_MS = 500;
-const DOUBLE_TAP_DELAY_MS = 350;
-const MOVE_THRESHOLD_PX = 10;
-function normalizeActionConfig(config) {
-  const normalize = (action) => {
-    if (!action) return void 0;
-    const a2 = { ...action };
-    if (a2.action === "call-service") {
-      a2.action = "perform-action";
-    }
-    if (a2.service && !a2.perform_action) {
-      a2.perform_action = a2.service;
-    }
-    if (a2.service_data && !a2.data) {
-      a2.data = a2.service_data;
-    }
-    return a2;
-  };
-  return {
-    ...config,
-    tap_action: normalize(config.tap_action),
-    hold_action: normalize(config.hold_action),
-    double_tap_action: normalize(config.double_tap_action)
-  };
-}
-function dispatchAction(element, config, action) {
-  const normalized = normalizeActionConfig(config);
-  const event = new Event("hass-action", { bubbles: true, composed: true });
-  event.detail = { config: normalized, action };
-  element.dispatchEvent(event);
-}
-function attachActionHandler(element, config, dispatch) {
-  var _a2, _b2;
-  let holdTimeout = null;
-  let tapTimeout = null;
-  let tapCount = 0;
-  let startX = 0;
-  let startY = 0;
-  let moved = false;
-  let holdFired = false;
-  const hasDoubleTap = ((_a2 = config.double_tap_action) == null ? void 0 : _a2.action) !== void 0 && config.double_tap_action.action !== "none";
-  const hasHold = ((_b2 = config.hold_action) == null ? void 0 : _b2.action) !== void 0 && config.hold_action.action !== "none";
-  const clearHold = () => {
-    if (holdTimeout) {
-      clearTimeout(holdTimeout);
-      holdTimeout = null;
-    }
-  };
-  const clearTap = () => {
-    if (tapTimeout) {
-      clearTimeout(tapTimeout);
-      tapTimeout = null;
-    }
-    tapCount = 0;
-  };
-  const onPointerDown = (e2) => {
-    if (e2.button !== void 0 && e2.button !== 0 && e2.pointerType !== "touch") {
-      return;
-    }
-    startX = e2.clientX;
-    startY = e2.clientY;
-    moved = false;
-    holdFired = false;
-    if (!hasHold) return;
-    holdTimeout = setTimeout(() => {
-      holdTimeout = null;
-      if (!moved) {
-        holdFired = true;
-        clearTap();
-        dispatch("hold");
-      }
-    }, HOLD_DELAY_MS);
-  };
-  const onPointerMove = (e2) => {
-    const dx = Math.abs(e2.clientX - startX);
-    const dy = Math.abs(e2.clientY - startY);
-    if (dx > MOVE_THRESHOLD_PX || dy > MOVE_THRESHOLD_PX) {
-      moved = true;
-      clearHold();
-    }
-  };
-  const onPointerUp = () => {
-    clearHold();
-    if (moved || holdFired) return;
-    if (!hasDoubleTap) {
-      dispatch("tap");
-      return;
-    }
-    tapCount++;
-    if (tapCount === 1) {
-      tapTimeout = setTimeout(() => {
-        tapCount = 0;
-        dispatch("tap");
-      }, DOUBLE_TAP_DELAY_MS);
-    } else {
-      clearTap();
-      dispatch("double_tap");
-    }
-  };
-  const onPointerCancel = () => {
-    clearHold();
-    clearTap();
-    moved = true;
-  };
-  const onContextMenu = (e2) => {
-    if (hasHold) e2.preventDefault();
-  };
-  const onKeyDown = (e2) => {
-    if (e2.key !== "Enter" && e2.key !== " ") return;
-    if (e2.target !== element || e2.repeat) return;
-    e2.preventDefault();
-    dispatch("tap");
-  };
-  element.addEventListener("pointerdown", onPointerDown);
-  element.addEventListener("pointermove", onPointerMove);
-  element.addEventListener("pointerup", onPointerUp);
-  element.addEventListener("pointercancel", onPointerCancel);
-  element.addEventListener("contextmenu", onContextMenu);
-  element.addEventListener("keydown", onKeyDown);
-  return () => {
-    clearHold();
-    clearTap();
-    element.removeEventListener("pointerdown", onPointerDown);
-    element.removeEventListener("pointermove", onPointerMove);
-    element.removeEventListener("pointerup", onPointerUp);
-    element.removeEventListener("pointercancel", onPointerCancel);
-    element.removeEventListener("contextmenu", onContextMenu);
-    element.removeEventListener("keydown", onKeyDown);
-  };
-}
-async function loadHaComponents() {
-  var _a2, _b2;
-  if (!customElements.get("ha-form")) {
-    (_b2 = (_a2 = customElements.get("hui-tile-card")) == null ? void 0 : _a2.getConfigElement) == null ? void 0 : _b2.call(_a2);
-  }
-  await Promise.resolve();
-}
-var __defProp$1 = Object.defineProperty;
-var __decorateClass$1 = (decorators, target, key, kind) => {
-  var result = void 0;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(target, key, result) || result;
-  if (result) __defProp$1(target, key, result);
-  return result;
-};
-const ICON_POSITION_OPTIONS = [
-  { value: "", label: "Default (inline with title)" },
-  { value: "top-left", label: "Top Left" },
-  { value: "top-right", label: "Top Right" },
-  { value: "bottom-left", label: "Bottom Left" },
-  { value: "bottom-right", label: "Bottom Right" },
-  { value: "center", label: "Center" },
-  { value: "center-left", label: "Center Left" },
-  { value: "center-right", label: "Center Right" },
-  { value: "custom", label: "Custom (% recommended for responsive)" }
-];
-const TITLE_POSITION_OPTIONS = [
-  { value: "", label: "Default (inline with icon)" },
-  { value: "top-left", label: "Top Left" },
-  { value: "top-center", label: "Top Center" },
-  { value: "top-right", label: "Top Right" },
-  { value: "center-left", label: "Center Left" },
-  { value: "center", label: "Center" },
-  { value: "center-right", label: "Center Right" },
-  { value: "bottom-left", label: "Bottom Left" },
-  { value: "bottom-center", label: "Bottom Center" },
-  { value: "bottom-right", label: "Bottom Right" },
-  { value: "custom", label: "Custom (% recommended for responsive)" }
-];
-const TITLE_ALIGN_OPTIONS = [
-  { value: "left", label: "Left" },
-  { value: "center", label: "Center" },
-  { value: "right", label: "Right" }
-];
-const BADGE_POSITION_OPTIONS = [
-  { value: "top-right", label: "Top Right (default)" },
-  { value: "top-left", label: "Top Left" },
-  { value: "bottom-left", label: "Bottom Left" },
-  { value: "bottom-right", label: "Bottom Right" },
-  { value: "custom", label: "Custom" }
-];
-const ICON_SHAPE_OPTIONS = [
-  { value: "circle", label: "Circle (default)" },
-  { value: "rounded-rect", label: "Rounded Rectangle" },
-  { value: "squircle", label: "Squircle" },
-  { value: "square", label: "Square" }
-];
-const CARD_SHAPE_OPTIONS = [
-  { value: "", label: "Default (from theme)" },
-  { value: "square", label: "Square (no rounding)" },
-  { value: "rounded-sm", label: "Rounded Small (8px)" },
-  { value: "rounded", label: "Rounded (12px)" },
-  { value: "rounded-lg", label: "Rounded Large (24px)" },
-  { value: "pill", label: "Pill (999px)" }
-];
-const SUB_BUTTON_LAYOUT_OPTIONS = [
-  { value: "bottom-row", label: "Bottom Row" },
-  { value: "top-row", label: "Top Row" },
-  { value: "right-column", label: "Right Column" },
-  { value: "left-column", label: "Left Column" },
-  { value: "corners", label: "Corners (up to 4)" },
-  { value: "grid", label: "Grid" },
-  { value: "custom", label: "Custom positions" }
-];
-const SUB_BUTTON_POSITION_OPTIONS = [
-  { value: "top-left", label: "Top Left" },
-  { value: "top-center", label: "Top Center" },
-  { value: "top-right", label: "Top Right" },
-  { value: "bottom-left", label: "Bottom Left" },
-  { value: "bottom-center", label: "Bottom Center" },
-  { value: "bottom-right", label: "Bottom Right" }
-];
-const ANIMATION_TYPE_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "spin", label: "Spin (continuous rotation)" },
-  { value: "pulse", label: "Pulse (scale breathe)" },
-  { value: "blink", label: "Blink (opacity flash)" },
-  { value: "bounce", label: "Bounce (vertical hop)" },
-  { value: "shake", label: "Shake (horizontal wiggle)" }
-];
-const ANIMATION_WHEN_OPTIONS = [
-  { value: "always", label: "Always" },
-  { value: "active", label: "When entity is active (on/open/playing)" },
-  { value: "inactive", label: "When entity is inactive (off/closed)" }
-];
-const ANIMATION_SPEED_OPTIONS = [
-  { value: "slow", label: "Slow" },
-  { value: "normal", label: "Normal" },
-  { value: "fast", label: "Fast" }
-];
-const COLUMN_JUSTIFY_OPTIONS = [
-  { value: "top", label: "Top (default)" },
-  { value: "center", label: "Center" },
-  { value: "bottom", label: "Bottom" },
-  { value: "space-between", label: "Space Between" },
-  { value: "space-around", label: "Space Around" }
-];
-const GROUP_POSITION_OPTIONS = [
-  { value: "", label: "Default (derived from layout)" },
-  { value: "bottom-row", label: "Full width — bottom edge" },
-  { value: "top-row", label: "Full width — top edge" },
-  { value: "right-column", label: "Full height — right side" },
-  { value: "left-column", label: "Full height — left side" },
-  { value: "top-left", label: "Top Left corner" },
-  { value: "top-center", label: "Top Center" },
-  { value: "top-right", label: "Top Right corner" },
-  { value: "center-left", label: "Center Left" },
-  { value: "center", label: "Center" },
-  { value: "center-right", label: "Center Right" },
-  { value: "bottom-left", label: "Bottom Left corner" },
-  { value: "bottom-center", label: "Bottom Center" },
-  { value: "bottom-right", label: "Bottom Right corner" },
-  { value: "custom", label: "Custom (X/Y coordinates)" }
-];
-const GRID_CELL_LAYOUT_OPTIONS = [
-  { value: "vertical", label: "Vertical — icon above label (default)" },
-  { value: "horizontal", label: "Horizontal — icon beside label" }
-];
-const TEMPLATE_CAPABLE_FIELDS = /* @__PURE__ */ new Set([
-  "title",
-  "icon",
-  "icon_color",
-  "icon_background_color",
-  "badge_icon",
-  "badge_color",
-  "badge_background_color",
-  "background_color",
-  "border_color"
-]);
-const OPACITY_SELECTOR = { number: { min: 0, max: 1, step: 0.05, mode: "slider" } };
-function cssToHex(value) {
-  if (!value) return "#000000";
-  if (/^#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase();
-  if (/^#[0-9a-f]{3}$/i.test(value)) {
-    const [, r2, g2, b2] = value.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
-    return `#${r2}${r2}${g2}${g2}${b2}${b2}`.toLowerCase();
-  }
-  return "#000000";
-}
-class IansCustomRoomCardEditor extends i {
-  constructor() {
-    super(...arguments);
-    this._loaded = false;
-    this._templateMode = /* @__PURE__ */ new Set();
-    this._expandedSubButton = null;
-    this._activeTab = "basic";
-    this._dragOverIndex = null;
-    this._dragIndex = null;
-    this._expandedGroup = null;
-    this._expandedGroupButton = {};
-    this._dragGroupContext = null;
-  }
-  connectedCallback() {
-    super.connectedCallback();
-    loadHaComponents().then(() => {
-      this._loaded = true;
-    });
-  }
-  setConfig(config) {
-    this._config = config;
-    const templateSet = /* @__PURE__ */ new Set();
-    for (const field of TEMPLATE_CAPABLE_FIELDS) {
-      const val = config[field];
-      if (val && isTemplate(val)) templateSet.add(field);
-    }
-    this._templateMode = templateSet;
-  }
-  // ── Event helpers ────────────────────────────────────────────────────────────
-  _fireConfigChanged(config) {
-    this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: { config },
-      bubbles: true,
-      composed: true
-    }));
-  }
-  _fieldChanged(field, value) {
-    if (!this._config) return;
-    this._fireConfigChanged({ ...this._config, [field]: value });
-  }
-  _gridFieldChanged(field, value) {
-    var _a2;
-    if (!this._config) return;
-    this._fireConfigChanged({
-      ...this._config,
-      grid_options: { ...(_a2 = this._config.grid_options) != null ? _a2 : {}, [field]: value }
-    });
-  }
-  _globalActionFieldChanged(field, value) {
-    var _a2;
-    if (!this._config) return;
-    this._fireConfigChanged({
-      ...this._config,
-      global_action: { ...(_a2 = this._config.global_action) != null ? _a2 : {}, [field]: value }
-    });
-  }
-  _subButtonChanged(index, patch) {
-    var _a2;
-    if (!((_a2 = this._config) == null ? void 0 : _a2.sub_buttons)) return;
-    const buttons = [...this._config.sub_buttons];
-    buttons[index] = { ...buttons[index], ...patch };
-    this._fieldChanged("sub_buttons", buttons);
-  }
-  _addSubButton() {
-    var _a2, _b2;
-    const buttons = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_buttons) != null ? _b2 : []];
-    buttons.push({
-      show_icon: true,
-      show_label: false,
-      show_state: false,
-      background: true,
-      state_based_color: false,
-      tap_action: { action: "toggle" },
-      hold_action: { action: "more-info" },
-      double_tap_action: { action: "none" }
-    });
-    this._fieldChanged("sub_buttons", buttons);
-    this._expandedSubButton = buttons.length - 1;
-  }
-  _deleteSubButton(index) {
-    var _a2;
-    if (!((_a2 = this._config) == null ? void 0 : _a2.sub_buttons)) return;
-    const buttons = [...this._config.sub_buttons];
-    buttons.splice(index, 1);
-    this._fieldChanged("sub_buttons", buttons);
-    if (this._expandedSubButton === index) this._expandedSubButton = null;
-  }
-  _onDragHandleMousedown(e2, index) {
-    const row = e2.currentTarget.closest(".sub-btn-row");
-    if (row) row.setAttribute("draggable", "true");
-    this._dragIndex = index;
-  }
-  _onDragStart(e2, index) {
-    var _a2;
-    (_a2 = e2.dataTransfer) == null ? void 0 : _a2.setData("text/plain", String(index));
-    if (e2.dataTransfer) e2.dataTransfer.effectAllowed = "move";
-    this._dragIndex = index;
-  }
-  _onDragOver(e2, index) {
-    if (this._dragIndex === null || this._dragIndex === index) return;
-    e2.preventDefault();
-    if (e2.dataTransfer) e2.dataTransfer.dropEffect = "move";
-    if (this._dragOverIndex !== index) this._dragOverIndex = index;
-  }
-  _onDragLeave(index) {
-    if (this._dragOverIndex === index) this._dragOverIndex = null;
-  }
-  _onDrop(e2, toIndex) {
-    var _a2;
-    e2.preventDefault();
-    const fromIndex = this._dragIndex;
-    this._dragIndex = null;
-    this._dragOverIndex = null;
-    if (fromIndex === null || fromIndex === toIndex || !((_a2 = this._config) == null ? void 0 : _a2.sub_buttons)) return;
-    const buttons = [...this._config.sub_buttons];
-    const [moved] = buttons.splice(fromIndex, 1);
-    buttons.splice(toIndex, 0, moved);
-    this._fieldChanged("sub_buttons", buttons);
-    this._expandedSubButton = null;
-  }
-  _onDragEnd(e2) {
-    e2.currentTarget.removeAttribute("draggable");
-    this._dragIndex = null;
-    this._dragOverIndex = null;
-  }
-  _toggleTemplateMode(field) {
-    const next = new Set(this._templateMode);
-    next.has(field) ? next.delete(field) : next.add(field);
-    this._templateMode = next;
-  }
-  // ── Render helpers ────────────────────────────────────────────────────────────
-  /** Color swatch + native text input, with optional label and template toggle.
-   *
-   *  When showLabel=true (default): a header row shows the label, and the
-   *  template button (if applicable) sits inline with the label at the right.
-   *
-   *  When showLabel=false: no header is rendered. If template-capable, the
-   *  template button is placed inside the color-row itself (after the text input),
-   *  so it's naturally center-aligned by the row's align-items:center. */
-  _renderColorField(fieldKey, label, placeholder = "e.g. red, #ff0000, var(--primary-color)", showLabel = true) {
-    var _a2, _b2;
-    const isTemplateCapable = TEMPLATE_CAPABLE_FIELDS.has(fieldKey);
-    const currentValue = (_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : "";
-    const inTemplateMode = isTemplateCapable && this._templateMode.has(fieldKey);
-    const tmplBtn = isTemplateCapable ? b`
+`;function yt(t){const e=t.trim();return e.startsWith("{{")||e.startsWith("{%")}function wt(t,e,o,i,n){return t.connection.subscribeMessage(t=>{"error"in t?null==n||n(t.error):i(t.result)},{type:"render_template",template:e,variables:o,strict:!1,report_errors:!0})}function Ct(t,e,o){const i=function(t){const e=t=>{if(!t)return;const e={...t};return"call-service"===e.action&&(e.action="perform-action"),e.service&&!e.perform_action&&(e.perform_action=e.service),e.service_data&&!e.data&&(e.data=e.service_data),e};return{...t,tap_action:e(t.tap_action),hold_action:e(t.hold_action),double_tap_action:e(t.double_tap_action)}}(e),n=new Event("hass-action",{bubbles:!0,composed:!0});n.detail={config:i,action:o},t.dispatchEvent(n)}function kt(t,e,o){var i,n;let a=null,s=null,l=0,r=0,d=0,c=!1,u=!1;const h=void 0!==(null===(i=e.double_tap_action)||void 0===i?void 0:i.action)&&"none"!==e.double_tap_action.action,p=void 0!==(null===(n=e.hold_action)||void 0===n?void 0:n.action)&&"none"!==e.hold_action.action,b=()=>{a&&(clearTimeout(a),a=null)},v=()=>{s&&(clearTimeout(s),s=null),l=0},_=t=>{void 0!==t.button&&0!==t.button&&"touch"!==t.pointerType||(r=t.clientX,d=t.clientY,c=!1,u=!1,p&&(a=setTimeout(()=>{a=null,c||(u=!0,v(),o("hold"))},500)))},g=t=>{const e=Math.abs(t.clientX-r),o=Math.abs(t.clientY-d);(e>10||o>10)&&(c=!0,b())},m=()=>{b(),c||u||(h?(l++,1===l?s=setTimeout(()=>{l=0,o("tap")},350):(v(),o("double_tap"))):o("tap"))},f=()=>{b(),v(),c=!0},$=t=>{p&&t.preventDefault()},x=e=>{"Enter"!==e.key&&" "!==e.key||e.target!==t||e.repeat||(e.preventDefault(),o("tap"))};return t.addEventListener("pointerdown",_),t.addEventListener("pointermove",g),t.addEventListener("pointerup",m),t.addEventListener("pointercancel",f),t.addEventListener("contextmenu",$),t.addEventListener("keydown",x),()=>{b(),v(),t.removeEventListener("pointerdown",_),t.removeEventListener("pointermove",g),t.removeEventListener("pointerup",m),t.removeEventListener("pointercancel",f),t.removeEventListener("contextmenu",$),t.removeEventListener("keydown",x)}}function St(t,e,o,i){var n,a=arguments.length,s=a<3?e:null===i?i=Object.getOwnPropertyDescriptor(e,o):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(t,e,o,i);else for(var l=t.length-1;l>=0;l--)(n=t[l])&&(s=(a<3?n(s):a>3?n(e,o,s):n(e,o))||s);return a>3&&s&&Object.defineProperty(e,o,s),s}var At=[{value:"",label:"Default (inline with title)"},{value:"top-left",label:"Top Left"},{value:"top-right",label:"Top Right"},{value:"bottom-left",label:"Bottom Left"},{value:"bottom-right",label:"Bottom Right"},{value:"center",label:"Center"},{value:"center-left",label:"Center Left"},{value:"center-right",label:"Center Right"},{value:"custom",label:"Custom (% recommended for responsive)"}],Bt=[{value:"",label:"Default (inline with icon)"},{value:"top-left",label:"Top Left"},{value:"top-center",label:"Top Center"},{value:"top-right",label:"Top Right"},{value:"center-left",label:"Center Left"},{value:"center",label:"Center"},{value:"center-right",label:"Center Right"},{value:"bottom-left",label:"Bottom Left"},{value:"bottom-center",label:"Bottom Center"},{value:"bottom-right",label:"Bottom Right"},{value:"custom",label:"Custom (% recommended for responsive)"}],Tt=[{value:"left",label:"Left"},{value:"center",label:"Center"},{value:"right",label:"Right"}],Et=[{value:"top-right",label:"Top Right (default)"},{value:"top-left",label:"Top Left"},{value:"bottom-left",label:"Bottom Left"},{value:"bottom-right",label:"Bottom Right"},{value:"custom",label:"Custom"}],zt=[{value:"circle",label:"Circle (default)"},{value:"rounded-rect",label:"Rounded Rectangle"},{value:"squircle",label:"Squircle"},{value:"square",label:"Square"}],Rt=[{value:"",label:"Default (from theme)"},{value:"square",label:"Square (no rounding)"},{value:"rounded-sm",label:"Rounded Small (8px)"},{value:"rounded",label:"Rounded (12px)"},{value:"rounded-lg",label:"Rounded Large (24px)"},{value:"pill",label:"Pill (999px)"}],Gt=[{value:"bottom-row",label:"Bottom Row"},{value:"top-row",label:"Top Row"},{value:"right-column",label:"Right Column"},{value:"left-column",label:"Left Column"},{value:"corners",label:"Corners (up to 4)"},{value:"grid",label:"Grid"},{value:"custom",label:"Custom positions"}],Ot=[{value:"top-left",label:"Top Left"},{value:"top-center",label:"Top Center"},{value:"top-right",label:"Top Right"},{value:"bottom-left",label:"Bottom Left"},{value:"bottom-center",label:"Bottom Center"},{value:"bottom-right",label:"Bottom Right"}],It=[{value:"none",label:"None"},{value:"spin",label:"Spin (continuous rotation)"},{value:"pulse",label:"Pulse (scale breathe)"},{value:"blink",label:"Blink (opacity flash)"},{value:"bounce",label:"Bounce (vertical hop)"},{value:"shake",label:"Shake (horizontal wiggle)"}],Pt=[{value:"always",label:"Always"},{value:"active",label:"When entity is active (on/open/playing)"},{value:"inactive",label:"When entity is inactive (off/closed)"}],jt=[{value:"slow",label:"Slow"},{value:"normal",label:"Normal"},{value:"fast",label:"Fast"}],Ft=[{value:"top",label:"Top (default)"},{value:"center",label:"Center"},{value:"bottom",label:"Bottom"},{value:"space-between",label:"Space Between"},{value:"space-around",label:"Space Around"}],Mt=[{value:"",label:"Default (derived from layout)"},{value:"bottom-row",label:"Full width — bottom edge"},{value:"top-row",label:"Full width — top edge"},{value:"right-column",label:"Full height — right side"},{value:"left-column",label:"Full height — left side"},{value:"top-left",label:"Top Left corner"},{value:"top-center",label:"Top Center"},{value:"top-right",label:"Top Right corner"},{value:"center-left",label:"Center Left"},{value:"center",label:"Center"},{value:"center-right",label:"Center Right"},{value:"bottom-left",label:"Bottom Left corner"},{value:"bottom-center",label:"Bottom Center"},{value:"bottom-right",label:"Bottom Right corner"},{value:"custom",label:"Custom (X/Y coordinates)"}],Dt=[{value:"vertical",label:"Vertical — icon above label (default)"},{value:"horizontal",label:"Horizontal — icon beside label"}],Lt=/* @__PURE__ */new Set(["title","icon","icon_color","icon_background_color","badge_icon","badge_color","badge_background_color","background_color","border_color"]),Ht={number:{min:0,max:1,step:.05,mode:"slider"}};function Ut(t){if(!t)return"#000000";if(/^#[0-9a-f]{6}$/i.test(t))return t.toLowerCase();if(/^#[0-9a-f]{3}$/i.test(t)){const[,e,o,i]=t.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);return`#${e}${e}${o}${o}${i}${i}`.toLowerCase()}return"#000000"}var Nt={entity:{}},Vt={icon:{}},Wt=class extends bt{constructor(...t){super(...t),this._loaded=!1,this._templateMode=/* @__PURE__ */new Set,this._expandedSubButton=null,this._activeTab="basic",this._dragOverIndex=null,this._dragIndex=null,this._expandedGroup=null,this._expandedGroupButton={},this._dragGroupContext=null}connectedCallback(){super.connectedCallback(),async function(){var t,e;customElements.get("ha-form")||null===(t=customElements.get("hui-tile-card"))||void 0===t||null===(e=t.getConfigElement)||void 0===e||e.call(t),await Promise.resolve()}().then(()=>{this._loaded=!0})}setConfig(t){this._config=t;const e=/* @__PURE__ */new Set;for(const o of Lt){const i=t[o];i&&yt(i)&&e.add(o)}this._templateMode=e}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}_fieldChanged(t,e){this._config&&this._fireConfigChanged({...this._config,[t]:e})}_gridFieldChanged(t,e){var o;this._config&&this._fireConfigChanged({...this._config,grid_options:{...null!==(o=this._config.grid_options)&&void 0!==o?o:{},[t]:e}})}_globalActionFieldChanged(t,e){var o;this._config&&this._fireConfigChanged({...this._config,global_action:{...null!==(o=this._config.global_action)&&void 0!==o?o:{},[t]:e}})}_subButtonChanged(t,e){var o;if(!(null===(o=this._config)||void 0===o?void 0:o.sub_buttons))return;const i=[...this._config.sub_buttons];i[t]={...i[t],...e},this._fieldChanged("sub_buttons",i)}_addSubButton(){var t,e;const o=[...null!==(t=null===(e=this._config)||void 0===e?void 0:e.sub_buttons)&&void 0!==t?t:[]];o.push({show_icon:!0,show_label:!1,show_state:!1,background:!0,state_based_color:!1,tap_action:{action:"toggle"},hold_action:{action:"more-info"},double_tap_action:{action:"none"}}),this._fieldChanged("sub_buttons",o),this._expandedSubButton=o.length-1}_deleteSubButton(t){var e;if(!(null===(e=this._config)||void 0===e?void 0:e.sub_buttons))return;const o=[...this._config.sub_buttons];o.splice(t,1),this._fieldChanged("sub_buttons",o),this._expandedSubButton===t&&(this._expandedSubButton=null)}_moveSubButton(t,e){var o,i;const n=[...null!==(o=null===(i=this._config)||void 0===i?void 0:i.sub_buttons)&&void 0!==o?o:[]];e<0||e>=n.length||([n[t],n[e]]=[n[e],n[t]],this._fieldChanged("sub_buttons",n),this._expandedSubButton=null)}_moveGroupButton(t,e,o){var i,n,a,s;const l=[...null!==(i=null===(n=this._config)||void 0===n?void 0:n.sub_button_groups)&&void 0!==i?i:[]],r=[...null!==(a=null===(s=l[t])||void 0===s?void 0:s.buttons)&&void 0!==a?a:[]];o<0||o>=r.length||([r[e],r[o]]=[r[o],r[e]],l[t]={...l[t],buttons:r},this._fieldChanged("sub_button_groups",l),this._expandedGroupButton={...this._expandedGroupButton,[t]:null})}_renderMoveButtons(t,e,o){return Y`
+      <div class="move-btns">
+        ${t>0?Y`
+          <button class="icon-btn" title="Move up"
+            @click=${e=>{e.stopPropagation(),o(t,t-1)}}
+          ><ha-icon icon="mdi:arrow-up" style="--mdc-icon-size:14px;"></ha-icon></button>
+        `:J}
+        ${t<e-1?Y`
+          <button class="icon-btn" title="Move down"
+            @click=${e=>{e.stopPropagation(),o(t,t+1)}}
+          ><ha-icon icon="mdi:arrow-down" style="--mdc-icon-size:14px;"></ha-icon></button>
+        `:J}
+      </div>
+    `}_onDragHandleMousedown(t,e){const o=t.currentTarget.closest(".sub-btn-row");o&&o.setAttribute("draggable","true"),this._dragIndex=e}_onDragStart(t,e){var o;null===(o=t.dataTransfer)||void 0===o||o.setData("text/plain",String(e)),t.dataTransfer&&(t.dataTransfer.effectAllowed="move"),this._dragIndex=e}_onDragOver(t,e){null!==this._dragIndex&&this._dragIndex!==e&&(t.preventDefault(),t.dataTransfer&&(t.dataTransfer.dropEffect="move"),this._dragOverIndex!==e&&(this._dragOverIndex=e))}_onDragLeave(t){this._dragOverIndex===t&&(this._dragOverIndex=null)}_onDrop(t,e){var o;t.preventDefault();const i=this._dragIndex;if(this._dragIndex=null,this._dragOverIndex=null,null===i||i===e||!(null===(o=this._config)||void 0===o?void 0:o.sub_buttons))return;const n=[...this._config.sub_buttons],[a]=n.splice(i,1);n.splice(e,0,a),this._fieldChanged("sub_buttons",n),this._expandedSubButton=null}_onDragEnd(t){t.currentTarget.removeAttribute("draggable"),this._dragIndex=null,this._dragOverIndex=null}_toggleTemplateMode(t){const e=new Set(this._templateMode);e.has(t)?e.delete(t):e.add(t),this._templateMode=e}_renderColorField(t,e,o="e.g. red, #ff0000, var(--primary-color)",i=!0){var n,a;const s=Lt.has(t),l=null!==(n=null===(a=this._config)||void 0===a?void 0:a[t])&&void 0!==n?n:"",r=s&&this._templateMode.has(t),d=s?Y`
       <button
-        class="tmpl-btn ${inTemplateMode ? "active" : ""}"
-        title="${inTemplateMode ? "Jinja2 template active — click to switch back to simple input" : "Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
-        @click=${() => this._toggleTemplateMode(fieldKey)}
+        class="tmpl-btn ${r?"active":""}"
+        title="${r?"Jinja2 template active — click to switch back to simple input":"Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
+        @click=${()=>this._toggleTemplateMode(t)}
       ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
-    ` : A;
-    if (inTemplateMode) {
-      return b`
+    `:J;return r?Y`
         <div class="color-field">
-          ${showLabel ? b`<span class="color-field-label">${label}</span>` : A}
+          ${i?Y`<span class="color-field-label">${e}</span>`:J}
           <div class="color-tmpl-row">
             <textarea
-              .value=${currentValue}
+              .value=${l}
               placeholder="{{ states('sensor.example') }}"
-              @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value)}
-              @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value)}
+              @change=${e=>this._fieldChanged(t,e.target.value)}
+              @input=${e=>this._fieldChanged(t,e.target.value)}
             ></textarea>
-            ${tmplBtn}
+            ${d}
           </div>
           <div class="hint">HA Jinja2 template</div>
         </div>
-      `;
-    }
-    return b`
+      `:Y`
       <div class="color-field">
-        ${showLabel ? b`<span class="color-field-label">${label}</span>` : A}
+        ${i?Y`<span class="color-field-label">${e}</span>`:J}
         <div class="color-row">
           <label class="color-btn" title="Click to open color picker">
             <div class="color-checker"></div>
-            <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+            <div class="color-fill" style="background: ${l||"transparent"}"></div>
             <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
             <input
               type="color"
               class="color-native"
-              .value=${cssToHex(currentValue)}
-              @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
+              .value=${Ut(l)}
+              @change=${e=>this._fieldChanged(t,e.target.value||void 0)}
             />
           </label>
           <input
             type="text"
             class="color-text-input"
-            .value=${currentValue}
-            placeholder=${placeholder}
-            @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
-            @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value || void 0)}
+            .value=${l}
+            placeholder=${o}
+            @change=${e=>this._fieldChanged(t,e.target.value||void 0)}
+            @input=${e=>this._fieldChanged(t,e.target.value||void 0)}
           />
-          ${tmplBtn}
+          ${d}
         </div>
       </div>
-    `;
-  }
-  /** Generic color field with callback. Used by both sub-button and group color fields. */
-  _renderButtonColorField(currentValue, label, placeholder, onChange) {
-    return b`
+    `}_renderButtonColorField(t,e,o,i){return Y`
       <div class="color-field">
-        <span class="color-field-label">${label}</span>
+        <span class="color-field-label">${e}</span>
         <div class="color-row">
           <label class="color-btn" title="Click to open color picker">
             <div class="color-checker"></div>
-            <div class="color-fill" style="background: ${currentValue || "transparent"}"></div>
+            <div class="color-fill" style="background: ${t||"transparent"}"></div>
             <ha-icon icon="mdi:eyedropper-variant" class="color-icon"></ha-icon>
             <input type="color" class="color-native"
-              .value=${cssToHex(currentValue)}
-              @change=${(ev) => onChange(ev.target.value || void 0)}
+              .value=${Ut(t)}
+              @change=${t=>i(t.target.value||void 0)}
             />
           </label>
           <input type="text" class="color-text-input"
-            .value=${currentValue}
-            placeholder=${placeholder}
-            @change=${(ev) => onChange(ev.target.value || void 0)}
-            @input=${(ev) => onChange(ev.target.value || void 0)}
+            .value=${t}
+            placeholder=${o}
+            @change=${t=>i(t.target.value||void 0)}
+            @input=${t=>i(t.target.value||void 0)}
           />
         </div>
       </div>
-    `;
-  }
-  /** Color field bound to a SubButtonConfig field (single-group mode). */
-  _renderSubBtnColorField(btn, index, field, label, placeholder = "e.g. #ff9800, var(--primary-color)") {
-    var _a2;
-    return this._renderButtonColorField(
-      (_a2 = btn[field]) != null ? _a2 : "",
-      label,
-      placeholder,
-      (v2) => this._subButtonChanged(index, { [field]: v2 })
-    );
-  }
-  /** Shared button accordion body used by both single-group and multi-group editors. */
-  _renderButtonBody(btn, showPosition, onChange, onColorChange) {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s;
-    return b`
+    `}_renderSubBtnColorField(t,e,o,i,n="e.g. #ff9800, var(--primary-color)"){var a;return this._renderButtonColorField(null!==(a=t[o])&&void 0!==a?a:"",i,n,t=>this._subButtonChanged(e,{[o]:t}))}_renderButtonBody(t,e,o,i){var n,a,s,l,r,d,c,u,h,p,b,v,_,g,m,f,$,x,y;return Y`
       <div class="sub-group-label">Entity &amp; Display</div>
 
-      <ha-entity-picker .hass=${this.hass} .label=${"Entity"}
-        .value=${(_a2 = btn.entity) != null ? _a2 : ""} allow-custom-entity
-        @value-changed=${(ev) => onChange({ entity: ev.detail.value || void 0 })}
-      ></ha-entity-picker>
+      <ha-selector .hass=${this.hass} .label=${"Entity"}
+        .selector=${Nt}
+        .value=${null!==(n=t.entity)&&void 0!==n?n:""}
+        @value-changed=${t=>o({entity:t.detail.value||void 0})}
+      ></ha-selector>
 
-      <ha-icon-picker .hass=${this.hass}
-        .label=${"Icon (blank = auto-pick from entity domain)"}
-        .value=${(_b2 = btn.icon) != null ? _b2 : ""}
-        @value-changed=${(ev) => onChange({ icon: ev.detail.value || void 0 })}
-      ></ha-icon-picker>
+      <ha-selector .hass=${this.hass}
+        .label=${"Icon (blank = Home Assistant's icon for the entity)"}
+        .selector=${Vt}
+        .value=${null!==(a=t.icon)&&void 0!==a?a:""}
+        .context=${{icon_entity:t.entity}}
+        @value-changed=${t=>o({icon:t.detail.value||void 0})}
+      ></ha-selector>
 
       <ha-selector .hass=${this.hass}
         .label=${"Label (blank to hide, or type 'entity' for entity name)"}
-        .selector=${{ text: {} }} .value=${(_c2 = btn.label) != null ? _c2 : ""}
-        @value-changed=${(ev) => onChange({ label: ev.detail.value || void 0 })}
+        .selector=${{text:{}}} .value=${null!==(s=t.label)&&void 0!==s?s:""}
+        @value-changed=${t=>o({label:t.detail.value||void 0})}
       ></ha-selector>
 
-      <ha-form .hass=${this.hass} .data=${btn}
-        .schema=${[
-      { name: "show_icon", label: "Show Icon", selector: { boolean: {} } },
-      { name: "show_label", label: "Show Label", selector: { boolean: {} } },
-      { name: "show_state", label: "Show State (includes unit of measurement)", selector: { boolean: {} } },
-      { name: "background", label: "Show Background", selector: { boolean: {} } }
-    ]}
-        .computeLabel=${(s2) => s2.label}
-        @value-changed=${(ev) => {
-      onChange({
-        show_icon: ev.detail.value.show_icon,
-        show_label: ev.detail.value.show_label,
-        show_state: ev.detail.value.show_state,
-        background: ev.detail.value.background
-      });
-    }}
+      <ha-form .hass=${this.hass} .data=${t}
+        .schema=${[{name:"show_icon",label:"Show Icon",selector:{boolean:{}}},{name:"show_label",label:"Show Label",selector:{boolean:{}}},{name:"show_state",label:"Show State (includes unit of measurement)",selector:{boolean:{}}},{name:"background",label:"Show Background",selector:{boolean:{}}}]}
+        .computeLabel=${t=>t.label}
+        @value-changed=${t=>{o({show_icon:t.detail.value.show_icon,show_label:t.detail.value.show_label,show_state:t.detail.value.show_state,background:t.detail.value.background})}}
       ></ha-form>
 
       <div class="sub-group-label">Color &amp; Opacity</div>
 
       <ha-form .hass=${this.hass}
-        .data=${{ state_based_color: (_d2 = btn.state_based_color) != null ? _d2 : false }}
-        .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
-        .computeLabel=${(s2) => s2.label}
-        @value-changed=${(ev) => onChange({ state_based_color: ev.detail.value.state_based_color })}
+        .data=${{state_based_color:null!==(l=t.state_based_color)&&void 0!==l&&l}}
+        .schema=${[{name:"state_based_color",label:"Auto-color by entity state",selector:{boolean:{}}}]}
+        .computeLabel=${t=>t.label}
+        @value-changed=${t=>o({state_based_color:t.detail.value.state_based_color})}
       ></ha-form>
 
-      ${btn.state_based_color ? b`
+      ${t.state_based_color?Y`
         <div class="hint">Active when entity is on/open/home/playing. Defaults to domain color (yellow for lights) if left blank.</div>
-        ${this._renderButtonColorField((_e2 = btn.icon_color_on) != null ? _e2 : "", "Active Icon Color", "e.g. #FDD835, yellow", (v2) => onColorChange("icon_color_on", v2))}
-        ${this._renderButtonColorField((_f2 = btn.icon_color_off) != null ? _f2 : "", "Inactive Icon Color", "e.g. #888888, grey", (v2) => onColorChange("icon_color_off", v2))}
-      ` : b`
-        ${this._renderButtonColorField((_g = btn.icon_color) != null ? _g : "", "Icon Color", "e.g. #ff9800, var(--primary-color)", (v2) => onColorChange("icon_color", v2))}
+        ${this._renderButtonColorField(null!==(r=t.icon_color_on)&&void 0!==r?r:"","Active Icon Color","e.g. #FDD835, yellow",t=>i("icon_color_on",t))}
+        ${this._renderButtonColorField(null!==(d=t.icon_color_off)&&void 0!==d?d:"","Inactive Icon Color","e.g. #888888, grey",t=>i("icon_color_off",t))}
+      `:Y`
+        ${this._renderButtonColorField(null!==(c=t.icon_color)&&void 0!==c?c:"","Icon Color","e.g. #ff9800, var(--primary-color)",t=>i("icon_color",t))}
       `}
 
-      ${this._renderButtonColorField((_h = btn.background_color) != null ? _h : "", "Background Color", "e.g. rgba(255,255,255,0.15)", (v2) => onColorChange("background_color", v2))}
+      ${this._renderButtonColorField(null!==(u=t.background_color)&&void 0!==u?u:"","Background Color","e.g. rgba(255,255,255,0.15)",t=>i("background_color",t))}
 
       <ha-selector .hass=${this.hass} .label=${"Button Opacity"}
-        .selector=${OPACITY_SELECTOR} .value=${(_i = btn.opacity) != null ? _i : 1}
-        @value-changed=${(ev) => onChange({ opacity: ev.detail.value })}
+        .selector=${Ht} .value=${null!==(h=t.opacity)&&void 0!==h?h:1}
+        @value-changed=${t=>o({opacity:t.detail.value})}
       ></ha-selector>
 
       <div class="sub-group-label">Animation</div>
       <ha-selector .hass=${this.hass} .label=${"Animation"}
-        .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
-        .value=${(_j = btn.animation) != null ? _j : "none"}
-        @value-changed=${(ev) => onChange({ animation: ev.detail.value === "none" ? void 0 : ev.detail.value })}
+        .selector=${{select:{options:It,mode:"dropdown"}}}
+        .value=${null!==(p=t.animation)&&void 0!==p?p:"none"}
+        @value-changed=${t=>o({animation:"none"===t.detail.value?void 0:t.detail.value})}
       ></ha-selector>
-      ${btn.animation && btn.animation !== "none" ? b`
+      ${t.animation&&"none"!==t.animation?Y`
         <div class="two-col">
           <ha-selector .hass=${this.hass} .label=${"When"}
-            .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
-            .value=${(_k = btn.animation_when) != null ? _k : "always"}
-            @value-changed=${(ev) => onChange({ animation_when: ev.detail.value || void 0 })}
+            .selector=${{select:{options:Pt,mode:"dropdown"}}}
+            .value=${null!==(b=t.animation_when)&&void 0!==b?b:"always"}
+            @value-changed=${t=>o({animation_when:t.detail.value||void 0})}
           ></ha-selector>
           <ha-selector .hass=${this.hass} .label=${"Speed"}
-            .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
-            .value=${(_l = btn.animation_speed) != null ? _l : "normal"}
-            @value-changed=${(ev) => onChange({ animation_speed: ev.detail.value || void 0 })}
+            .selector=${{select:{options:jt,mode:"dropdown"}}}
+            .value=${null!==(v=t.animation_speed)&&void 0!==v?v:"normal"}
+            @value-changed=${t=>o({animation_speed:t.detail.value||void 0})}
           ></ha-selector>
         </div>
-      ` : A}
+      `:J}
 
       <div class="sub-group-label">Text Style</div>
       <div class="two-col">
         <ha-selector .hass=${this.hass} .label=${"State Font Size"}
-          .selector=${{ number: { min: 8, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
-          .value=${(_m = btn.state_font_size) != null ? _m : 11}
-          @value-changed=${(ev) => onChange({ state_font_size: ev.detail.value !== 11 ? ev.detail.value : void 0 })}
+          .selector=${{number:{min:8,max:32,step:1,mode:"box",unit_of_measurement:"px"}}}
+          .value=${null!==(_=t.state_font_size)&&void 0!==_?_:11}
+          @value-changed=${t=>o({state_font_size:11!==t.detail.value?t.detail.value:void 0})}
         ></ha-selector>
         <ha-selector .hass=${this.hass} .label=${"State Font Weight"}
-          .selector=${{ number: { min: 100, max: 900, step: 100, mode: "box" } }}
-          .value=${(_n = btn.state_font_weight) != null ? _n : 500}
-          @value-changed=${(ev) => onChange({ state_font_weight: ev.detail.value !== 500 ? ev.detail.value : void 0 })}
+          .selector=${{number:{min:100,max:900,step:100,mode:"box"}}}
+          .value=${null!==(g=t.state_font_weight)&&void 0!==g?g:500}
+          @value-changed=${t=>o({state_font_weight:500!==t.detail.value?t.detail.value:void 0})}
         ></ha-selector>
       </div>
       <ha-selector .hass=${this.hass} .label=${"State/Label Max Width (0 = auto)"}
-        .selector=${{ number: { min: 0, max: 400, step: 1, mode: "box", unit_of_measurement: "px" } }}
-        .value=${(_o = btn.text_max_width) != null ? _o : 0}
-        @value-changed=${(ev) => onChange({ text_max_width: ev.detail.value || void 0 })}
+        .selector=${{number:{min:0,max:400,step:1,mode:"box",unit_of_measurement:"px"}}}
+        .value=${null!==(m=t.text_max_width)&&void 0!==m?m:0}
+        @value-changed=${t=>o({text_max_width:t.detail.value||void 0})}
       ></ha-selector>
 
-      ${showPosition ? b`
+      ${e?Y`
         <div class="sub-group-label">Position</div>
         <ha-selector .hass=${this.hass} .label=${"Position"}
-          .selector=${{ select: { options: SUB_BUTTON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_p = btn.position) != null ? _p : "bottom-left"}
-          @value-changed=${(ev) => onChange({ position: ev.detail.value })}
+          .selector=${{select:{options:Ot,mode:"dropdown"}}}
+          .value=${null!==(f=t.position)&&void 0!==f?f:"bottom-left"}
+          @value-changed=${t=>o({position:t.detail.value})}
         ></ha-selector>
-      ` : A}
+      `:J}
 
       <div class="sub-group-label">Actions</div>
       <ha-selector .hass=${this.hass} .label=${"Tap Action"}
-        .selector=${{ ui_action: {} }} .value=${(_q = btn.tap_action) != null ? _q : { action: "toggle" }}
-        @value-changed=${(ev) => onChange({ tap_action: ev.detail.value })}
+        .selector=${{ui_action:{}}} .value=${null!==($=t.tap_action)&&void 0!==$?$:{action:"toggle"}}
+        @value-changed=${t=>o({tap_action:t.detail.value})}
       ></ha-selector>
       <ha-selector .hass=${this.hass} .label=${"Hold Action"}
-        .selector=${{ ui_action: {} }} .value=${(_r = btn.hold_action) != null ? _r : { action: "more-info" }}
-        @value-changed=${(ev) => onChange({ hold_action: ev.detail.value })}
+        .selector=${{ui_action:{}}} .value=${null!==(x=t.hold_action)&&void 0!==x?x:{action:"more-info"}}
+        @value-changed=${t=>o({hold_action:t.detail.value})}
       ></ha-selector>
       <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
-        .selector=${{ ui_action: {} }} .value=${(_s = btn.double_tap_action) != null ? _s : { action: "none" }}
-        @value-changed=${(ev) => onChange({ double_tap_action: ev.detail.value })}
+        .selector=${{ui_action:{}}} .value=${null!==(y=t.double_tap_action)&&void 0!==y?y:{action:"none"}}
+        @value-changed=${t=>o({double_tap_action:t.detail.value})}
       ></ha-selector>
-    `;
-  }
-  _renderTemplateField(fieldKey, label, renderWidget) {
-    var _a2, _b2;
-    const inTemplateMode = this._templateMode.has(fieldKey);
-    const currentValue = (_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : "";
-    return b`
+    `}_renderTemplateField(t,e,o){var i,n;const a=this._templateMode.has(t),s=null!==(i=null===(n=this._config)||void 0===n?void 0:n[t])&&void 0!==i?i:"";return Y`
       <div class="template-row">
         <div class="template-input">
-          ${inTemplateMode ? b`
+          ${a?Y`
                 <textarea
-                  .value=${currentValue}
+                  .value=${s}
                   placeholder="{{ states('sensor.example') }}"
-                  @change=${(ev) => this._fieldChanged(fieldKey, ev.target.value)}
-                  @input=${(ev) => this._fieldChanged(fieldKey, ev.target.value)}
+                  @change=${e=>this._fieldChanged(t,e.target.value)}
+                  @input=${e=>this._fieldChanged(t,e.target.value)}
                 ></textarea>
                 <div class="hint">HA Jinja2 template</div>
-              ` : renderWidget()}
+              `:o()}
         </div>
         <button
-          class="tmpl-btn ${inTemplateMode ? "active" : ""}"
-          title="${inTemplateMode ? "Jinja2 template active — click to switch back to simple input" : "Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
-          @click=${() => this._toggleTemplateMode(fieldKey)}
+          class="tmpl-btn ${a?"active":""}"
+          title="${a?"Jinja2 template active — click to switch back to simple input":"Click to enter a Jinja2 template (e.g. {{ states('sensor.temp') }})"}"
+          @click=${()=>this._toggleTemplateMode(t)}
         ><ha-icon icon="mdi:code-braces" class="tmpl-icon"></ha-icon></button>
       </div>
-    `;
-  }
-  _renderOpacityField(fieldKey, label, defaultVal = 1) {
-    var _a2, _b2;
-    const hint = "Use this slider for element opacity. For color transparency, add alpha to the color value instead (e.g. rgba(255,0,0,0.5)).";
-    return b`
+    `}_renderOpacityField(t,e,o=1){var i,n;return Y`
       <ha-selector
         .hass=${this.hass}
-        .label=${label}
-        .selector=${OPACITY_SELECTOR}
-        .value=${(_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : defaultVal}
-        title=${hint}
-        @value-changed=${(ev) => this._fieldChanged(fieldKey, ev.detail.value)}
+        .label=${e}
+        .selector=${Ht}
+        .value=${null!==(i=null===(n=this._config)||void 0===n?void 0:n[t])&&void 0!==i?i:o}
+        title=${"Use this slider for element opacity. For color transparency, add alpha to the color value instead (e.g. rgba(255,0,0,0.5))."}
+        @value-changed=${e=>this._fieldChanged(t,e.detail.value)}
       ></ha-selector>
-    `;
-  }
-  _renderNumField(fieldKey, label, min, max, step, defaultVal, suffix = "") {
-    var _a2, _b2;
-    return b`
+    `}_renderNumField(t,e,o,i,n,a,s=""){var l,r;return Y`
       <ha-selector
         .hass=${this.hass}
-        .label=${label}
-        .selector=${{ number: { min, max, step, mode: "box", ...suffix ? { unit_of_measurement: suffix } : {} } }}
-        .value=${(_b2 = (_a2 = this._config) == null ? void 0 : _a2[fieldKey]) != null ? _b2 : defaultVal}
-        @value-changed=${(ev) => this._fieldChanged(fieldKey, ev.detail.value)}
+        .label=${e}
+        .selector=${{number:{min:o,max:i,step:n,mode:"box",...s?{unit_of_measurement:s}:{}}}}
+        .value=${null!==(l=null===(r=this._config)||void 0===r?void 0:r[t])&&void 0!==l?l:a}
+        @value-changed=${e=>this._fieldChanged(t,e.detail.value)}
       ></ha-selector>
-    `;
-  }
-  _renderCoordFields(xKey, yKey, xLabel = "X (CSS)", yLabel = "Y (CSS)") {
-    var _a2, _b2, _c2, _d2;
-    return b`
+    `}_renderCoordFields(t,e,o="X (CSS)",i="Y (CSS)"){var n,a,s,l;return Y`
       <div class="two-col">
-        <ha-selector .hass=${this.hass} .label=${xLabel}
-          .selector=${{ text: {} }}
-          .value=${(_b2 = (_a2 = this._config) == null ? void 0 : _a2[xKey]) != null ? _b2 : ""}
+        <ha-selector .hass=${this.hass} .label=${o}
+          .selector=${{text:{}}}
+          .value=${null!==(n=null===(a=this._config)||void 0===a?void 0:a[t])&&void 0!==n?n:""}
           .placeholder=${"e.g. 10px, 25%"}
-          @value-changed=${(ev) => this._fieldChanged(xKey, ev.detail.value || void 0)}
+          @value-changed=${e=>this._fieldChanged(t,e.detail.value||void 0)}
         ></ha-selector>
-        <ha-selector .hass=${this.hass} .label=${yLabel}
-          .selector=${{ text: {} }}
-          .value=${(_d2 = (_c2 = this._config) == null ? void 0 : _c2[yKey]) != null ? _d2 : ""}
+        <ha-selector .hass=${this.hass} .label=${i}
+          .selector=${{text:{}}}
+          .value=${null!==(s=null===(l=this._config)||void 0===l?void 0:l[e])&&void 0!==s?s:""}
           .placeholder=${"e.g. 10px, 25%"}
-          @value-changed=${(ev) => this._fieldChanged(yKey, ev.detail.value || void 0)}
+          @value-changed=${t=>this._fieldChanged(e,t.detail.value||void 0)}
         ></ha-selector>
       </div>
       <div class="hint">Tip: use <code>%</code> values (e.g. <code>25%</code>) for positions that adapt to card size. Fixed <code>px</code> values stay constant when the card is resized.</div>
-    `;
-  }
-  // ── Tab bar ──────────────────────────────────────────────────────────────────
-  _renderTabBar() {
-    const tabs = [
-      { id: "basic", label: "Basic" },
-      { id: "icon", label: "Icon" },
-      { id: "card", label: "Card" },
-      { id: "buttons", label: "Buttons" },
-      { id: "actions", label: "Actions" }
-    ];
-    return b`
+    `}_renderTabBar(){return Y`
       <div class="tab-bar">
-        ${tabs.map((t2) => b`
+        ${[{id:"basic",label:"Basic"},{id:"icon",label:"Icon"},{id:"card",label:"Card"},{id:"buttons",label:"Buttons"},{id:"actions",label:"Actions"}].map(t=>Y`
           <button
-            class="tab ${this._activeTab === t2.id ? "active" : ""}"
-            @click=${() => {
-      this._activeTab = t2.id;
-    }}
-          >${t2.label}</button>
+            class="tab ${this._activeTab===t.id?"active":""}"
+            @click=${()=>{this._activeTab=t.id}}
+          >${t.label}</button>
         `)}
       </div>
-    `;
-  }
-  // ── Tab content ───────────────────────────────────────────────────────────────
-  _renderBasicTab() {
-    var _a2, _b2, _c2;
-    const c2 = this._config;
-    return b`
+    `}_renderBasicTab(){var t,e,o;const i=this._config;return Y`
       <div class="section">
         <div class="section-label">Entity</div>
-        <ha-entity-picker
+        <ha-selector
           .hass=${this.hass}
           .label=${"Entity (optional)"}
-          .value=${(_a2 = c2.entity) != null ? _a2 : ""}
-          allow-custom-entity
-          @value-changed=${(ev) => this._fieldChanged("entity", ev.detail.value || void 0)}
-        ></ha-entity-picker>
+          .selector=${Nt}
+          .value=${null!==(t=i.entity)&&void 0!==t?t:""}
+          @value-changed=${t=>this._fieldChanged("entity",t.detail.value||void 0)}
+        ></ha-selector>
       </div>
 
       <div class="section">
         <div class="section-label">Title</div>
-        ${this._renderTemplateField(
-      "title",
-      "Title",
-      () => {
-        var _a3;
-        return b`
+        ${this._renderTemplateField("title","Title",()=>{var t;return Y`
             <input
               type="text"
               class="color-text-input"
-              .value=${(_a3 = c2.title) != null ? _a3 : ""}
+              .value=${null!==(t=i.title)&&void 0!==t?t:""}
               placeholder="Room name, or leave blank to hide"
-              @change=${(ev) => this._fieldChanged("title", ev.target.value || void 0)}
-              @input=${(ev) => this._fieldChanged("title", ev.target.value || void 0)}
+              @change=${t=>this._fieldChanged("title",t.target.value||void 0)}
+              @input=${t=>this._fieldChanged("title",t.target.value||void 0)}
             />
-          `;
-      }
-    )}
+          `})}
 
         <ha-selector .hass=${this.hass} .label=${"Position"}
-          .selector=${{ select: { options: TITLE_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_b2 = c2.title_position) != null ? _b2 : ""}
-          @value-changed=${(ev) => this._fieldChanged("title_position", ev.detail.value || void 0)}
+          .selector=${{select:{options:Bt,mode:"dropdown"}}}
+          .value=${null!==(e=i.title_position)&&void 0!==e?e:""}
+          @value-changed=${t=>this._fieldChanged("title_position",t.detail.value||void 0)}
         ></ha-selector>
 
-        ${c2.title_position === "custom" ? this._renderCoordFields("title_position_x", "title_position_y", "X offset", "Y offset") : A}
+        ${"custom"===i.title_position?this._renderCoordFields("title_position_x","title_position_y","X offset","Y offset"):J}
 
-        ${!c2.title_position ? b`
+        ${i.title_position?J:Y`
           <ha-selector .hass=${this.hass} .label=${"Text Alignment"}
-            .selector=${{ select: { options: TITLE_ALIGN_OPTIONS, mode: "list" } }}
-            .value=${(_c2 = c2.title_align) != null ? _c2 : "left"}
-            @value-changed=${(ev) => this._fieldChanged("title_align", ev.detail.value || void 0)}
+            .selector=${{select:{options:Tt,mode:"list"}}}
+            .value=${null!==(o=i.title_align)&&void 0!==o?o:"left"}
+            @value-changed=${t=>this._fieldChanged("title_align",t.detail.value||void 0)}
           ></ha-selector>
-        ` : A}
+        `}
 
         <div class="two-col">
-          ${this._renderNumField("title_font_size", "Font Size", 8, 48, 1, 14, "px")}
-          ${this._renderNumField("title_font_weight", "Font Weight", 100, 900, 100, 500)}
+          ${this._renderNumField("title_font_size","Font Size",8,48,1,14,"px")}
+          ${this._renderNumField("title_font_weight","Font Weight",100,900,100,500)}
         </div>
-        ${this._renderColorField("title_color", "Title Color", "e.g. white, #ffffff")}
+        ${this._renderColorField("title_color","Title Color","e.g. white, #ffffff")}
       </div>
 
       <div class="section">
         <div class="section-label">Icon</div>
-        ${this._renderTemplateField(
-      "icon",
-      "Icon",
-      () => {
-        var _a3;
-        return b`
-            <ha-icon-picker .hass=${this.hass} .label=${"Icon"}
-              .value=${(_a3 = c2.icon) != null ? _a3 : ""}
-              @value-changed=${(ev) => this._fieldChanged("icon", ev.detail.value || void 0)}
-            ></ha-icon-picker>
-          `;
-      }
-    )}
+        ${this._renderTemplateField("icon","Icon",()=>{var t;return Y`
+            <ha-selector .hass=${this.hass} .label=${"Icon"}
+              .selector=${Vt}
+              .value=${null!==(t=i.icon)&&void 0!==t?t:""}
+              @value-changed=${t=>this._fieldChanged("icon",t.detail.value||void 0)}
+            ></ha-selector>
+          `})}
       </div>
-    `;
-  }
-  _renderIconTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s;
-    const c2 = this._config;
-    return b`
+    `}_renderIconTab(){var t,e,o,i,n,a,s,l,r,d,c,u,h,p,b,v,_,g,m;const f=this._config;return Y`
       <!-- ── Icon color ── -->
       <div class="section">
         <div class="section-label">Icon Color</div>
-        ${this._renderColorField("icon_color", "Icon Color", void 0, false)}
+        ${this._renderColorField("icon_color","Icon Color",void 0,!1)}
 
         <ha-form
           .hass=${this.hass}
-          .data=${{ state_based_color: (_a2 = c2.state_based_color) != null ? _a2 : false }}
-          .schema=${[{ name: "state_based_color", label: "Auto-color by entity state", selector: { boolean: {} } }]}
-          .computeLabel=${(s2) => s2.label}
-          @value-changed=${(ev) => this._fieldChanged("state_based_color", ev.detail.value.state_based_color)}
+          .data=${{state_based_color:null!==(t=f.state_based_color)&&void 0!==t&&t}}
+          .schema=${[{name:"state_based_color",label:"Auto-color by entity state",selector:{boolean:{}}}]}
+          .computeLabel=${t=>t.label}
+          @value-changed=${t=>this._fieldChanged("state_based_color",t.detail.value.state_based_color)}
         ></ha-form>
 
-        ${c2.state_based_color ? b`
+        ${f.state_based_color?Y`
           <div class="hint">When active (on/open/playing/home): uses the color below or a domain default (yellow for lights). When inactive: uses the off-color or falls back to Icon Color.</div>
-          ${this._renderColorField("icon_color_on", "Active Color (on/open/playing)", "e.g. #FDD835, yellow")}
-          ${this._renderColorField("icon_color_off", "Inactive Color (off/closed)", "e.g. #888888, grey")}
-        ` : A}
+          ${this._renderColorField("icon_color_on","Active Color (on/open/playing)","e.g. #FDD835, yellow")}
+          ${this._renderColorField("icon_color_off","Inactive Color (off/closed)","e.g. #888888, grey")}
+        `:J}
 
         <ha-selector .hass=${this.hass} .label=${"Icon Opacity"}
-          .selector=${OPACITY_SELECTOR} .value=${(_b2 = c2.icon_opacity) != null ? _b2 : 1}
-          @value-changed=${(ev) => this._fieldChanged("icon_opacity", ev.detail.value)}
+          .selector=${Ht} .value=${null!==(e=f.icon_opacity)&&void 0!==e?e:1}
+          @value-changed=${t=>this._fieldChanged("icon_opacity",t.detail.value)}
         ></ha-selector>
       </div>
 
@@ -2061,196 +924,185 @@ class IansCustomRoomCardEditor extends i {
       <div class="section">
         <div class="section-label">Icon Background</div>
         <ha-selector .hass=${this.hass} .label=${"Shape"}
-          .selector=${{ select: { options: ICON_SHAPE_OPTIONS, mode: "dropdown" } }}
-          .value=${(_c2 = c2.icon_background_shape) != null ? _c2 : "circle"}
-          @value-changed=${(ev) => this._fieldChanged("icon_background_shape", ev.detail.value || void 0)}
+          .selector=${{select:{options:zt,mode:"dropdown"}}}
+          .value=${null!==(o=f.icon_background_shape)&&void 0!==o?o:"circle"}
+          @value-changed=${t=>this._fieldChanged("icon_background_shape",t.detail.value||void 0)}
         ></ha-selector>
 
         <ha-selector .hass=${this.hass} .label=${"Custom Border Radius (CSS — overrides shape)"}
-          .selector=${{ text: {} }}
-          .value=${(_d2 = c2.icon_background_border_radius) != null ? _d2 : ""}
+          .selector=${{text:{}}}
+          .value=${null!==(i=f.icon_background_border_radius)&&void 0!==i?i:""}
           .placeholder=${"e.g. 10px 20px 30px 40px, 50% 0"}
-          @value-changed=${(ev) => this._fieldChanged("icon_background_border_radius", ev.detail.value || void 0)}
+          @value-changed=${t=>this._fieldChanged("icon_background_border_radius",t.detail.value||void 0)}
         ></ha-selector>
 
-        ${this._renderColorField("icon_background_color", "Background Color")}
+        ${this._renderColorField("icon_background_color","Background Color")}
 
         <ha-selector .hass=${this.hass} .label=${"Background Opacity"}
-          .selector=${OPACITY_SELECTOR} .value=${(_e2 = c2.icon_background_opacity) != null ? _e2 : 1}
-          @value-changed=${(ev) => this._fieldChanged("icon_background_opacity", ev.detail.value)}
+          .selector=${Ht} .value=${null!==(n=f.icon_background_opacity)&&void 0!==n?n:1}
+          @value-changed=${t=>this._fieldChanged("icon_background_opacity",t.detail.value)}
         ></ha-selector>
 
         <div class="two-col">
-          ${this._renderNumField("icon_size", "Icon Size", 8, 120, 2, 24, "px")}
-          ${this._renderNumField("icon_background_size", "Background Size", 8, 160, 2, 40, "px")}
+          ${this._renderNumField("icon_size","Icon Size",8,120,2,24,"px")}
+          ${this._renderNumField("icon_background_size","Background Size",8,160,2,40,"px")}
         </div>
 
         <div class="hint">Width/Height override Background Size for non-square backgrounds.</div>
         <div class="two-col">
-          ${this._renderNumField("icon_background_width", "Width", 8, 200, 2, (_f2 = c2.icon_background_size) != null ? _f2 : 40, "px")}
-          ${this._renderNumField("icon_background_height", "Height", 8, 200, 2, (_g = c2.icon_background_size) != null ? _g : 40, "px")}
+          ${this._renderNumField("icon_background_width","Width",8,200,2,null!==(a=f.icon_background_size)&&void 0!==a?a:40,"px")}
+          ${this._renderNumField("icon_background_height","Height",8,200,2,null!==(s=f.icon_background_size)&&void 0!==s?s:40,"px")}
         </div>
 
         <ha-selector .hass=${this.hass} .label=${"Background Position (independent of icon)"}
-          .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_h = c2.icon_background_position) != null ? _h : ""}
-          @value-changed=${(ev) => this._fieldChanged("icon_background_position", ev.detail.value || void 0)}
+          .selector=${{select:{options:At,mode:"dropdown"}}}
+          .value=${null!==(l=f.icon_background_position)&&void 0!==l?l:""}
+          @value-changed=${t=>this._fieldChanged("icon_background_position",t.detail.value||void 0)}
         ></ha-selector>
-        ${c2.icon_background_position === "custom" ? this._renderCoordFields("icon_background_position_x", "icon_background_position_y", "X offset", "Y offset") : A}
-        ${c2.icon_background_position ? b`
+        ${"custom"===f.icon_background_position?this._renderCoordFields("icon_background_position_x","icon_background_position_y","X offset","Y offset"):J}
+        ${f.icon_background_position?Y`
           <div class="hint">The background shape renders at this position; the icon renders at its own position below with no background behind it.</div>
-        ` : A}
+        `:J}
       </div>
 
       <!-- ── Icon animation ── -->
       <div class="section">
         <div class="section-label">Icon Animation</div>
         <ha-selector .hass=${this.hass} .label=${"Animation"}
-          .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
-          .value=${(_i = c2.icon_animation) != null ? _i : "none"}
-          @value-changed=${(ev) => this._fieldChanged("icon_animation", ev.detail.value === "none" ? void 0 : ev.detail.value)}
+          .selector=${{select:{options:It,mode:"dropdown"}}}
+          .value=${null!==(r=f.icon_animation)&&void 0!==r?r:"none"}
+          @value-changed=${t=>this._fieldChanged("icon_animation","none"===t.detail.value?void 0:t.detail.value)}
         ></ha-selector>
-        ${c2.icon_animation && c2.icon_animation !== "none" ? b`
+        ${f.icon_animation&&"none"!==f.icon_animation?Y`
           <div class="two-col">
             <ha-selector .hass=${this.hass} .label=${"When"}
-              .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
-              .value=${(_j = c2.icon_animation_when) != null ? _j : "always"}
-              @value-changed=${(ev) => this._fieldChanged("icon_animation_when", ev.detail.value || void 0)}
+              .selector=${{select:{options:Pt,mode:"dropdown"}}}
+              .value=${null!==(d=f.icon_animation_when)&&void 0!==d?d:"always"}
+              @value-changed=${t=>this._fieldChanged("icon_animation_when",t.detail.value||void 0)}
             ></ha-selector>
             <ha-selector .hass=${this.hass} .label=${"Speed"}
-              .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
-              .value=${(_k = c2.icon_animation_speed) != null ? _k : "normal"}
-              @value-changed=${(ev) => this._fieldChanged("icon_animation_speed", ev.detail.value || void 0)}
+              .selector=${{select:{options:jt,mode:"dropdown"}}}
+              .value=${null!==(c=f.icon_animation_speed)&&void 0!==c?c:"normal"}
+              @value-changed=${t=>this._fieldChanged("icon_animation_speed",t.detail.value||void 0)}
             ></ha-selector>
           </div>
-        ` : A}
+        `:J}
       </div>
 
       <!-- ── Icon position ── -->
       <div class="section">
         <div class="section-label">Icon Position</div>
         <ha-selector .hass=${this.hass} .label=${"Position"}
-          .selector=${{ select: { options: ICON_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_l = c2.icon_position) != null ? _l : ""}
-          @value-changed=${(ev) => this._fieldChanged("icon_position", ev.detail.value || void 0)}
+          .selector=${{select:{options:At,mode:"dropdown"}}}
+          .value=${null!==(u=f.icon_position)&&void 0!==u?u:""}
+          @value-changed=${t=>this._fieldChanged("icon_position",t.detail.value||void 0)}
         ></ha-selector>
-        ${c2.icon_position === "custom" ? this._renderCoordFields("icon_position_x", "icon_position_y", "X offset", "Y offset") : A}
+        ${"custom"===f.icon_position?this._renderCoordFields("icon_position_x","icon_position_y","X offset","Y offset"):J}
         <div class="hint">Size fields accept whole numbers (px applied automatically). Coordinate fields accept any CSS value — use <code>%</code> for responsive positioning or <code>px</code> for fixed.</div>
       </div>
 
       <!-- ── Badge ── -->
       <div class="section">
         <div class="section-label">Badge</div>
-        ${this._renderTemplateField(
-      "badge_icon",
-      "Badge Icon",
-      () => {
-        var _a3;
-        return b`
-            <ha-icon-picker .hass=${this.hass} .label=${"Badge Icon (blank to hide)"}
-              .value=${(_a3 = c2.badge_icon) != null ? _a3 : ""}
-              @value-changed=${(ev) => this._fieldChanged("badge_icon", ev.detail.value || void 0)}
-            ></ha-icon-picker>
-          `;
-      }
-    )}
+        ${this._renderTemplateField("badge_icon","Badge Icon",()=>{var t;return Y`
+            <ha-selector .hass=${this.hass} .label=${"Badge Icon (blank to hide)"}
+              .selector=${Vt}
+              .value=${null!==(t=f.badge_icon)&&void 0!==t?t:""}
+              @value-changed=${t=>this._fieldChanged("badge_icon",t.detail.value||void 0)}
+            ></ha-selector>
+          `})}
 
-        ${this._renderColorField("badge_color", "Badge Icon Color")}
-        ${this._renderColorField("badge_background_color", "Badge Background Color")}
+        ${this._renderColorField("badge_color","Badge Icon Color")}
+        ${this._renderColorField("badge_background_color","Badge Background Color")}
 
         <div class="two-col">
-          ${this._renderNumField("badge_size", "Badge Size", 8, 48, 1, 18, "px")}
+          ${this._renderNumField("badge_size","Badge Size",8,48,1,18,"px")}
           <ha-selector .hass=${this.hass} .label=${"Opacity"}
-            .selector=${OPACITY_SELECTOR} .value=${(_m = c2.badge_opacity) != null ? _m : 1}
-            @value-changed=${(ev) => this._fieldChanged("badge_opacity", ev.detail.value)}
+            .selector=${Ht} .value=${null!==(h=f.badge_opacity)&&void 0!==h?h:1}
+            @value-changed=${t=>this._fieldChanged("badge_opacity",t.detail.value)}
           ></ha-selector>
         </div>
 
         <ha-selector .hass=${this.hass} .label=${"Badge Position"}
-          .selector=${{ select: { options: BADGE_POSITION_OPTIONS, mode: "dropdown" } }}
-          .value=${(_n = c2.badge_position) != null ? _n : "top-right"}
-          @value-changed=${(ev) => this._fieldChanged("badge_position", ev.detail.value || void 0)}
+          .selector=${{select:{options:Et,mode:"dropdown"}}}
+          .value=${null!==(p=f.badge_position)&&void 0!==p?p:"top-right"}
+          @value-changed=${t=>this._fieldChanged("badge_position",t.detail.value||void 0)}
         ></ha-selector>
-        ${c2.badge_position === "custom" ? b`
+        ${"custom"===f.badge_position?Y`
           <div class="two-col">
-            <ha-selector .hass=${this.hass} .label=${"X (CSS)"} .selector=${{ text: {} }}
-              .value=${(_o = c2.badge_position_x) != null ? _o : ""} .placeholder=${"e.g. 10px"}
-              @value-changed=${(ev) => this._fieldChanged("badge_position_x", ev.detail.value || void 0)}
+            <ha-selector .hass=${this.hass} .label=${"X (CSS)"} .selector=${{text:{}}}
+              .value=${null!==(b=f.badge_position_x)&&void 0!==b?b:""} .placeholder=${"e.g. 10px"}
+              @value-changed=${t=>this._fieldChanged("badge_position_x",t.detail.value||void 0)}
             ></ha-selector>
-            <ha-selector .hass=${this.hass} .label=${"Y (CSS)"} .selector=${{ text: {} }}
-              .value=${(_p = c2.badge_position_y) != null ? _p : ""} .placeholder=${"e.g. 10px"}
-              @value-changed=${(ev) => this._fieldChanged("badge_position_y", ev.detail.value || void 0)}
+            <ha-selector .hass=${this.hass} .label=${"Y (CSS)"} .selector=${{text:{}}}
+              .value=${null!==(v=f.badge_position_y)&&void 0!==v?v:""} .placeholder=${"e.g. 10px"}
+              @value-changed=${t=>this._fieldChanged("badge_position_y",t.detail.value||void 0)}
             ></ha-selector>
           </div>
-        ` : A}
+        `:J}
 
         <ha-selector .hass=${this.hass} .label=${"Badge Animation"}
-          .selector=${{ select: { options: ANIMATION_TYPE_OPTIONS, mode: "dropdown" } }}
-          .value=${(_q = c2.badge_animation) != null ? _q : "none"}
-          @value-changed=${(ev) => this._fieldChanged("badge_animation", ev.detail.value === "none" ? void 0 : ev.detail.value)}
+          .selector=${{select:{options:It,mode:"dropdown"}}}
+          .value=${null!==(_=f.badge_animation)&&void 0!==_?_:"none"}
+          @value-changed=${t=>this._fieldChanged("badge_animation","none"===t.detail.value?void 0:t.detail.value)}
         ></ha-selector>
-        ${c2.badge_animation && c2.badge_animation !== "none" ? b`
+        ${f.badge_animation&&"none"!==f.badge_animation?Y`
           <div class="two-col">
             <ha-selector .hass=${this.hass} .label=${"When"}
-              .selector=${{ select: { options: ANIMATION_WHEN_OPTIONS, mode: "dropdown" } }}
-              .value=${(_r = c2.badge_animation_when) != null ? _r : "always"}
-              @value-changed=${(ev) => this._fieldChanged("badge_animation_when", ev.detail.value || void 0)}
+              .selector=${{select:{options:Pt,mode:"dropdown"}}}
+              .value=${null!==(g=f.badge_animation_when)&&void 0!==g?g:"always"}
+              @value-changed=${t=>this._fieldChanged("badge_animation_when",t.detail.value||void 0)}
             ></ha-selector>
             <ha-selector .hass=${this.hass} .label=${"Speed"}
-              .selector=${{ select: { options: ANIMATION_SPEED_OPTIONS, mode: "dropdown" } }}
-              .value=${(_s = c2.badge_animation_speed) != null ? _s : "normal"}
-              @value-changed=${(ev) => this._fieldChanged("badge_animation_speed", ev.detail.value || void 0)}
+              .selector=${{select:{options:jt,mode:"dropdown"}}}
+              .value=${null!==(m=f.badge_animation_speed)&&void 0!==m?m:"normal"}
+              @value-changed=${t=>this._fieldChanged("badge_animation_speed",t.detail.value||void 0)}
             ></ha-selector>
           </div>
-        ` : A}
+        `:J}
       </div>
-    `;
-  }
-  _renderCardTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l;
-    const c2 = this._config;
-    return b`
+    `}_renderCardTab(){var t,e,o,i,n,a,s,l,r,d,c,u;const h=this._config;return Y`
       <!-- ── Background ── -->
       <div class="section">
         <div class="section-label">Background</div>
-        ${this._renderColorField("background_color", "Background Color", void 0, false)}
+        ${this._renderColorField("background_color","Background Color",void 0,!1)}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
-          .selector=${OPACITY_SELECTOR} .value=${(_a2 = c2.background_opacity) != null ? _a2 : 1}
-          @value-changed=${(ev) => this._fieldChanged("background_opacity", ev.detail.value)}
+          .selector=${Ht} .value=${null!==(t=h.background_opacity)&&void 0!==t?t:1}
+          @value-changed=${t=>this._fieldChanged("background_opacity",t.detail.value)}
         ></ha-selector>
         <ha-selector .hass=${this.hass} .label=${"Image URL (or type 'area' to use room picture)"}
-          .selector=${{ text: {} }} .value=${(_b2 = c2.background_image) != null ? _b2 : ""}
+          .selector=${{text:{}}} .value=${null!==(e=h.background_image)&&void 0!==e?e:""}
           .placeholder=${"e.g. /local/room.jpg   or   area"}
-          @value-changed=${(ev) => this._fieldChanged("background_image", ev.detail.value || void 0)}
+          @value-changed=${t=>this._fieldChanged("background_image",t.detail.value||void 0)}
         ></ha-selector>
 
-        ${c2.background_image ? b`
+        ${h.background_image?Y`
           <ha-selector .hass=${this.hass} .label=${"Image Position (CSS background-position)"}
-            .selector=${{ text: {} }} .value=${(_c2 = c2.background_image_position) != null ? _c2 : ""}
+            .selector=${{text:{}}} .value=${null!==(o=h.background_image_position)&&void 0!==o?o:""}
             .placeholder=${"e.g. center, top right, 75% 25%"}
-            @value-changed=${(ev) => this._fieldChanged("background_image_position", ev.detail.value || void 0)}
+            @value-changed=${t=>this._fieldChanged("background_image_position",t.detail.value||void 0)}
           ></ha-selector>
-        ` : A}
+        `:J}
       </div>
 
       <!-- ── Shape ── -->
       <div class="section">
         <div class="section-label">Shape</div>
         <ha-selector .hass=${this.hass} .label=${"Card Shape"}
-          .selector=${{ select: { options: CARD_SHAPE_OPTIONS, mode: "dropdown" } }}
-          .value=${(_d2 = c2.card_shape) != null ? _d2 : ""}
-          @value-changed=${(ev) => this._fieldChanged("card_shape", ev.detail.value || void 0)}
+          .selector=${{select:{options:Rt,mode:"dropdown"}}}
+          .value=${null!==(i=h.card_shape)&&void 0!==i?i:""}
+          @value-changed=${t=>this._fieldChanged("card_shape",t.detail.value||void 0)}
         ></ha-selector>
         <ha-selector .hass=${this.hass} .label=${"Custom Border Radius (CSS — overrides shape)"}
-          .selector=${{ text: {} }}
-          .value=${(_e2 = c2.card_border_radius) != null ? _e2 : ""}
+          .selector=${{text:{}}}
+          .value=${null!==(n=h.card_border_radius)&&void 0!==n?n:""}
           .placeholder=${"e.g. 12px, 50% 0 50% 0, 8px 24px"}
-          @value-changed=${(ev) => this._fieldChanged("card_border_radius", ev.detail.value || void 0)}
+          @value-changed=${t=>this._fieldChanged("card_border_radius",t.detail.value||void 0)}
         ></ha-selector>
         <ha-selector .hass=${this.hass} .label=${"Card Margin (space around card within grid cell)"}
-          .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
-          .value=${(_f2 = c2.card_margin) != null ? _f2 : 0}
-          @value-changed=${(ev) => this._fieldChanged("card_margin", ev.detail.value || void 0)}
+          .selector=${{number:{min:0,max:32,step:1,mode:"box",unit_of_measurement:"px"}}}
+          .value=${null!==(a=h.card_margin)&&void 0!==a?a:0}
+          @value-changed=${t=>this._fieldChanged("card_margin",t.detail.value||void 0)}
         ></ha-selector>
       </div>
 
@@ -2259,14 +1111,10 @@ class IansCustomRoomCardEditor extends i {
         <div class="section-label">Interaction</div>
         <ha-form
           .hass=${this.hass}
-          .data=${{ hover_highlight: (_g = c2.hover_highlight) != null ? _g : true }}
-          .schema=${[{
-      name: "hover_highlight",
-      label: "Show hover highlight (ripple overlay on mouse-over)",
-      selector: { boolean: {} }
-    }]}
-          .computeLabel=${(s2) => s2.label}
-          @value-changed=${(ev) => this._fieldChanged("hover_highlight", ev.detail.value.hover_highlight)}
+          .data=${{hover_highlight:null===(s=h.hover_highlight)||void 0===s||s}}
+          .schema=${[{name:"hover_highlight",label:"Show hover highlight (ripple overlay on mouse-over)",selector:{boolean:{}}}]}
+          .computeLabel=${t=>t.label}
+          @value-changed=${t=>this._fieldChanged("hover_highlight",t.detail.value.hover_highlight)}
         ></ha-form>
         <div class="hint">When enabled, a subtle white overlay appears on hover. Enabled by default when a Global Action is configured.</div>
       </div>
@@ -2274,10 +1122,10 @@ class IansCustomRoomCardEditor extends i {
       <!-- ── Border ── -->
       <div class="section">
         <div class="section-label">Border</div>
-        ${this._renderColorField("border_color", "Border Color", void 0, false)}
+        ${this._renderColorField("border_color","Border Color",void 0,!1)}
         <ha-selector .hass=${this.hass} .label=${"Opacity"}
-          .selector=${OPACITY_SELECTOR} .value=${(_h = c2.border_opacity) != null ? _h : 1}
-          @value-changed=${(ev) => this._fieldChanged("border_opacity", ev.detail.value)}
+          .selector=${Ht} .value=${null!==(l=h.border_opacity)&&void 0!==l?l:1}
+          @value-changed=${t=>this._fieldChanged("border_opacity",t.detail.value)}
         ></ha-selector>
       </div>
 
@@ -2286,114 +1134,101 @@ class IansCustomRoomCardEditor extends i {
         <div class="section-label">Grid Sizing (Sections Dashboard)</div>
         <div class="two-col">
           <ha-selector .hass=${this.hass} .label=${"Columns"}
-            .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
-            .value=${(_j = (_i = c2.grid_options) == null ? void 0 : _i.columns) != null ? _j : 6}
-            @value-changed=${(ev) => this._gridFieldChanged("columns", ev.detail.value)}
+            .selector=${{number:{min:1,max:12,step:1,mode:"box"}}}
+            .value=${null!==(r=null===(d=h.grid_options)||void 0===d?void 0:d.columns)&&void 0!==r?r:6}
+            @value-changed=${t=>this._gridFieldChanged("columns",t.detail.value)}
           ></ha-selector>
           <ha-selector .hass=${this.hass} .label=${"Rows"}
-            .selector=${{ number: { min: 1, max: 6, step: 1, mode: "box" } }}
-            .value=${(_l = (_k = c2.grid_options) == null ? void 0 : _k.rows) != null ? _l : 2}
-            @value-changed=${(ev) => this._gridFieldChanged("rows", ev.detail.value)}
+            .selector=${{number:{min:1,max:6,step:1,mode:"box"}}}
+            .value=${null!==(c=null===(u=h.grid_options)||void 0===u?void 0:u.rows)&&void 0!==c?c:2}
+            @value-changed=${t=>this._gridFieldChanged("rows",t.detail.value)}
           ></ha-selector>
         </div>
       </div>
-    `;
-  }
-  _renderButtonsTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
-    const c2 = this._config;
-    const isGroupsMode = !!((_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length);
-    if (isGroupsMode) {
-      return b`
+    `}_renderButtonsTab(){var t,e,o,i,n,a,s,l,r,d;const c=this._config;var u,h,p;if(null===(t=c.sub_button_groups)||void 0===t?void 0:t.length)return Y`
         <div class="section">
           <div class="section-label">Button Groups</div>
           <div class="hint">Each group is an independent set of buttons with its own layout and position. Max 4 groups.</div>
-          ${((_b2 = c2.sub_button_groups) != null ? _b2 : []).map((group, i2) => this._renderGroupRow(group, i2))}
-          ${((_d2 = (_c2 = c2.sub_button_groups) == null ? void 0 : _c2.length) != null ? _d2 : 0) < 4 ? b`
-            <button class="add-btn" @click=${() => this._addGroup()}>+ Add Group</button>
-          ` : A}
+          ${(null!==(u=c.sub_button_groups)&&void 0!==u?u:[]).map((t,e)=>this._renderGroupRow(t,e))}
+          ${(null!==(h=null===(p=c.sub_button_groups)||void 0===p?void 0:p.length)&&void 0!==h?h:0)<4?Y`
+            <button class="add-btn" @click=${()=>this._addGroup()}>+ Add Group</button>
+          `:J}
         </div>
         <div class="section">
           <button class="clear-btn"
-            @click=${() => {
-        if (!confirm("Revert to single-group mode? Only the first group's settings will be kept.")) return;
-        this._revertToSingleGroup();
-      }}
+            @click=${()=>{confirm("Revert to single-group mode? Only the first group's settings will be kept.")&&this._revertToSingleGroup()}}
           >Revert to Single Group Mode</button>
         </div>
-      `;
-    }
-    const layout = (_e2 = c2.sub_buttons_layout) != null ? _e2 : "bottom-row";
-    return b`
+      `;const b=null!==(e=c.sub_buttons_layout)&&void 0!==e?e:"bottom-row";return Y`
       <!-- ── Layout ── -->
       <div class="section">
         <div class="section-label">Layout</div>
         <ha-selector .hass=${this.hass} .label=${"Layout"}
-          .selector=${{ select: { options: SUB_BUTTON_LAYOUT_OPTIONS, mode: "dropdown" } }}
-          .value=${layout}
-          @value-changed=${(ev) => this._fieldChanged("sub_buttons_layout", ev.detail.value)}
+          .selector=${{select:{options:Gt,mode:"dropdown"}}}
+          .value=${b}
+          @value-changed=${t=>this._fieldChanged("sub_buttons_layout",t.detail.value)}
         ></ha-selector>
 
-        ${layout === "grid" ? b`
+        ${"grid"===b?Y`
           <div class="two-col">
             <ha-selector .hass=${this.hass} .label=${"Columns (0 = auto-fill)"}
-              .selector=${{ number: { min: 0, max: 8, step: 1, mode: "box" } }}
-              .value=${(_f2 = c2.sub_buttons_grid_columns) != null ? _f2 : 0}
-              @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_columns", ev.detail.value || void 0)}
+              .selector=${{number:{min:0,max:8,step:1,mode:"box"}}}
+              .value=${null!==(o=c.sub_buttons_grid_columns)&&void 0!==o?o:0}
+              @value-changed=${t=>this._fieldChanged("sub_buttons_grid_columns",t.detail.value||void 0)}
             ></ha-selector>
             <ha-selector .hass=${this.hass} .label=${"Cell Min Width"}
-              .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
-              .value=${(_g = c2.sub_buttons_grid_min_width) != null ? _g : 56}
-              @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_min_width", ev.detail.value)}
+              .selector=${{number:{min:32,max:200,step:4,mode:"box",unit_of_measurement:"px"}}}
+              .value=${null!==(i=c.sub_buttons_grid_min_width)&&void 0!==i?i:56}
+              @value-changed=${t=>this._fieldChanged("sub_buttons_grid_min_width",t.detail.value)}
             ></ha-selector>
           </div>
           <ha-selector .hass=${this.hass} .label=${"Cell Layout"}
-            .selector=${{ select: { options: GRID_CELL_LAYOUT_OPTIONS, mode: "list" } }}
-            .value=${(_h = c2.sub_buttons_grid_cell_layout) != null ? _h : "vertical"}
-            @value-changed=${(ev) => this._fieldChanged("sub_buttons_grid_cell_layout", ev.detail.value || void 0)}
+            .selector=${{select:{options:Dt,mode:"list"}}}
+            .value=${null!==(n=c.sub_buttons_grid_cell_layout)&&void 0!==n?n:"vertical"}
+            @value-changed=${t=>this._fieldChanged("sub_buttons_grid_cell_layout",t.detail.value||void 0)}
           ></ha-selector>
-        ` : A}
+        `:J}
 
-        ${layout === "left-column" || layout === "right-column" ? b`
+        ${"left-column"===b||"right-column"===b?Y`
           <ha-selector .hass=${this.hass} .label=${"Column Alignment"}
-            .selector=${{ select: { options: COLUMN_JUSTIFY_OPTIONS, mode: "dropdown" } }}
-            .value=${(_i = c2.sub_buttons_column_justify) != null ? _i : "top"}
-            @value-changed=${(ev) => this._fieldChanged("sub_buttons_column_justify", ev.detail.value || void 0)}
+            .selector=${{select:{options:Ft,mode:"dropdown"}}}
+            .value=${null!==(a=c.sub_buttons_column_justify)&&void 0!==a?a:"top"}
+            @value-changed=${t=>this._fieldChanged("sub_buttons_column_justify",t.detail.value||void 0)}
           ></ha-selector>
-        ` : A}
+        `:J}
       </div>
 
       <!-- ── Global style ── -->
       <div class="section">
         <div class="section-label">Global Button Style</div>
-        ${this._renderColorField("sub_button_icon_color", "Icon Color (default for all)")}
-        ${this._renderColorField("sub_button_background_color", "Background Color (default for all)")}
+        ${this._renderColorField("sub_button_icon_color","Icon Color (default for all)")}
+        ${this._renderColorField("sub_button_background_color","Background Color (default for all)")}
         <div class="two-col">
           <ha-selector .hass=${this.hass} .label=${"Opacity"}
-            .selector=${OPACITY_SELECTOR} .value=${(_j = c2.sub_button_opacity) != null ? _j : 1}
-            @value-changed=${(ev) => this._fieldChanged("sub_button_opacity", ev.detail.value)}
+            .selector=${Ht} .value=${null!==(s=c.sub_button_opacity)&&void 0!==s?s:1}
+            @value-changed=${t=>this._fieldChanged("sub_button_opacity",t.detail.value)}
           ></ha-selector>
           <ha-selector .hass=${this.hass} .label=${"Button Gap"}
-            .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
-            .value=${(_k = c2.sub_button_gap) != null ? _k : 6}
-            @value-changed=${(ev) => this._fieldChanged("sub_button_gap", ev.detail.value)}
+            .selector=${{number:{min:0,max:32,step:1,mode:"box",unit_of_measurement:"px"}}}
+            .value=${null!==(l=c.sub_button_gap)&&void 0!==l?l:6}
+            @value-changed=${t=>this._fieldChanged("sub_button_gap",t.detail.value)}
           ></ha-selector>
         </div>
         <div class="two-col">
-          ${this._renderNumField("sub_button_state_font_size", "State Font Size", 8, 32, 1, 11, "px")}
-          ${this._renderNumField("sub_button_state_font_weight", "State Font Weight", 100, 900, 100, 500)}
+          ${this._renderNumField("sub_button_state_font_size","State Font Size",8,32,1,11,"px")}
+          ${this._renderNumField("sub_button_state_font_weight","State Font Weight",100,900,100,500)}
         </div>
         <ha-selector .hass=${this.hass} .label=${"State/Label Max Width (0 = auto)"}
-          .selector=${{ number: { min: 0, max: 400, step: 1, mode: "box", unit_of_measurement: "px" } }}
-          .value=${(_l = c2.sub_button_text_max_width) != null ? _l : 0}
-          @value-changed=${(ev) => this._fieldChanged("sub_button_text_max_width", ev.detail.value || void 0)}
+          .selector=${{number:{min:0,max:400,step:1,mode:"box",unit_of_measurement:"px"}}}
+          .value=${null!==(r=c.sub_button_text_max_width)&&void 0!==r?r:0}
+          @value-changed=${t=>this._fieldChanged("sub_button_text_max_width",t.detail.value||void 0)}
         ></ha-selector>
       </div>
 
       <!-- ── Individual buttons ── -->
       <div class="section">
         <div class="section-label">Buttons</div>
-        ${((_m = c2.sub_buttons) != null ? _m : []).map((btn, i2) => this._renderSubButtonRow(btn, i2))}
+        ${(null!==(d=c.sub_buttons)&&void 0!==d?d:[]).map((t,e)=>this._renderSubButtonRow(t,e))}
         <button class="add-btn" @click=${this._addSubButton}>+ Add Button</button>
       </div>
 
@@ -2401,15 +1236,10 @@ class IansCustomRoomCardEditor extends i {
       <div class="section">
         <div class="hint">Groups mode allows multiple independent button groups with different layouts and positions.</div>
         <button class="clear-btn"
-          @click=${() => this._switchToGroupsMode()}
+          @click=${()=>this._switchToGroupsMode()}
         >Switch to Groups Mode</button>
       </div>
-    `;
-  }
-  _renderActionsTab() {
-    var _a2, _b2, _c2, _d2, _e2, _f2;
-    const c2 = this._config;
-    return b`
+    `}_renderActionsTab(){var t,e,o,i,n,a;const s=this._config;return Y`
       <div class="section">
         <div class="section-label">Global Action</div>
         <div class="warning-box">
@@ -2418,437 +1248,201 @@ class IansCustomRoomCardEditor extends i {
         </div>
 
         <ha-selector .hass=${this.hass} .label=${"Tap Action"}
-          .selector=${{ ui_action: {} }}
-          .value=${(_b2 = (_a2 = c2.global_action) == null ? void 0 : _a2.tap_action) != null ? _b2 : { action: "none" }}
-          @value-changed=${(ev) => this._globalActionFieldChanged("tap_action", ev.detail.value)}
+          .selector=${{ui_action:{}}}
+          .value=${null!==(t=null===(e=s.global_action)||void 0===e?void 0:e.tap_action)&&void 0!==t?t:{action:"none"}}
+          @value-changed=${t=>this._globalActionFieldChanged("tap_action",t.detail.value)}
         ></ha-selector>
         <ha-selector .hass=${this.hass} .label=${"Hold Action"}
-          .selector=${{ ui_action: {} }}
-          .value=${(_d2 = (_c2 = c2.global_action) == null ? void 0 : _c2.hold_action) != null ? _d2 : { action: "none" }}
-          @value-changed=${(ev) => this._globalActionFieldChanged("hold_action", ev.detail.value)}
+          .selector=${{ui_action:{}}}
+          .value=${null!==(o=null===(i=s.global_action)||void 0===i?void 0:i.hold_action)&&void 0!==o?o:{action:"none"}}
+          @value-changed=${t=>this._globalActionFieldChanged("hold_action",t.detail.value)}
         ></ha-selector>
         <ha-selector .hass=${this.hass} .label=${"Double-Tap Action"}
-          .selector=${{ ui_action: {} }}
-          .value=${(_f2 = (_e2 = c2.global_action) == null ? void 0 : _e2.double_tap_action) != null ? _f2 : { action: "none" }}
-          @value-changed=${(ev) => this._globalActionFieldChanged("double_tap_action", ev.detail.value)}
+          .selector=${{ui_action:{}}}
+          .value=${null!==(n=null===(a=s.global_action)||void 0===a?void 0:a.double_tap_action)&&void 0!==n?n:{action:"none"}}
+          @value-changed=${t=>this._globalActionFieldChanged("double_tap_action",t.detail.value)}
         ></ha-selector>
 
         <button class="clear-btn"
-          @click=${() => {
-      const cfg = { ...this._config };
-      delete cfg.global_action;
-      this._fireConfigChanged(cfg);
-    }}
+          @click=${()=>{const t={...this._config};delete t.global_action,this._fireConfigChanged(t)}}
         >Clear Global Action</button>
       </div>
-    `;
-  }
-  // ── Sub-button row (single-group mode) ───────────────────────────────────────
-  _renderSubButtonRow(btn, index) {
-    var _a2, _b2, _c2, _d2, _e2, _f2;
-    const isExpanded = this._expandedSubButton === index;
-    const label = (_c2 = (_b2 = (_a2 = btn.entity) != null ? _a2 : btn.label) != null ? _b2 : btn.icon) != null ? _c2 : `Sub-button ${index + 1}`;
-    const layout = (_e2 = (_d2 = this._config) == null ? void 0 : _d2.sub_buttons_layout) != null ? _e2 : "bottom-row";
-    const showPosition = layout === "custom";
-    return b`
-      <div class="sub-btn-row ${this._dragOverIndex === index ? "drag-over" : ""}"
-        @dragstart=${(e2) => this._onDragStart(e2, index)}
-        @dragover=${(e2) => this._onDragOver(e2, index)}
-        @dragleave=${() => this._onDragLeave(index)}
-        @dragend=${(e2) => this._onDragEnd(e2)}
-        @drop=${(e2) => this._onDrop(e2, index)}
+    `}_renderSubButtonRow(t,e){var o,i,n,a,s,l,r,d;const c=this._expandedSubButton===e,u=null!==(o=null!==(i=null!==(n=t.entity)&&void 0!==n?n:t.label)&&void 0!==i?i:t.icon)&&void 0!==o?o:`Sub-button ${e+1}`,h="custom"===(null!==(a=null===(s=this._config)||void 0===s?void 0:s.sub_buttons_layout)&&void 0!==a?a:"bottom-row");return Y`
+      <div class="sub-btn-row ${this._dragOverIndex===e?"drag-over":""}"
+        @dragstart=${t=>this._onDragStart(t,e)}
+        @dragover=${t=>this._onDragOver(t,e)}
+        @dragleave=${()=>this._onDragLeave(e)}
+        @dragend=${t=>this._onDragEnd(t)}
+        @drop=${t=>this._onDrop(t,e)}
       >
         <div class="sub-btn-header"
-          @click=${() => this._expandedSubButton = isExpanded ? null : index}
+          @click=${()=>this._expandedSubButton=c?null:e}
         >
           <ha-icon class="drag-handle" icon="mdi:drag-vertical"
-            @mousedown=${(e2) => this._onDragHandleMousedown(e2, index)}
+            @mousedown=${t=>this._onDragHandleMousedown(t,e)}
           ></ha-icon>
-          <ha-icon .icon=${(_f2 = btn.icon) != null ? _f2 : "mdi:gesture-tap"}></ha-icon>
-          <span class="sub-btn-label">${label}</span>
-          <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+          <ha-icon .icon=${null!==(l=t.icon)&&void 0!==l?l:"mdi:gesture-tap"}></ha-icon>
+          <span class="sub-btn-label">${u}</span>
+          ${this._renderMoveButtons(e,null!==(r=null===(d=this._config)||void 0===d||null===(d=d.sub_buttons)||void 0===d?void 0:d.length)&&void 0!==r?r:0,(t,e)=>this._moveSubButton(t,e))}
+          <ha-icon .icon=${c?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>
           <button class="del-btn"
-            @click=${(ev) => {
-      ev.stopPropagation();
-      this._deleteSubButton(index);
-    }}
+            @click=${t=>{t.stopPropagation(),this._deleteSubButton(e)}}
           ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
         </div>
 
-        ${isExpanded ? b`
+        ${c?Y`
           <div class="sub-btn-body">
-            ${this._renderButtonBody(
-      btn,
-      showPosition,
-      (patch) => this._subButtonChanged(index, patch),
-      (field, value) => this._subButtonChanged(index, { [field]: value })
-    )}
+            ${this._renderButtonBody(t,h,t=>this._subButtonChanged(e,t),(t,o)=>this._subButtonChanged(e,{[t]:o}))}
           </div>
-        ` : A}
+        `:J}
       </div>
-    `;
-  }
-  // ── Group management methods ──────────────────────────────────────────────────
-  _addGroup() {
-    var _a2, _b2;
-    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
-    if (groups.length >= 4) return;
-    groups.push({ layout: "bottom-row", buttons: [] });
-    this._fieldChanged("sub_button_groups", groups);
-    this._expandedGroup = groups.length - 1;
-  }
-  _deleteGroup(index) {
-    var _a2, _b2;
-    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
-    groups.splice(index, 1);
-    this._fieldChanged("sub_button_groups", groups.length ? groups : void 0);
-    if (this._expandedGroup === index) this._expandedGroup = null;
-  }
-  _moveGroupUp(index) {
-    var _a2, _b2;
-    if (index === 0) return;
-    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
-    [groups[index - 1], groups[index]] = [groups[index], groups[index - 1]];
-    this._fieldChanged("sub_button_groups", groups);
-  }
-  _moveGroupDown(index) {
-    var _a2, _b2;
-    const groups = (_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : [];
-    if (index >= groups.length - 1) return;
-    const arr = [...groups];
-    [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
-    this._fieldChanged("sub_button_groups", arr);
-  }
-  _groupChanged(groupIndex, patch) {
-    var _a2, _b2;
-    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
-    groups[groupIndex] = { ...groups[groupIndex], ...patch };
-    this._fieldChanged("sub_button_groups", groups);
-  }
-  _groupButtonChanged(groupIndex, btnIndex, patch) {
-    var _a2, _b2, _c2, _d2;
-    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
-    const buttons = [...(_d2 = (_c2 = groups[groupIndex]) == null ? void 0 : _c2.buttons) != null ? _d2 : []];
-    buttons[btnIndex] = { ...buttons[btnIndex], ...patch };
-    groups[groupIndex] = { ...groups[groupIndex], buttons };
-    this._fieldChanged("sub_button_groups", groups);
-  }
-  _addGroupButton(groupIndex) {
-    var _a2, _b2, _c2, _d2;
-    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
-    const buttons = [...(_d2 = (_c2 = groups[groupIndex]) == null ? void 0 : _c2.buttons) != null ? _d2 : []];
-    buttons.push({
-      show_icon: true,
-      show_label: false,
-      show_state: false,
-      background: true,
-      state_based_color: false,
-      tap_action: { action: "toggle" },
-      hold_action: { action: "more-info" },
-      double_tap_action: { action: "none" }
-    });
-    groups[groupIndex] = { ...groups[groupIndex], buttons };
-    this._fieldChanged("sub_button_groups", groups);
-    this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: buttons.length - 1 };
-  }
-  _deleteGroupButton(groupIndex, btnIndex) {
-    var _a2, _b2, _c2, _d2;
-    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
-    const buttons = [...(_d2 = (_c2 = groups[groupIndex]) == null ? void 0 : _c2.buttons) != null ? _d2 : []];
-    buttons.splice(btnIndex, 1);
-    groups[groupIndex] = { ...groups[groupIndex], buttons };
-    this._fieldChanged("sub_button_groups", groups);
-    if (this._expandedGroupButton[groupIndex] === btnIndex) {
-      this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: null };
-    }
-  }
-  _switchToGroupsMode() {
-    var _a2, _b2;
-    const cfg = { ...this._config };
-    cfg.sub_button_groups = [{
-      layout: (_a2 = cfg.sub_buttons_layout) != null ? _a2 : "bottom-row",
-      gap: cfg.sub_button_gap,
-      grid_columns: cfg.sub_buttons_grid_columns,
-      grid_min_width: cfg.sub_buttons_grid_min_width,
-      grid_cell_layout: cfg.sub_buttons_grid_cell_layout,
-      column_justify: cfg.sub_buttons_column_justify,
-      icon_color: cfg.sub_button_icon_color,
-      background_color: cfg.sub_button_background_color,
-      opacity: cfg.sub_button_opacity,
-      buttons: (_b2 = cfg.sub_buttons) != null ? _b2 : []
-    }];
-    delete cfg.sub_buttons;
-    delete cfg.sub_buttons_layout;
-    delete cfg.sub_button_gap;
-    delete cfg.sub_buttons_grid_columns;
-    delete cfg.sub_buttons_grid_min_width;
-    delete cfg.sub_buttons_grid_cell_layout;
-    delete cfg.sub_buttons_column_justify;
-    delete cfg.sub_button_icon_color;
-    delete cfg.sub_button_background_color;
-    delete cfg.sub_button_opacity;
-    this._fireConfigChanged(cfg);
-    this._expandedGroup = 0;
-  }
-  _revertToSingleGroup() {
-    var _a2, _b2, _c2, _d2;
-    const firstGroup = (_c2 = (_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) == null ? void 0 : _b2[0]) != null ? _c2 : {};
-    const cfg = { ...this._config };
-    cfg.sub_buttons = (_d2 = firstGroup.buttons) != null ? _d2 : [];
-    if (firstGroup.layout) cfg.sub_buttons_layout = firstGroup.layout;
-    if (firstGroup.gap !== void 0) cfg.sub_button_gap = firstGroup.gap;
-    if (firstGroup.grid_columns !== void 0) cfg.sub_buttons_grid_columns = firstGroup.grid_columns;
-    if (firstGroup.grid_min_width !== void 0) cfg.sub_buttons_grid_min_width = firstGroup.grid_min_width;
-    if (firstGroup.grid_cell_layout) cfg.sub_buttons_grid_cell_layout = firstGroup.grid_cell_layout;
-    if (firstGroup.column_justify) cfg.sub_buttons_column_justify = firstGroup.column_justify;
-    if (firstGroup.icon_color) cfg.sub_button_icon_color = firstGroup.icon_color;
-    if (firstGroup.background_color) cfg.sub_button_background_color = firstGroup.background_color;
-    if (firstGroup.opacity !== void 0) cfg.sub_button_opacity = firstGroup.opacity;
-    delete cfg.sub_button_groups;
-    this._fireConfigChanged(cfg);
-  }
-  // ── Group button drag-and-drop ────────────────────────────────────────────────
-  _onGroupBtnDragHandleMousedown(e2, groupIndex, btnIndex) {
-    const row = e2.currentTarget.closest(".sub-btn-row");
-    if (row) row.setAttribute("draggable", "true");
-    this._dragGroupContext = groupIndex;
-    this._dragIndex = btnIndex;
-  }
-  _onGroupBtnDragStart(e2, groupIndex, btnIndex) {
-    var _a2;
-    (_a2 = e2.dataTransfer) == null ? void 0 : _a2.setData("text/plain", String(btnIndex));
-    if (e2.dataTransfer) e2.dataTransfer.effectAllowed = "move";
-    this._dragGroupContext = groupIndex;
-    this._dragIndex = btnIndex;
-  }
-  _onGroupBtnDragOver(e2, groupIndex, btnIndex) {
-    if (this._dragGroupContext !== groupIndex || this._dragIndex === null || this._dragIndex === btnIndex) return;
-    e2.preventDefault();
-    if (e2.dataTransfer) e2.dataTransfer.dropEffect = "move";
-    if (this._dragOverIndex !== btnIndex) this._dragOverIndex = btnIndex;
-  }
-  _onGroupBtnDrop(e2, groupIndex, toIndex) {
-    var _a2, _b2, _c2, _d2;
-    e2.preventDefault();
-    const fromIndex = this._dragIndex;
-    this._dragGroupContext = null;
-    this._dragIndex = null;
-    this._dragOverIndex = null;
-    if (fromIndex === null || fromIndex === toIndex) return;
-    const groups = [...(_b2 = (_a2 = this._config) == null ? void 0 : _a2.sub_button_groups) != null ? _b2 : []];
-    const buttons = [...(_d2 = (_c2 = groups[groupIndex]) == null ? void 0 : _c2.buttons) != null ? _d2 : []];
-    const [moved] = buttons.splice(fromIndex, 1);
-    buttons.splice(toIndex, 0, moved);
-    groups[groupIndex] = { ...groups[groupIndex], buttons };
-    this._fieldChanged("sub_button_groups", groups);
-    this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: null };
-  }
-  // ── Group button row ──────────────────────────────────────────────────────────
-  _renderGroupButtonRow(btn, btnIndex, groupIndex, layout) {
-    var _a2, _b2, _c2, _d2;
-    const isExpanded = this._expandedGroupButton[groupIndex] === btnIndex;
-    const label = (_c2 = (_b2 = (_a2 = btn.entity) != null ? _a2 : btn.label) != null ? _b2 : btn.icon) != null ? _c2 : `Button ${btnIndex + 1}`;
-    const showPosition = layout === "custom";
-    const isDragTarget = this._dragGroupContext === groupIndex && this._dragOverIndex === btnIndex;
-    return b`
-      <div class="sub-btn-row ${isDragTarget ? "drag-over" : ""}"
-        @dragstart=${(e2) => this._onGroupBtnDragStart(e2, groupIndex, btnIndex)}
-        @dragover=${(e2) => this._onGroupBtnDragOver(e2, groupIndex, btnIndex)}
-        @dragleave=${() => {
-      if (this._dragGroupContext === groupIndex && this._dragOverIndex === btnIndex) this._dragOverIndex = null;
-    }}
-        @dragend=${(e2) => {
-      e2.currentTarget.removeAttribute("draggable");
-      this._dragGroupContext = null;
-      this._dragIndex = null;
-      this._dragOverIndex = null;
-    }}
-        @drop=${(e2) => this._onGroupBtnDrop(e2, groupIndex, btnIndex)}
+    `}_addGroup(){var t,e;const o=[...null!==(t=null===(e=this._config)||void 0===e?void 0:e.sub_button_groups)&&void 0!==t?t:[]];o.length>=4||(o.push({layout:"bottom-row",buttons:[]}),this._fieldChanged("sub_button_groups",o),this._expandedGroup=o.length-1)}_deleteGroup(t){var e,o;const i=[...null!==(e=null===(o=this._config)||void 0===o?void 0:o.sub_button_groups)&&void 0!==e?e:[]];i.splice(t,1),this._fieldChanged("sub_button_groups",i.length?i:void 0),this._expandedGroup===t&&(this._expandedGroup=null)}_moveGroupUp(t){var e,o;if(0===t)return;const i=[...null!==(e=null===(o=this._config)||void 0===o?void 0:o.sub_button_groups)&&void 0!==e?e:[]];[i[t-1],i[t]]=[i[t],i[t-1]],this._fieldChanged("sub_button_groups",i)}_moveGroupDown(t){var e,o;const i=null!==(e=null===(o=this._config)||void 0===o?void 0:o.sub_button_groups)&&void 0!==e?e:[];if(t>=i.length-1)return;const n=[...i];[n[t],n[t+1]]=[n[t+1],n[t]],this._fieldChanged("sub_button_groups",n)}_groupChanged(t,e){var o,i;const n=[...null!==(o=null===(i=this._config)||void 0===i?void 0:i.sub_button_groups)&&void 0!==o?o:[]];n[t]={...n[t],...e},this._fieldChanged("sub_button_groups",n)}_groupButtonChanged(t,e,o){var i,n,a,s;const l=[...null!==(i=null===(n=this._config)||void 0===n?void 0:n.sub_button_groups)&&void 0!==i?i:[]],r=[...null!==(a=null===(s=l[t])||void 0===s?void 0:s.buttons)&&void 0!==a?a:[]];r[e]={...r[e],...o},l[t]={...l[t],buttons:r},this._fieldChanged("sub_button_groups",l)}_addGroupButton(t){var e,o,i,n;const a=[...null!==(e=null===(o=this._config)||void 0===o?void 0:o.sub_button_groups)&&void 0!==e?e:[]],s=[...null!==(i=null===(n=a[t])||void 0===n?void 0:n.buttons)&&void 0!==i?i:[]];s.push({show_icon:!0,show_label:!1,show_state:!1,background:!0,state_based_color:!1,tap_action:{action:"toggle"},hold_action:{action:"more-info"},double_tap_action:{action:"none"}}),a[t]={...a[t],buttons:s},this._fieldChanged("sub_button_groups",a),this._expandedGroupButton={...this._expandedGroupButton,[t]:s.length-1}}_deleteGroupButton(t,e){var o,i,n,a;const s=[...null!==(o=null===(i=this._config)||void 0===i?void 0:i.sub_button_groups)&&void 0!==o?o:[]],l=[...null!==(n=null===(a=s[t])||void 0===a?void 0:a.buttons)&&void 0!==n?n:[]];l.splice(e,1),s[t]={...s[t],buttons:l},this._fieldChanged("sub_button_groups",s),this._expandedGroupButton[t]===e&&(this._expandedGroupButton={...this._expandedGroupButton,[t]:null})}_switchToGroupsMode(){var t,e;const o={...this._config};o.sub_button_groups=[{layout:null!==(t=o.sub_buttons_layout)&&void 0!==t?t:"bottom-row",gap:o.sub_button_gap,grid_columns:o.sub_buttons_grid_columns,grid_min_width:o.sub_buttons_grid_min_width,grid_cell_layout:o.sub_buttons_grid_cell_layout,column_justify:o.sub_buttons_column_justify,icon_color:o.sub_button_icon_color,background_color:o.sub_button_background_color,opacity:o.sub_button_opacity,buttons:null!==(e=o.sub_buttons)&&void 0!==e?e:[]}],delete o.sub_buttons,delete o.sub_buttons_layout,delete o.sub_button_gap,delete o.sub_buttons_grid_columns,delete o.sub_buttons_grid_min_width,delete o.sub_buttons_grid_cell_layout,delete o.sub_buttons_column_justify,delete o.sub_button_icon_color,delete o.sub_button_background_color,delete o.sub_button_opacity,this._fireConfigChanged(o),this._expandedGroup=0}_revertToSingleGroup(){var t,e,o;const i=null!==(t=null===(e=this._config)||void 0===e||null===(e=e.sub_button_groups)||void 0===e?void 0:e[0])&&void 0!==t?t:{},n={...this._config};n.sub_buttons=null!==(o=i.buttons)&&void 0!==o?o:[],i.layout&&(n.sub_buttons_layout=i.layout),void 0!==i.gap&&(n.sub_button_gap=i.gap),void 0!==i.grid_columns&&(n.sub_buttons_grid_columns=i.grid_columns),void 0!==i.grid_min_width&&(n.sub_buttons_grid_min_width=i.grid_min_width),i.grid_cell_layout&&(n.sub_buttons_grid_cell_layout=i.grid_cell_layout),i.column_justify&&(n.sub_buttons_column_justify=i.column_justify),i.icon_color&&(n.sub_button_icon_color=i.icon_color),i.background_color&&(n.sub_button_background_color=i.background_color),void 0!==i.opacity&&(n.sub_button_opacity=i.opacity),delete n.sub_button_groups,this._fireConfigChanged(n)}_onGroupBtnDragHandleMousedown(t,e,o){const i=t.currentTarget.closest(".sub-btn-row");i&&i.setAttribute("draggable","true"),this._dragGroupContext=e,this._dragIndex=o}_onGroupBtnDragStart(t,e,o){var i;null===(i=t.dataTransfer)||void 0===i||i.setData("text/plain",String(o)),t.dataTransfer&&(t.dataTransfer.effectAllowed="move"),this._dragGroupContext=e,this._dragIndex=o}_onGroupBtnDragOver(t,e,o){this._dragGroupContext===e&&null!==this._dragIndex&&this._dragIndex!==o&&(t.preventDefault(),t.dataTransfer&&(t.dataTransfer.dropEffect="move"),this._dragOverIndex!==o&&(this._dragOverIndex=o))}_onGroupBtnDrop(t,e,o){var i,n,a,s;t.preventDefault();const l=this._dragIndex;if(this._dragGroupContext=null,this._dragIndex=null,this._dragOverIndex=null,null===l||l===o)return;const r=[...null!==(i=null===(n=this._config)||void 0===n?void 0:n.sub_button_groups)&&void 0!==i?i:[]],d=[...null!==(a=null===(s=r[e])||void 0===s?void 0:s.buttons)&&void 0!==a?a:[]],[c]=d.splice(l,1);d.splice(o,0,c),r[e]={...r[e],buttons:d},this._fieldChanged("sub_button_groups",r),this._expandedGroupButton={...this._expandedGroupButton,[e]:null}}_renderGroupButtonRow(t,e,o,i){var n,a,s,l,r,d;const c=this._expandedGroupButton[o]===e,u=null!==(n=null!==(a=null!==(s=t.entity)&&void 0!==s?s:t.label)&&void 0!==a?a:t.icon)&&void 0!==n?n:`Button ${e+1}`,h="custom"===i,p=this._dragGroupContext===o&&this._dragOverIndex===e;return Y`
+      <div class="sub-btn-row ${p?"drag-over":""}"
+        @dragstart=${t=>this._onGroupBtnDragStart(t,o,e)}
+        @dragover=${t=>this._onGroupBtnDragOver(t,o,e)}
+        @dragleave=${()=>{this._dragGroupContext===o&&this._dragOverIndex===e&&(this._dragOverIndex=null)}}
+        @dragend=${t=>{t.currentTarget.removeAttribute("draggable"),this._dragGroupContext=null,this._dragIndex=null,this._dragOverIndex=null}}
+        @drop=${t=>this._onGroupBtnDrop(t,o,e)}
       >
         <div class="sub-btn-header"
-          @click=${() => {
-      const cur = this._expandedGroupButton[groupIndex];
-      this._expandedGroupButton = { ...this._expandedGroupButton, [groupIndex]: cur === btnIndex ? null : btnIndex };
-    }}
+          @click=${()=>{const t=this._expandedGroupButton[o];this._expandedGroupButton={...this._expandedGroupButton,[o]:t===e?null:e}}}
         >
           <ha-icon class="drag-handle" icon="mdi:drag-vertical"
-            @mousedown=${(e2) => this._onGroupBtnDragHandleMousedown(e2, groupIndex, btnIndex)}
+            @mousedown=${t=>this._onGroupBtnDragHandleMousedown(t,o,e)}
           ></ha-icon>
-          <ha-icon .icon=${(_d2 = btn.icon) != null ? _d2 : "mdi:gesture-tap"}></ha-icon>
-          <span class="sub-btn-label">${label}</span>
-          <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+          <ha-icon .icon=${null!==(l=t.icon)&&void 0!==l?l:"mdi:gesture-tap"}></ha-icon>
+          <span class="sub-btn-label">${u}</span>
+          ${this._renderMoveButtons(e,null!==(r=null===(d=this._config)||void 0===d||null===(d=d.sub_button_groups)||void 0===d||null===(d=d[o])||void 0===d||null===(d=d.buttons)||void 0===d?void 0:d.length)&&void 0!==r?r:0,(t,e)=>this._moveGroupButton(o,t,e))}
+          <ha-icon .icon=${c?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>
           <button class="del-btn"
-            @click=${(ev) => {
-      ev.stopPropagation();
-      this._deleteGroupButton(groupIndex, btnIndex);
-    }}
+            @click=${t=>{t.stopPropagation(),this._deleteGroupButton(o,e)}}
           ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
         </div>
-        ${isExpanded ? b`
+        ${c?Y`
           <div class="sub-btn-body">
-            ${this._renderButtonBody(
-      btn,
-      showPosition,
-      (patch) => this._groupButtonChanged(groupIndex, btnIndex, patch),
-      (field, value) => this._groupButtonChanged(groupIndex, btnIndex, { [field]: value })
-    )}
+            ${this._renderButtonBody(t,h,t=>this._groupButtonChanged(o,e,t),(t,i)=>this._groupButtonChanged(o,e,{[t]:i}))}
           </div>
-        ` : A}
+        `:J}
       </div>
-    `;
-  }
-  // ── Group row ─────────────────────────────────────────────────────────────────
-  _renderGroupRow(group, groupIndex) {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
-    const c2 = this._config;
-    const isExpanded = this._expandedGroup === groupIndex;
-    const numGroups = (_b2 = (_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length) != null ? _b2 : 0;
-    const groupLabel = (_c2 = group.label) != null ? _c2 : `Group ${groupIndex + 1}`;
-    const layout = (_d2 = group.layout) != null ? _d2 : "bottom-row";
-    const isColumn = layout === "left-column" || layout === "right-column";
-    const isGrid = layout === "grid";
-    const showCustomPos = group.position === "custom";
-    return b`
+    `}_renderGroupRow(t,e){var o,i,n,a,s,l,r,d,c,u,h,p,b,v,_,g,m;const f=this._config,$=this._expandedGroup===e,x=null!==(o=null===(i=f.sub_button_groups)||void 0===i?void 0:i.length)&&void 0!==o?o:0,y=null!==(n=t.label)&&void 0!==n?n:`Group ${e+1}`,w=null!==(a=t.layout)&&void 0!==a?a:"bottom-row",C="left-column"===w||"right-column"===w,k="grid"===w,S="custom"===t.position;return Y`
       <div class="sub-btn-row">
-        <div class="sub-btn-header" @click=${() => this._expandedGroup = isExpanded ? null : groupIndex}>
+        <div class="sub-btn-header" @click=${()=>this._expandedGroup=$?null:e}>
           <ha-icon icon="mdi:layers" style="--mdc-icon-size:18px; opacity:0.7; flex-shrink:0;"></ha-icon>
-          <span class="sub-btn-label">${groupLabel}</span>
-          <span class="group-layout-chip">${layout}</span>
-          <ha-icon .icon=${isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+          <span class="sub-btn-label">${y}</span>
+          <span class="group-layout-chip">${w}</span>
+          <ha-icon .icon=${$?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>
           <div style="display:flex; gap:2px; flex-shrink:0;">
-            ${groupIndex > 0 ? b`
+            ${e>0?Y`
               <button class="icon-btn" title="Move up"
-                @click=${(e2) => {
-      e2.stopPropagation();
-      this._moveGroupUp(groupIndex);
-    }}
+                @click=${t=>{t.stopPropagation(),this._moveGroupUp(e)}}
               ><ha-icon icon="mdi:arrow-up" style="--mdc-icon-size:14px;"></ha-icon></button>
-            ` : A}
-            ${groupIndex < numGroups - 1 ? b`
+            `:J}
+            ${e<x-1?Y`
               <button class="icon-btn" title="Move down"
-                @click=${(e2) => {
-      e2.stopPropagation();
-      this._moveGroupDown(groupIndex);
-    }}
+                @click=${t=>{t.stopPropagation(),this._moveGroupDown(e)}}
               ><ha-icon icon="mdi:arrow-down" style="--mdc-icon-size:14px;"></ha-icon></button>
-            ` : A}
+            `:J}
             <button class="del-btn"
-              @click=${(e2) => {
-      e2.stopPropagation();
-      this._deleteGroup(groupIndex);
-    }}
+              @click=${t=>{t.stopPropagation(),this._deleteGroup(e)}}
             ><ha-icon icon="mdi:delete" class="del-icon"></ha-icon></button>
           </div>
         </div>
 
-        ${isExpanded ? b`
+        ${$?Y`
           <div class="sub-btn-body">
             <ha-selector .hass=${this.hass} .label=${"Group Name (editor label only)"}
-              .selector=${{ text: {} }} .value=${(_e2 = group.label) != null ? _e2 : ""}
-              @value-changed=${(ev) => this._groupChanged(groupIndex, { label: ev.detail.value || void 0 })}
+              .selector=${{text:{}}} .value=${null!==(s=t.label)&&void 0!==s?s:""}
+              @value-changed=${t=>this._groupChanged(e,{label:t.detail.value||void 0})}
             ></ha-selector>
 
             <div class="sub-group-label">Layout &amp; Position</div>
 
             <ha-selector .hass=${this.hass} .label=${"Button Layout"}
-              .selector=${{ select: { options: SUB_BUTTON_LAYOUT_OPTIONS, mode: "dropdown" } }}
-              .value=${layout}
-              @value-changed=${(ev) => this._groupChanged(groupIndex, { layout: ev.detail.value })}
+              .selector=${{select:{options:Gt,mode:"dropdown"}}}
+              .value=${w}
+              @value-changed=${t=>this._groupChanged(e,{layout:t.detail.value})}
             ></ha-selector>
 
             <ha-selector .hass=${this.hass} .label=${"Group Position (overrides layout default)"}
-              .selector=${{ select: { options: GROUP_POSITION_OPTIONS, mode: "dropdown" } }}
-              .value=${(_f2 = group.position) != null ? _f2 : ""}
-              @value-changed=${(ev) => this._groupChanged(groupIndex, { position: ev.detail.value || void 0 })}
+              .selector=${{select:{options:Mt,mode:"dropdown"}}}
+              .value=${null!==(l=t.position)&&void 0!==l?l:""}
+              @value-changed=${t=>this._groupChanged(e,{position:t.detail.value||void 0})}
             ></ha-selector>
 
-            ${showCustomPos ? b`
+            ${S?Y`
               <div class="two-col">
                 <ha-selector .hass=${this.hass} .label=${"X (CSS left)"}
-                  .selector=${{ text: {} }} .value=${(_g = group.position_x) != null ? _g : ""}
+                  .selector=${{text:{}}} .value=${null!==(r=t.position_x)&&void 0!==r?r:""}
                   .placeholder=${"e.g. 10px, 25%"}
-                  @value-changed=${(ev) => this._groupChanged(groupIndex, { position_x: ev.detail.value || void 0 })}
+                  @value-changed=${t=>this._groupChanged(e,{position_x:t.detail.value||void 0})}
                 ></ha-selector>
                 <ha-selector .hass=${this.hass} .label=${"Y (CSS top)"}
-                  .selector=${{ text: {} }} .value=${(_h = group.position_y) != null ? _h : ""}
+                  .selector=${{text:{}}} .value=${null!==(d=t.position_y)&&void 0!==d?d:""}
                   .placeholder=${"e.g. 10px, 25%"}
-                  @value-changed=${(ev) => this._groupChanged(groupIndex, { position_y: ev.detail.value || void 0 })}
+                  @value-changed=${t=>this._groupChanged(e,{position_y:t.detail.value||void 0})}
                 ></ha-selector>
               </div>
-            ` : A}
+            `:J}
 
-            ${isColumn ? b`
+            ${C?Y`
               <ha-selector .hass=${this.hass} .label=${"Column Alignment"}
-                .selector=${{ select: { options: COLUMN_JUSTIFY_OPTIONS, mode: "dropdown" } }}
-                .value=${(_i = group.column_justify) != null ? _i : "top"}
-                @value-changed=${(ev) => this._groupChanged(groupIndex, { column_justify: ev.detail.value || void 0 })}
+                .selector=${{select:{options:Ft,mode:"dropdown"}}}
+                .value=${null!==(c=t.column_justify)&&void 0!==c?c:"top"}
+                @value-changed=${t=>this._groupChanged(e,{column_justify:t.detail.value||void 0})}
               ></ha-selector>
-            ` : A}
+            `:J}
 
-            ${isGrid ? b`
+            ${k?Y`
               <div class="two-col">
                 <ha-selector .hass=${this.hass} .label=${"Columns (0 = auto-fill)"}
-                  .selector=${{ number: { min: 0, max: 8, step: 1, mode: "box" } }}
-                  .value=${(_j = group.grid_columns) != null ? _j : 0}
-                  @value-changed=${(ev) => this._groupChanged(groupIndex, { grid_columns: ev.detail.value || void 0 })}
+                  .selector=${{number:{min:0,max:8,step:1,mode:"box"}}}
+                  .value=${null!==(u=t.grid_columns)&&void 0!==u?u:0}
+                  @value-changed=${t=>this._groupChanged(e,{grid_columns:t.detail.value||void 0})}
                 ></ha-selector>
                 <ha-selector .hass=${this.hass} .label=${"Cell Min Width"}
-                  .selector=${{ number: { min: 32, max: 200, step: 4, mode: "box", unit_of_measurement: "px" } }}
-                  .value=${(_k = group.grid_min_width) != null ? _k : 56}
-                  @value-changed=${(ev) => this._groupChanged(groupIndex, { grid_min_width: ev.detail.value })}
+                  .selector=${{number:{min:32,max:200,step:4,mode:"box",unit_of_measurement:"px"}}}
+                  .value=${null!==(h=t.grid_min_width)&&void 0!==h?h:56}
+                  @value-changed=${t=>this._groupChanged(e,{grid_min_width:t.detail.value})}
                 ></ha-selector>
               </div>
               <ha-selector .hass=${this.hass} .label=${"Cell Layout"}
-                .selector=${{ select: { options: GRID_CELL_LAYOUT_OPTIONS, mode: "list" } }}
-                .value=${(_l = group.grid_cell_layout) != null ? _l : "vertical"}
-                @value-changed=${(ev) => this._groupChanged(groupIndex, { grid_cell_layout: ev.detail.value || void 0 })}
+                .selector=${{select:{options:Dt,mode:"list"}}}
+                .value=${null!==(p=t.grid_cell_layout)&&void 0!==p?p:"vertical"}
+                @value-changed=${t=>this._groupChanged(e,{grid_cell_layout:t.detail.value||void 0})}
               ></ha-selector>
-            ` : A}
+            `:J}
 
             <div class="sub-group-label">Group Style</div>
             <div class="two-col">
               <ha-selector .hass=${this.hass} .label=${"Opacity"}
-                .selector=${OPACITY_SELECTOR} .value=${(_m = group.opacity) != null ? _m : 1}
-                @value-changed=${(ev) => this._groupChanged(groupIndex, { opacity: ev.detail.value })}
+                .selector=${Ht} .value=${null!==(b=t.opacity)&&void 0!==b?b:1}
+                @value-changed=${t=>this._groupChanged(e,{opacity:t.detail.value})}
               ></ha-selector>
               <ha-selector .hass=${this.hass} .label=${"Button Gap"}
-                .selector=${{ number: { min: 0, max: 32, step: 1, mode: "box", unit_of_measurement: "px" } }}
-                .value=${(_n = group.gap) != null ? _n : 6}
-                @value-changed=${(ev) => this._groupChanged(groupIndex, { gap: ev.detail.value })}
+                .selector=${{number:{min:0,max:32,step:1,mode:"box",unit_of_measurement:"px"}}}
+                .value=${null!==(v=t.gap)&&void 0!==v?v:6}
+                @value-changed=${t=>this._groupChanged(e,{gap:t.detail.value})}
               ></ha-selector>
             </div>
-            ${this._renderButtonColorField((_o = group.icon_color) != null ? _o : "", "Icon Color (default for group)", "e.g. #ff9800", (v2) => this._groupChanged(groupIndex, { icon_color: v2 }))}
-            ${this._renderButtonColorField((_p = group.background_color) != null ? _p : "", "Background Color (default for group)", "e.g. rgba(255,255,255,0.1)", (v2) => this._groupChanged(groupIndex, { background_color: v2 }))}
+            ${this._renderButtonColorField(null!==(_=t.icon_color)&&void 0!==_?_:"","Icon Color (default for group)","e.g. #ff9800",t=>this._groupChanged(e,{icon_color:t}))}
+            ${this._renderButtonColorField(null!==(g=t.background_color)&&void 0!==g?g:"","Background Color (default for group)","e.g. rgba(255,255,255,0.1)",t=>this._groupChanged(e,{background_color:t}))}
 
             <div class="sub-group-label">Buttons</div>
-            ${((_q = group.buttons) != null ? _q : []).map(
-      (btn, i2) => this._renderGroupButtonRow(btn, i2, groupIndex, layout)
-    )}
-            <button class="add-btn" @click=${() => this._addGroupButton(groupIndex)}>+ Add Button</button>
+            ${(null!==(m=t.buttons)&&void 0!==m?m:[]).map((t,o)=>this._renderGroupButtonRow(t,o,e,w))}
+            <button class="add-btn" @click=${()=>this._addGroupButton(e)}>+ Add Button</button>
           </div>
-        ` : A}
+        `:J}
       </div>
-    `;
-  }
-  // ── Main render ───────────────────────────────────────────────────────────────
-  render() {
-    if (!this._loaded || !this._config) {
-      return b`<div class="loading">Loading editor…</div>`;
-    }
-    return b`
+    `}render(){return this._loaded&&this._config?Y`
       ${this._renderTabBar()}
       <div class="tab-content">
-        ${this._activeTab === "basic" ? this._renderBasicTab() : A}
-        ${this._activeTab === "icon" ? this._renderIconTab() : A}
-        ${this._activeTab === "card" ? this._renderCardTab() : A}
-        ${this._activeTab === "buttons" ? this._renderButtonsTab() : A}
-        ${this._activeTab === "actions" ? this._renderActionsTab() : A}
+        ${"basic"===this._activeTab?this._renderBasicTab():J}
+        ${"icon"===this._activeTab?this._renderIconTab():J}
+        ${"card"===this._activeTab?this._renderCardTab():J}
+        ${"buttons"===this._activeTab?this._renderButtonsTab():J}
+        ${"actions"===this._activeTab?this._renderActionsTab():J}
       </div>
-    `;
-  }
-  // ── Styles ────────────────────────────────────────────────────────────────────
-  static get styles() {
-    return i$3`
+    `:Y`<div class="loading">Loading editor…</div>`}static get styles(){return d`
       :host { display: block; }
 
       .loading { padding: 16px; color: var(--secondary-text-color); }
@@ -3263,6 +1857,12 @@ class IansCustomRoomCardEditor extends i {
         color: var(--primary-text-color);
       }
 
+      .move-btns {
+        display: flex;
+        gap: 2px;
+        flex-shrink: 0;
+      }
+
       .icon-btn {
         display: flex;
         align-items: center;
@@ -3294,918 +1894,89 @@ class IansCustomRoomCardEditor extends i {
         font-weight: 500;
         flex-shrink: 0;
       }
-    `;
-  }
-}
-__decorateClass$1([
-  n2({ attribute: false })
-], IansCustomRoomCardEditor.prototype, "hass");
-__decorateClass$1([
-  r()
-], IansCustomRoomCardEditor.prototype, "_config");
-__decorateClass$1([
-  r()
-], IansCustomRoomCardEditor.prototype, "_loaded");
-__decorateClass$1([
-  r()
-], IansCustomRoomCardEditor.prototype, "_templateMode");
-__decorateClass$1([
-  r()
-], IansCustomRoomCardEditor.prototype, "_expandedSubButton");
-__decorateClass$1([
-  r()
-], IansCustomRoomCardEditor.prototype, "_activeTab");
-__decorateClass$1([
-  r()
-], IansCustomRoomCardEditor.prototype, "_dragOverIndex");
-__decorateClass$1([
-  r()
-], IansCustomRoomCardEditor.prototype, "_expandedGroup");
-__decorateClass$1([
-  r()
-], IansCustomRoomCardEditor.prototype, "_expandedGroupButton");
-if (!customElements.get(`${CARD_TYPE}-editor`)) {
-  customElements.define(`${CARD_TYPE}-editor`, IansCustomRoomCardEditor);
-}
-var __defProp = Object.defineProperty;
-var __decorateClass = (decorators, target, key, kind) => {
-  var result = void 0;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(target, key, result) || result;
-  if (result) __defProp(target, key, result);
-  return result;
-};
-const TEMPLATE_FIELDS = [
-  "icon",
-  "icon_color",
-  "icon_background_color",
-  "badge_icon",
-  "badge_color",
-  "badge_background_color",
-  "background_color",
-  "border_color",
-  "title"
-];
-const INACTIVE_STATES = /* @__PURE__ */ new Set(["unavailable", "unknown", "off"]);
-function isStateActive(stateObj) {
-  const state2 = stateObj.state;
-  if (INACTIVE_STATES.has(state2)) return false;
-  switch (stateObj.entity_id.split(".")[0]) {
-    case "alarm_control_panel":
-      return state2 !== "disarmed";
-    case "alert":
-      return state2 !== "idle";
-    case "cover":
-    case "valve":
-      return state2 !== "closed";
-    case "device_tracker":
-    case "person":
-      return state2 !== "not_home";
-    case "lawn_mower":
-      return state2 === "mowing" || state2 === "error";
-    case "lock":
-      return state2 !== "locked";
-    case "media_player":
-      return state2 !== "standby";
-    case "vacuum":
-      return !["idle", "docked", "paused"].includes(state2);
-    case "plant":
-      return state2 === "problem";
-    case "group":
-      return ["on", "home", "open", "locked", "problem"].includes(state2);
-    case "timer":
-      return state2 === "active";
-    case "camera":
-      return state2 === "streaming";
-    default:
-      return true;
-  }
-}
-const DOMAIN_ACTIVE_COLORS = {
-  light: "var(--state-light-active-color, #FDD835)",
-  switch: "var(--state-switch-active-color, #FDD835)",
-  fan: "var(--state-fan-active-color, #26A69A)",
-  media_player: "var(--state-media_player-active-color, #FDD835)",
-  cover: "var(--state-cover-active-color, #FDD835)",
-  lock: "var(--success-color, #4CAF50)",
-  binary_sensor: "var(--state-binary_sensor-active-color, #FDD835)",
-  alarm_control_panel: "var(--error-color, #db4437)",
-  climate: "var(--state-climate-active-color, #FF9800)",
-  vacuum: "var(--state-vacuum-active-color, #26A69A)",
-  humidifier: "var(--state-humidifier-active-color, #2196F3)",
-  water_heater: "var(--state-water_heater-active-color, #FF9800)"
-};
-const DOMAIN_ICONS = {
-  light: "mdi:lightbulb",
-  switch: "mdi:toggle-switch",
-  sensor: "mdi:eye",
-  binary_sensor: "mdi:radiobox-marked",
-  climate: "mdi:thermostat",
-  cover: "mdi:garage",
-  fan: "mdi:fan",
-  media_player: "mdi:cast",
-  lock: "mdi:lock",
-  vacuum: "mdi:robot-vacuum",
-  camera: "mdi:camera",
-  person: "mdi:account",
-  device_tracker: "mdi:map-marker",
-  weather: "mdi:weather-partly-cloudy",
-  script: "mdi:script-text",
-  automation: "mdi:robot",
-  scene: "mdi:palette",
-  input_boolean: "mdi:toggle-switch-outline",
-  input_number: "mdi:numeric",
-  input_select: "mdi:form-select",
-  number: "mdi:numeric",
-  select: "mdi:form-select",
-  button: "mdi:gesture-tap-button",
-  water_heater: "mdi:water-boiler",
-  alarm_control_panel: "mdi:shield-home"
-};
-const COLUMN_JUSTIFY_MAP = {
-  top: "flex-start",
-  center: "center",
-  bottom: "flex-end",
-  "space-between": "space-between",
-  "space-around": "space-around"
-};
-const SHAPE_BORDER_RADIUS = {
-  circle: "50%",
-  "rounded-rect": "8px",
-  squircle: "30%",
-  square: "0"
-};
-const CARD_SHAPE_BORDER_RADIUS = {
-  square: "0",
-  "rounded-sm": "8px",
-  rounded: "12px",
-  "rounded-lg": "24px",
-  pill: "999px"
-};
-const ANIM_DURATIONS = {
-  spin: { slow: "4s", normal: "2s", fast: "0.8s" },
-  pulse: { slow: "3s", normal: "1.5s", fast: "0.6s" },
-  blink: { slow: "2.4s", normal: "1.2s", fast: "0.5s" },
-  bounce: { slow: "1.6s", normal: "0.8s", fast: "0.35s" },
-  shake: { slow: "1.2s", normal: "0.6s", fast: "0.25s" }
-};
-const CORNER_POSITIONS = [
-  "top-left",
-  "top-right",
-  "bottom-left",
-  "bottom-right"
-];
-const _templateResultsCache = /* @__PURE__ */ new Map();
-const _CACHE_TTL = 2e3;
-function _templateCacheKey(config) {
-  return JSON.stringify(config);
-}
-const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
-  constructor() {
-    super(...arguments);
-    this._templateResults = {};
-    this._templateErrors = {};
-    this._templateUnsubs = /* @__PURE__ */ new Map();
-    this._subTemplateResults = {};
-    this._subTemplateUnsubs = /* @__PURE__ */ new Map();
-    this._subButtonCleanups = [];
-    this._templateGen = 0;
-    this._subTemplateGen = 0;
-    this._watchedEntities = [];
-  }
-  // ── Static card metadata ───────────────────────────────────────────────────
-  static getStubConfig(hass) {
-    var _a2, _b2;
-    if (hass) {
-      const lightKey = Object.keys(hass.states).find(
-        (e2) => e2.startsWith("light.")
-      );
-      if (lightKey) {
-        return {
-          type: `custom:${CARD_TYPE}`,
-          entity: lightKey,
-          title: (_b2 = (_a2 = hass.states[lightKey]) == null ? void 0 : _a2.attributes.friendly_name) != null ? _b2 : "Room",
-          icon: "mdi:lightbulb"
-        };
-      }
-    }
-    return { type: `custom:${CARD_TYPE}`, title: "Room", icon: "mdi:home" };
-  }
-  static getGridOptions(config) {
-    var _a2, _b2, _c2, _d2, _e2;
-    const g2 = (_a2 = config == null ? void 0 : config.grid_options) != null ? _a2 : {};
-    return {
-      columns: (_b2 = g2.columns) != null ? _b2 : 6,
-      rows: (_c2 = g2.rows) != null ? _c2 : 2,
-      min_columns: (_d2 = g2.min_columns) != null ? _d2 : 3,
-      min_rows: (_e2 = g2.min_rows) != null ? _e2 : 1,
-      ...g2.max_columns !== void 0 && { max_columns: g2.max_columns },
-      ...g2.max_rows !== void 0 && { max_rows: g2.max_rows }
-    };
-  }
-  // HA calls getGridOptions() on the element instance (not as static) to drive
-  // the resize UI. Delegate to the static implementation.
-  getGridOptions() {
-    return _IansCustomRoomCard2.getGridOptions(this._config);
-  }
-  static getConfigElement() {
-    return document.createElement(`${CARD_TYPE}-editor`);
-  }
-  // Masonry layout height hint (1 unit ≈ 50px). Sections layout uses
-  // getGridOptions instead.
-  getCardSize() {
-    var _a2, _b2, _c2;
-    return (_c2 = (_b2 = (_a2 = this._config) == null ? void 0 : _a2.grid_options) == null ? void 0 : _b2.rows) != null ? _c2 : 2;
-  }
-  // ── Config ─────────────────────────────────────────────────────────────────
-  setConfig(config) {
-    if (!config) throw new Error("Invalid configuration");
-    this._config = config;
-    this._watchedEntities = this._collectEntities(config);
-  }
-  _collectEntities(config) {
-    var _a2, _b2;
-    const ids = /* @__PURE__ */ new Set();
-    if (config.entity) ids.add(config.entity);
-    const buttons = ((_a2 = config.sub_button_groups) == null ? void 0 : _a2.length) ? config.sub_button_groups.flatMap((g2) => {
-      var _a3;
-      return (_a3 = g2.buttons) != null ? _a3 : [];
-    }) : (_b2 = config.sub_buttons) != null ? _b2 : [];
-    for (const btn of buttons) if (btn.entity) ids.add(btn.entity);
-    return [...ids];
-  }
-  // Skip re-rendering on hass updates that don't touch this card — HA pushes
-  // a new hass object on every state change anywhere in the system
-  shouldUpdate(changedProps) {
-    if (!changedProps.has("hass") || changedProps.size > 1) return true;
-    const oldHass = changedProps.get("hass");
-    if (!oldHass || !this.hass) return true;
-    if (oldHass.themes !== this.hass.themes || oldHass.locale !== this.hass.locale || oldHass.formatEntityState !== this.hass.formatEntityState || oldHass.entities !== this.hass.entities || oldHass.devices !== this.hass.devices || oldHass.areas !== this.hass.areas) {
-      return true;
-    }
-    return this._watchedEntities.some((id) => oldHass.states[id] !== this.hass.states[id]);
-  }
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
-  connectedCallback() {
-    super.connectedCallback();
-    if (this._config) {
-      const cached = _templateResultsCache.get(_templateCacheKey(this._config));
-      if (cached) this._templateResults = { ...cached };
-    }
-    if (!this.hasUpdated) return;
-    if (this._config && this.hass) {
-      this._subscribeTemplates();
-      this._subscribeSubButtonTemplates();
-    }
-    if (this._config) {
-      this._setupCardActionHandler();
-      this._setupSubButtonHandlers();
-    }
-  }
-  firstUpdated() {
-    this._setupCardActionHandler();
-  }
-  disconnectedCallback() {
-    var _a2;
-    super.disconnectedCallback();
-    if (this._config && Object.keys(this._templateResults).length > 0) {
-      const key = _templateCacheKey(this._config);
-      _templateResultsCache.set(key, { ...this._templateResults });
-      window.setTimeout(() => _templateResultsCache.delete(key), _CACHE_TTL);
-    }
-    this._templateGen++;
-    this._subTemplateGen++;
-    this._unsubscribeTemplates();
-    this._unsubscribeSubButtonTemplates();
-    (_a2 = this._cardActionCleanup) == null ? void 0 : _a2.call(this);
-    this._cardActionCleanup = void 0;
-    this._cleanupSubButtonHandlers();
-  }
-  updated(changedProps) {
-    super.updated(changedProps);
-    const configChanged = changedProps.has("_config");
-    const templateResultsChanged = changedProps.has("_templateResults");
-    const hassChanged = changedProps.has("hass");
-    const hassArrived = hassChanged && changedProps.get("hass") === void 0;
-    if (configChanged || hassArrived) {
-      this._subscribeTemplates();
-      this._subscribeSubButtonTemplates();
-    }
-    if (configChanged) {
-      this._setupCardActionHandler();
-    }
-    if (configChanged || templateResultsChanged || changedProps.has("_subTemplateResults") || hassChanged) {
-      this._applyConfigStyles();
-    }
-    if (configChanged) {
-      this._setupSubButtonHandlers();
-    }
-  }
-  // ── Template subscriptions ─────────────────────────────────────────────────
-  async _subscribeTemplates() {
-    var _a2, _b2;
-    const gen = ++this._templateGen;
-    await this._unsubscribeTemplates();
-    if (gen !== this._templateGen) return;
-    const c2 = this._config;
-    if (!c2 || !this.hass) return;
-    const staleResults = { ...this._templateResults };
-    for (const field of TEMPLATE_FIELDS) {
-      const value = c2[field];
-      if (!value || !isTemplate(value)) {
-        delete staleResults[field];
-      }
-    }
-    this._templateResults = staleResults;
-    const variables = {
-      config: c2,
-      user: (_b2 = (_a2 = this.hass.user) == null ? void 0 : _a2.name) != null ? _b2 : "",
-      entity: c2.entity
-    };
-    const fields = TEMPLATE_FIELDS.filter((field) => {
-      const value = c2[field];
-      return !!value && isTemplate(value);
-    });
-    await Promise.all(fields.map(async (field) => {
-      const value = c2[field];
-      try {
-        const unsub = await subscribeTemplate(
-          this.hass,
-          value,
-          variables,
-          (result) => {
-            if (gen !== this._templateGen) return;
-            this._templateResults = { ...this._templateResults, [field]: result };
-            if (field in this._templateErrors) {
-              const errs = { ...this._templateErrors };
-              delete errs[field];
-              this._templateErrors = errs;
-            }
-          },
-          (error) => {
-            if (gen !== this._templateGen) return;
-            console.warn(`[ians-room-card] Template error in ${field}:`, error);
-            this._templateErrors = { ...this._templateErrors, [field]: error };
-          }
-        );
-        if (gen !== this._templateGen) {
-          unsub().catch(() => void 0);
-          return;
-        }
-        this._templateUnsubs.set(field, unsub);
-      } catch (e2) {
-        if (gen !== this._templateGen) return;
-        console.error(`[ians-room-card] Failed to subscribe template for ${field}:`, e2);
-        this._templateErrors = { ...this._templateErrors, [field]: String(e2) };
-      }
-    }));
-  }
-  async _unsubscribeTemplates() {
-    const unsubs = [...this._templateUnsubs.values()];
-    this._templateUnsubs.clear();
-    this._templateErrors = {};
-    for (const unsub of unsubs) {
-      try {
-        await unsub();
-      } catch (e2) {
-      }
-    }
-  }
-  async _subscribeSubButtonTemplates() {
-    var _a2, _b2, _c2, _d2;
-    const gen = ++this._subTemplateGen;
-    await this._unsubscribeSubButtonTemplates();
-    if (gen !== this._subTemplateGen) return;
-    const c2 = this._config;
-    if (!c2 || !this.hass) return;
-    const variables = {
-      config: c2,
-      user: (_b2 = (_a2 = this.hass.user) == null ? void 0 : _a2.name) != null ? _b2 : ""
-    };
-    const jobs = [];
-    const collect = (buttons, prefix) => {
-      for (const [i2, btn] of buttons.entries()) {
-        for (const field of ["icon", "label"]) {
-          const value = btn[field];
-          if (!value || !isTemplate(value)) continue;
-          jobs.push({ key: `${prefix}sub_${i2}_${field}`, template: value, entity: btn.entity });
-        }
-      }
-    };
-    if ((_c2 = c2.sub_button_groups) == null ? void 0 : _c2.length) {
-      for (const [g2, group] of c2.sub_button_groups.slice(0, 4).entries()) {
-        collect((_d2 = group.buttons) != null ? _d2 : [], `g${g2}_`);
-      }
-    } else if (c2.sub_buttons) {
-      collect(c2.sub_buttons, "");
-    }
-    const liveKeys = new Set(jobs.map((j) => j.key));
-    const staleResults = {};
-    for (const [key, val] of Object.entries(this._subTemplateResults)) {
-      if (liveKeys.has(key)) staleResults[key] = val;
-    }
-    this._subTemplateResults = staleResults;
-    await Promise.all(jobs.map(async ({ key, template, entity }) => {
-      try {
-        const unsub = await subscribeTemplate(
-          this.hass,
-          template,
-          { ...variables, entity },
-          (result) => {
-            if (gen !== this._subTemplateGen) return;
-            this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
-          }
-        );
-        if (gen !== this._subTemplateGen) {
-          unsub().catch(() => void 0);
-          return;
-        }
-        this._subTemplateUnsubs.set(key, unsub);
-      } catch (e2) {
-        console.warn(`[ians-room-card] Sub-button template error (${key}):`, e2);
-      }
-    }));
-  }
-  async _unsubscribeSubButtonTemplates() {
-    const unsubs = [...this._subTemplateUnsubs.values()];
-    this._subTemplateUnsubs.clear();
-    for (const unsub of unsubs) {
-      try {
-        await unsub();
-      } catch (e2) {
-      }
-    }
-  }
-  // ── CSS variable application ───────────────────────────────────────────────
-  _applyConfigStyles() {
-    var _a2, _b2, _c2, _d2;
-    const c2 = this._config;
-    if (!c2) return;
-    const resolve = (field, configValue) => {
-      var _a3;
-      return (_a3 = this._templateResults[field]) != null ? _a3 : configValue;
-    };
-    this._setCSSVar("--ians-card-margin", c2.card_margin !== void 0 ? `${c2.card_margin}px` : void 0);
-    this._setCSSVar("--ians-card-background-color", resolve("background_color", c2.background_color));
-    this._setCSSVar("--ians-card-background-opacity", c2.background_opacity !== void 0 ? String(c2.background_opacity) : void 0);
-    this._setCSSVar("--ians-card-border-color", resolve("border_color", c2.border_color));
-    this._setCSSVar("--ians-card-border-opacity", c2.border_opacity !== void 0 ? String(c2.border_opacity) : void 0);
-    const cardBorderRadius = c2.card_border_radius || (c2.card_shape ? CARD_SHAPE_BORDER_RADIUS[c2.card_shape] : void 0);
-    this._setCSSVar("--ians-card-border-radius", cardBorderRadius);
-    this._setCSSVar("--ha-card-border-radius", cardBorderRadius);
-    let iconColor = resolve("icon_color", c2.icon_color);
-    if (c2.state_based_color && c2.entity && this.hass) {
-      const es = this.hass.states[c2.entity];
-      const domain = c2.entity.split(".")[0];
-      if (es) {
-        const isActive = isStateActive(es);
-        iconColor = isActive ? (_b2 = (_a2 = c2.icon_color_on) != null ? _a2 : DOMAIN_ACTIVE_COLORS[domain]) != null ? _b2 : iconColor : (_c2 = c2.icon_color_off) != null ? _c2 : iconColor;
-      }
-    }
-    this._setCSSVar("--ians-icon-color", iconColor);
-    this._setCSSVar("--ians-icon-opacity", c2.icon_opacity !== void 0 ? String(c2.icon_opacity) : void 0);
-    this._setCSSVar("--ians-icon-background-color", resolve("icon_background_color", c2.icon_background_color));
-    this._setCSSVar("--ians-icon-background-opacity", c2.icon_background_opacity !== void 0 ? String(c2.icon_background_opacity) : void 0);
-    this._setCSSVar("--ians-icon-background-size", c2.icon_background_size !== void 0 ? `${c2.icon_background_size}px` : void 0);
-    this._setCSSVar("--ians-icon-background-width", c2.icon_background_width !== void 0 ? `${c2.icon_background_width}px` : void 0);
-    this._setCSSVar("--ians-icon-background-height", c2.icon_background_height !== void 0 ? `${c2.icon_background_height}px` : void 0);
-    const borderRadius = c2.icon_background_border_radius || (c2.icon_background_shape ? SHAPE_BORDER_RADIUS[c2.icon_background_shape] : void 0);
-    this._setCSSVar("--ians-icon-background-border-radius", borderRadius);
-    this._setCSSVar("--ians-icon-size", c2.icon_size !== void 0 ? `${c2.icon_size}px` : void 0);
-    this._setCSSVar("--ians-badge-color", resolve("badge_color", c2.badge_color));
-    this._setCSSVar("--ians-badge-background-color", resolve("badge_background_color", c2.badge_background_color));
-    this._setCSSVar("--ians-badge-size", c2.badge_size !== void 0 ? `${c2.badge_size}px` : void 0);
-    this._setCSSVar("--ians-badge-opacity", c2.badge_opacity !== void 0 ? String(c2.badge_opacity) : void 0);
-    this._setCSSVar("--ians-title-color", c2.title_color);
-    this._setCSSVar("--ians-title-font-size", c2.title_font_size !== void 0 ? `${c2.title_font_size}px` : void 0);
-    this._setCSSVar("--ians-title-font-weight", c2.title_font_weight !== void 0 ? String(c2.title_font_weight) : void 0);
-    this._setCSSVar("--ians-title-align", c2.title_align);
-    this._setCSSVar("--ians-sub-button-icon-color", c2.sub_button_icon_color);
-    this._setCSSVar("--ians-sub-button-background-color", c2.sub_button_background_color);
-    this._setCSSVar("--ians-sub-button-opacity", c2.sub_button_opacity !== void 0 ? String(c2.sub_button_opacity) : void 0);
-    this._setCSSVar("--ians-sub-button-gap", c2.sub_button_gap !== void 0 ? `${c2.sub_button_gap}px` : void 0);
-    this._setCSSVar("--ians-sub-button-state-font-size", c2.sub_button_state_font_size !== void 0 ? `${c2.sub_button_state_font_size}px` : void 0);
-    this._setCSSVar("--ians-sub-button-state-font-weight", c2.sub_button_state_font_weight !== void 0 ? String(c2.sub_button_state_font_weight) : void 0);
-    this._setCSSVar("--ians-sub-button-text-max-width", c2.sub_button_text_max_width !== void 0 ? `${c2.sub_button_text_max_width}px` : void 0);
-    if (!((_d2 = c2.sub_button_groups) == null ? void 0 : _d2.length)) {
-      if (c2.sub_buttons_layout === "grid") {
-        if (c2.sub_buttons_grid_columns) {
-          this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(${c2.sub_buttons_grid_columns}, 1fr)`);
-        } else if (c2.sub_buttons_grid_min_width) {
-          this._setCSSVar("--ians-sub-buttons-grid-template-columns", `repeat(auto-fill, minmax(${c2.sub_buttons_grid_min_width}px, 1fr))`);
-        } else {
-          this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
-        }
-      } else {
-        this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
-      }
-      if (c2.sub_buttons_layout === "left-column" || c2.sub_buttons_layout === "right-column") {
-        const justify = c2.sub_buttons_column_justify ? COLUMN_JUSTIFY_MAP[c2.sub_buttons_column_justify] : void 0;
-        this._setCSSVar("--ians-sub-buttons-column-justify", justify);
-      } else {
-        this.style.removeProperty("--ians-sub-buttons-column-justify");
-      }
-    } else {
-      this.style.removeProperty("--ians-sub-buttons-grid-template-columns");
-      this.style.removeProperty("--ians-sub-buttons-column-justify");
-    }
-  }
-  // ── Action handlers ────────────────────────────────────────────────────────
-  _setupSubButtonHandlers() {
-    var _a2, _b2, _c2;
-    this._cleanupSubButtonHandlers();
-    const c2 = this._config;
-    if (!c2 || c2.global_action) return;
-    const isGroupMode = !!((_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length);
-    if (!isGroupMode && !((_b2 = c2.sub_buttons) == null ? void 0 : _b2.length)) return;
-    const subBtnEls = (_c2 = this.shadowRoot) == null ? void 0 : _c2.querySelectorAll(".sub-button");
-    if (!subBtnEls) return;
-    subBtnEls.forEach((el, flatIndex) => {
-      var _a3, _b3, _c3, _d2, _e2, _f2, _g, _h, _i;
-      let btn;
-      if (isGroupMode) {
-        const g2 = parseInt((_a3 = el.dataset.group) != null ? _a3 : "0");
-        const i2 = parseInt((_b3 = el.dataset.index) != null ? _b3 : "0");
-        btn = (_e2 = (_d2 = (_c3 = c2.sub_button_groups) == null ? void 0 : _c3[g2]) == null ? void 0 : _d2.buttons) == null ? void 0 : _e2[i2];
-      } else {
-        btn = (_f2 = c2.sub_buttons) == null ? void 0 : _f2[flatIndex];
-      }
-      if (!btn) return;
-      const actionConfig = {
-        entity: btn.entity,
-        tap_action: (_g = btn.tap_action) != null ? _g : { action: "more-info" },
-        hold_action: (_h = btn.hold_action) != null ? _h : { action: "more-info" },
-        double_tap_action: (_i = btn.double_tap_action) != null ? _i : { action: "none" }
-      };
-      const cleanup = attachActionHandler(
-        el,
-        actionConfig,
-        (action) => dispatchAction(el, actionConfig, action)
-      );
-      this._subButtonCleanups.push(cleanup);
-    });
-  }
-  _cleanupSubButtonHandlers() {
-    for (const cleanup of this._subButtonCleanups) cleanup();
-    this._subButtonCleanups = [];
-  }
-  _setupCardActionHandler() {
-    var _a2, _b2;
-    (_a2 = this._cardActionCleanup) == null ? void 0 : _a2.call(this);
-    this._cardActionCleanup = void 0;
-    const c2 = this._config;
-    if (!(c2 == null ? void 0 : c2.global_action)) return;
-    const haCard = (_b2 = this.shadowRoot) == null ? void 0 : _b2.querySelector("ha-card");
-    if (!haCard) return;
-    const actionConfig = {
-      entity: c2.entity,
-      tap_action: c2.global_action.tap_action,
-      hold_action: c2.global_action.hold_action,
-      double_tap_action: c2.global_action.double_tap_action
-    };
-    this._cardActionCleanup = attachActionHandler(
-      haCard,
-      actionConfig,
-      (action) => dispatchAction(haCard, actionConfig, action)
-    );
-  }
-  _getAnimClass(animation, when, entityState) {
-    if (!animation || animation === "none") return "";
-    const whenMode = when != null ? when : "always";
-    if (whenMode !== "always" && entityState) {
-      const isActive = isStateActive(entityState);
-      if (whenMode === "active" && !isActive) return "";
-      if (whenMode === "inactive" && isActive) return "";
-    }
-    return `anim-${animation}`;
-  }
-  _getAnimDur(animation, speed) {
-    var _a2, _b2;
-    if (!animation || animation === "none") return void 0;
-    return (_b2 = (_a2 = ANIM_DURATIONS[animation]) == null ? void 0 : _a2[speed != null ? speed : "normal"]) != null ? _b2 : "2s";
-  }
-  _setCSSVar(prop, value) {
-    if (value !== void 0 && value !== "") {
-      this.style.setProperty(prop, value);
-    } else {
-      this.style.removeProperty(prop);
-    }
-  }
-  // ── Render ─────────────────────────────────────────────────────────────────
-  render() {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
-    if (!this._config) return A;
-    const c2 = this._config;
-    const hasErrors = Object.keys(this._templateErrors).length > 0;
-    const isInteractive = !!c2.global_action;
-    const icon = (_a2 = this._templateResults.icon) != null ? _a2 : c2.icon;
-    const badgeIcon = (_b2 = this._templateResults.badge_icon) != null ? _b2 : c2.badge_icon;
-    const title = this._resolveTitle();
-    const titleConfigured = !!c2.title;
-    let bgImageUrl;
-    if (c2.background_image === "area") {
-      bgImageUrl = this.hass ? resolveAreaImage(this.hass, c2.entity) : void 0;
-    } else if (c2.background_image) {
-      bgImageUrl = c2.background_image;
-    }
-    const bgImageStyle = bgImageUrl ? `background-image: url('${bgImageUrl}'); background-position: ${(_c2 = c2.background_image_position) != null ? _c2 : "center"};` : "";
-    const iconPosition = c2.icon_position;
-    const iconBgPosition = c2.icon_background_position;
-    const hasIndependentBg = !!iconBgPosition;
-    const badgePosition = (_d2 = c2.badge_position) != null ? _d2 : "top-right";
-    const titlePosition = c2.title_position;
-    const showHighlight = isInteractive ? c2.hover_highlight !== false : c2.hover_highlight === true;
-    const cardEntityState = c2.entity ? (_e2 = this.hass) == null ? void 0 : _e2.states[c2.entity] : void 0;
-    const iconAnimClass = this._getAnimClass(c2.icon_animation, c2.icon_animation_when, cardEntityState);
-    const iconAnimDur = this._getAnimDur(c2.icon_animation, c2.icon_animation_speed);
-    const badgeAnimClass = this._getAnimClass(c2.badge_animation, c2.badge_animation_when, cardEntityState);
-    const badgeAnimDur = this._getAnimDur(c2.badge_animation, c2.badge_animation_speed);
-    const iconContainerStyle = [
-      iconPosition === "custom" ? `top: ${(_f2 = c2.icon_position_y) != null ? _f2 : "auto"}; left: ${(_g = c2.icon_position_x) != null ? _g : "auto"}` : "",
-      iconAnimDur ? `--ians-anim-dur: ${iconAnimDur}` : ""
-    ].filter(Boolean).join("; ");
-    const badgeContainerStyle = [
-      badgePosition === "custom" ? `top: ${(_h = c2.badge_position_y) != null ? _h : "auto"}; left: ${(_i = c2.badge_position_x) != null ? _i : "auto"}` : "",
-      badgeAnimDur ? `--ians-anim-dur: ${badgeAnimDur}` : ""
-    ].filter(Boolean).join("; ");
-    const badgeEl = badgeIcon ? b`
+    `}};St([mt({attribute:!1})],Wt.prototype,"hass",void 0),St([ft()],Wt.prototype,"_config",void 0),St([ft()],Wt.prototype,"_loaded",void 0),St([ft()],Wt.prototype,"_templateMode",void 0),St([ft()],Wt.prototype,"_expandedSubButton",void 0),St([ft()],Wt.prototype,"_activeTab",void 0),St([ft()],Wt.prototype,"_dragOverIndex",void 0),St([ft()],Wt.prototype,"_expandedGroup",void 0),St([ft()],Wt.prototype,"_expandedGroupButton",void 0),customElements.get("ians-custom-room-card-editor")||customElements.define(`${$t}-editor`,Wt);var qt=["icon","icon_color","icon_background_color","badge_icon","badge_color","badge_background_color","background_color","border_color","title"],Yt=/* @__PURE__ */new Set(["unavailable","unknown","off"]);function Xt(t){const e=t.state;if(Yt.has(e))return!1;switch(t.entity_id.split(".")[0]){case"alarm_control_panel":return"disarmed"!==e;case"alert":return"idle"!==e;case"cover":case"valve":return"closed"!==e;case"device_tracker":case"person":return"not_home"!==e;case"lawn_mower":return"mowing"===e||"error"===e;case"lock":return"locked"!==e;case"media_player":return"standby"!==e;case"vacuum":return!["idle","docked","paused"].includes(e);case"plant":return"problem"===e;case"group":return["on","home","open","locked","problem"].includes(e);case"timer":return"active"===e;case"camera":return"streaming"===e;default:return!0}}var Jt={light:"var(--state-light-active-color, #FDD835)",switch:"var(--state-switch-active-color, #FDD835)",fan:"var(--state-fan-active-color, #26A69A)",media_player:"var(--state-media_player-active-color, #FDD835)",cover:"var(--state-cover-active-color, #FDD835)",lock:"var(--success-color, #4CAF50)",binary_sensor:"var(--state-binary_sensor-active-color, #FDD835)",alarm_control_panel:"var(--error-color, #db4437)",climate:"var(--state-climate-active-color, #FF9800)",vacuum:"var(--state-vacuum-active-color, #26A69A)",humidifier:"var(--state-humidifier-active-color, #2196F3)",water_heater:"var(--state-water_heater-active-color, #FF9800)"},Kt={light:"mdi:lightbulb",switch:"mdi:toggle-switch",sensor:"mdi:eye",binary_sensor:"mdi:radiobox-marked",climate:"mdi:thermostat",cover:"mdi:garage",fan:"mdi:fan",media_player:"mdi:cast",lock:"mdi:lock",vacuum:"mdi:robot-vacuum",camera:"mdi:camera",person:"mdi:account",device_tracker:"mdi:map-marker",weather:"mdi:weather-partly-cloudy",script:"mdi:script-text",automation:"mdi:robot",scene:"mdi:palette",input_boolean:"mdi:toggle-switch-outline",input_number:"mdi:numeric",input_select:"mdi:form-select",number:"mdi:numeric",select:"mdi:form-select",button:"mdi:gesture-tap-button",water_heater:"mdi:water-boiler",alarm_control_panel:"mdi:shield-home"},Zt={top:"flex-start",center:"center",bottom:"flex-end","space-between":"space-between","space-around":"space-around"},Qt={circle:"50%","rounded-rect":"8px",squircle:"30%",square:"0"},te={square:"0","rounded-sm":"8px",rounded:"12px","rounded-lg":"24px",pill:"999px"},ee={spin:{slow:"4s",normal:"2s",fast:"0.8s"},pulse:{slow:"3s",normal:"1.5s",fast:"0.6s"},blink:{slow:"2.4s",normal:"1.2s",fast:"0.5s"},bounce:{slow:"1.6s",normal:"0.8s",fast:"0.35s"},shake:{slow:"1.2s",normal:"0.6s",fast:"0.25s"}},oe=["top-left","top-right","bottom-left","bottom-right"],ie=/* @__PURE__ */new Map;function ne(t){return JSON.stringify(t)}var ae=class t extends bt{constructor(...t){super(...t),this._templateResults={},this._templateErrors={},this._templateUnsubs=/* @__PURE__ */new Map,this._subTemplateResults={},this._subTemplateUnsubs=/* @__PURE__ */new Map,this._subButtonCleanups=[],this._templateGen=0,this._subTemplateGen=0,this._watchedEntities=[]}static getStubConfig(t){if(t){const i=Object.keys(t.states).find(t=>t.startsWith("light."));var e,o;if(i)return{type:`custom:${$t}`,entity:i,title:null!==(e=null===(o=t.states[i])||void 0===o?void 0:o.attributes.friendly_name)&&void 0!==e?e:"Room",icon:"mdi:lightbulb"}}return{type:`custom:${$t}`,title:"Room",icon:"mdi:home"}}static getGridOptions(t){var e,o,i,n,a;const s=null!==(e=null==t?void 0:t.grid_options)&&void 0!==e?e:{};return{columns:null!==(o=s.columns)&&void 0!==o?o:6,rows:null!==(i=s.rows)&&void 0!==i?i:2,min_columns:null!==(n=s.min_columns)&&void 0!==n?n:3,min_rows:null!==(a=s.min_rows)&&void 0!==a?a:1,...void 0!==s.max_columns&&{max_columns:s.max_columns},...void 0!==s.max_rows&&{max_rows:s.max_rows}}}getGridOptions(){return t.getGridOptions(this._config)}static getConfigElement(){return document.createElement(`${$t}-editor`)}getCardSize(){var t,e;return null!==(t=null===(e=this._config)||void 0===e||null===(e=e.grid_options)||void 0===e?void 0:e.rows)&&void 0!==t?t:2}setConfig(t){if(!t)throw new Error("Invalid configuration");this._config=t,this._watchedEntities=this._collectEntities(t)}_collectEntities(t){var e,o;const i=/* @__PURE__ */new Set;t.entity&&i.add(t.entity);const n=(null===(e=t.sub_button_groups)||void 0===e?void 0:e.length)?t.sub_button_groups.flatMap(t=>{var e;return null!==(e=t.buttons)&&void 0!==e?e:[]}):null!==(o=t.sub_buttons)&&void 0!==o?o:[];for(const a of n)a.entity&&i.add(a.entity);return[...i]}shouldUpdate(t){if(!t.has("hass")||t.size>1)return!0;const e=t.get("hass");return!e||!this.hass||e.themes!==this.hass.themes||e.locale!==this.hass.locale||e.formatEntityState!==this.hass.formatEntityState||e.entities!==this.hass.entities||e.devices!==this.hass.devices||e.areas!==this.hass.areas||this._watchedEntities.some(t=>e.states[t]!==this.hass.states[t])}connectedCallback(){if(super.connectedCallback(),this._config){const t=ie.get(ne(this._config));t&&(this._templateResults={...t})}this.hasUpdated&&(this._config&&this.hass&&(this._subscribeTemplates(),this._subscribeSubButtonTemplates()),this._config&&(this._setupCardActionHandler(),this._setupSubButtonHandlers()))}firstUpdated(){this._setupCardActionHandler()}disconnectedCallback(){var t;if(super.disconnectedCallback(),this._config&&Object.keys(this._templateResults).length>0){const t=ne(this._config);ie.set(t,{...this._templateResults}),window.setTimeout(()=>ie.delete(t),2e3)}this._templateGen++,this._subTemplateGen++,this._unsubscribeTemplates(),this._unsubscribeSubButtonTemplates(),null===(t=this._cardActionCleanup)||void 0===t||t.call(this),this._cardActionCleanup=void 0,this._cleanupSubButtonHandlers()}updated(t){super.updated(t);const e=t.has("_config"),o=t.has("_templateResults"),i=t.has("hass"),n=i&&void 0===t.get("hass");(e||n)&&(this._subscribeTemplates(),this._subscribeSubButtonTemplates()),e&&this._setupCardActionHandler(),(e||o||t.has("_subTemplateResults")||i)&&this._applyConfigStyles(),e&&this._setupSubButtonHandlers()}async _subscribeTemplates(){var t,e;const o=++this._templateGen;if(await this._unsubscribeTemplates(),o!==this._templateGen)return;const i=this._config;if(!i||!this.hass)return;const n={...this._templateResults};for(const l of qt){const t=i[l];t&&yt(t)||delete n[l]}this._templateResults=n;const a={config:i,user:null!==(t=null===(e=this.hass.user)||void 0===e?void 0:e.name)&&void 0!==t?t:"",entity:i.entity},s=qt.filter(t=>{const e=i[t];return!!e&&yt(e)});await Promise.all(s.map(async t=>{const e=i[t];try{const i=await wt(this.hass,e,a,e=>{if(o===this._templateGen&&(this._templateResults={...this._templateResults,[t]:e},t in this._templateErrors)){const e={...this._templateErrors};delete e[t],this._templateErrors=e}},e=>{o===this._templateGen&&(console.warn(`[ians-room-card] Template error in ${t}:`,e),this._templateErrors={...this._templateErrors,[t]:e})});if(o!==this._templateGen)return void i().catch(()=>{});this._templateUnsubs.set(t,i)}catch(E){if(o!==this._templateGen)return;console.error(`[ians-room-card] Failed to subscribe template for ${t}:`,E),this._templateErrors={...this._templateErrors,[t]:String(E)}}}))}async _unsubscribeTemplates(){const t=[...this._templateUnsubs.values()];this._templateUnsubs.clear(),this._templateErrors={};for(const o of t)try{await o()}catch(e){}}async _subscribeSubButtonTemplates(){var t,e,o;const i=++this._subTemplateGen;if(await this._unsubscribeSubButtonTemplates(),i!==this._subTemplateGen)return;const n=this._config;if(!n||!this.hass)return;const a={config:n,user:null!==(t=null===(e=this.hass.user)||void 0===e?void 0:e.name)&&void 0!==t?t:""},s=[],l=(t,e)=>{for(const[o,i]of t.entries())for(const t of["icon","label"]){const n=i[t];n&&yt(n)&&s.push({key:`${e}sub_${o}_${t}`,template:n,entity:i.entity})}};if(null===(o=n.sub_button_groups)||void 0===o?void 0:o.length)for(const[u,h]of n.sub_button_groups.slice(0,4).entries()){var r;l(null!==(r=h.buttons)&&void 0!==r?r:[],`g${u}_`)}else n.sub_buttons&&l(n.sub_buttons,"");const d=new Set(s.map(t=>t.key)),c={};for(const[u,h]of Object.entries(this._subTemplateResults))d.has(u)&&(c[u]=h);this._subTemplateResults=c,await Promise.all(s.map(async({key:t,template:e,entity:o})=>{try{const n=await wt(this.hass,e,{...a,entity:o},e=>{i===this._subTemplateGen&&(this._subTemplateResults={...this._subTemplateResults,[t]:e})});if(i!==this._subTemplateGen)return void n().catch(()=>{});this._subTemplateUnsubs.set(t,n)}catch(E){console.warn(`[ians-room-card] Sub-button template error (${t}):`,E)}}))}async _unsubscribeSubButtonTemplates(){const t=[...this._subTemplateUnsubs.values()];this._subTemplateUnsubs.clear();for(const o of t)try{await o()}catch(e){}}_applyConfigStyles(){var t;const e=this._config;if(!e)return;const o=(t,e)=>{var o;return null!==(o=this._templateResults[t])&&void 0!==o?o:e};this._setCSSVar("--ians-card-margin",void 0!==e.card_margin?`${e.card_margin}px`:void 0),this._setCSSVar("--ians-card-background-color",o("background_color",e.background_color)),this._setCSSVar("--ians-card-background-opacity",void 0!==e.background_opacity?String(e.background_opacity):void 0),this._setCSSVar("--ians-card-border-color",o("border_color",e.border_color)),this._setCSSVar("--ians-card-border-opacity",void 0!==e.border_opacity?String(e.border_opacity):void 0);const i=e.card_border_radius||(e.card_shape?te[e.card_shape]:void 0);this._setCSSVar("--ians-card-border-radius",i),this._setCSSVar("--ha-card-border-radius",i);let n=o("icon_color",e.icon_color);if(e.state_based_color&&e.entity&&this.hass){const t=this.hass.states[e.entity],o=e.entity.split(".")[0];var a,s,l;t&&(n=Xt(t)?null!==(a=null!==(s=e.icon_color_on)&&void 0!==s?s:Jt[o])&&void 0!==a?a:n:null!==(l=e.icon_color_off)&&void 0!==l?l:n)}this._setCSSVar("--ians-icon-color",n),this._setCSSVar("--ians-icon-opacity",void 0!==e.icon_opacity?String(e.icon_opacity):void 0),this._setCSSVar("--ians-icon-background-color",o("icon_background_color",e.icon_background_color)),this._setCSSVar("--ians-icon-background-opacity",void 0!==e.icon_background_opacity?String(e.icon_background_opacity):void 0),this._setCSSVar("--ians-icon-background-size",void 0!==e.icon_background_size?`${e.icon_background_size}px`:void 0),this._setCSSVar("--ians-icon-background-width",void 0!==e.icon_background_width?`${e.icon_background_width}px`:void 0),this._setCSSVar("--ians-icon-background-height",void 0!==e.icon_background_height?`${e.icon_background_height}px`:void 0);const r=e.icon_background_border_radius||(e.icon_background_shape?Qt[e.icon_background_shape]:void 0);if(this._setCSSVar("--ians-icon-background-border-radius",r),this._setCSSVar("--ians-icon-size",void 0!==e.icon_size?`${e.icon_size}px`:void 0),this._setCSSVar("--ians-badge-color",o("badge_color",e.badge_color)),this._setCSSVar("--ians-badge-background-color",o("badge_background_color",e.badge_background_color)),this._setCSSVar("--ians-badge-size",void 0!==e.badge_size?`${e.badge_size}px`:void 0),this._setCSSVar("--ians-badge-opacity",void 0!==e.badge_opacity?String(e.badge_opacity):void 0),this._setCSSVar("--ians-title-color",e.title_color),this._setCSSVar("--ians-title-font-size",void 0!==e.title_font_size?`${e.title_font_size}px`:void 0),this._setCSSVar("--ians-title-font-weight",void 0!==e.title_font_weight?String(e.title_font_weight):void 0),this._setCSSVar("--ians-title-align",e.title_align),this._setCSSVar("--ians-sub-button-icon-color",e.sub_button_icon_color),this._setCSSVar("--ians-sub-button-background-color",e.sub_button_background_color),this._setCSSVar("--ians-sub-button-opacity",void 0!==e.sub_button_opacity?String(e.sub_button_opacity):void 0),this._setCSSVar("--ians-sub-button-gap",void 0!==e.sub_button_gap?`${e.sub_button_gap}px`:void 0),this._setCSSVar("--ians-sub-button-state-font-size",void 0!==e.sub_button_state_font_size?`${e.sub_button_state_font_size}px`:void 0),this._setCSSVar("--ians-sub-button-state-font-weight",void 0!==e.sub_button_state_font_weight?String(e.sub_button_state_font_weight):void 0),this._setCSSVar("--ians-sub-button-text-max-width",void 0!==e.sub_button_text_max_width?`${e.sub_button_text_max_width}px`:void 0),null===(t=e.sub_button_groups)||void 0===t?void 0:t.length)this.style.removeProperty("--ians-sub-buttons-grid-template-columns"),this.style.removeProperty("--ians-sub-buttons-column-justify");else if("grid"===e.sub_buttons_layout?e.sub_buttons_grid_columns?this._setCSSVar("--ians-sub-buttons-grid-template-columns",`repeat(${e.sub_buttons_grid_columns}, 1fr)`):e.sub_buttons_grid_min_width?this._setCSSVar("--ians-sub-buttons-grid-template-columns",`repeat(auto-fill, minmax(${e.sub_buttons_grid_min_width}px, 1fr))`):this.style.removeProperty("--ians-sub-buttons-grid-template-columns"):this.style.removeProperty("--ians-sub-buttons-grid-template-columns"),"left-column"===e.sub_buttons_layout||"right-column"===e.sub_buttons_layout){const t=e.sub_buttons_column_justify?Zt[e.sub_buttons_column_justify]:void 0;this._setCSSVar("--ians-sub-buttons-column-justify",t)}else this.style.removeProperty("--ians-sub-buttons-column-justify")}_setupSubButtonHandlers(){var t,e,o;this._cleanupSubButtonHandlers();const i=this._config;if(!i||i.global_action)return;const n=!!(null===(t=i.sub_button_groups)||void 0===t?void 0:t.length);if(!n&&!(null===(e=i.sub_buttons)||void 0===e?void 0:e.length))return;const a=null===(o=this.shadowRoot)||void 0===o?void 0:o.querySelectorAll(".sub-button");a&&a.forEach((t,e)=>{var o,a,s;let l;if(n){var r,d,c;const e=parseInt(null!==(r=t.dataset.group)&&void 0!==r?r:"0"),o=parseInt(null!==(d=t.dataset.index)&&void 0!==d?d:"0");l=null===(c=i.sub_button_groups)||void 0===c||null===(c=c[e])||void 0===c||null===(c=c.buttons)||void 0===c?void 0:c[o]}else{var u;l=null===(u=i.sub_buttons)||void 0===u?void 0:u[e]}if(!l)return;const h={entity:l.entity,tap_action:null!==(o=l.tap_action)&&void 0!==o?o:{action:"more-info"},hold_action:null!==(a=l.hold_action)&&void 0!==a?a:{action:"more-info"},double_tap_action:null!==(s=l.double_tap_action)&&void 0!==s?s:{action:"none"}},p=kt(t,h,e=>Ct(t,h,e));this._subButtonCleanups.push(p)})}_cleanupSubButtonHandlers(){for(const t of this._subButtonCleanups)t();this._subButtonCleanups=[]}_setupCardActionHandler(){var t,e;null===(t=this._cardActionCleanup)||void 0===t||t.call(this),this._cardActionCleanup=void 0;const o=this._config;if(!(null==o?void 0:o.global_action))return;const i=null===(e=this.shadowRoot)||void 0===e?void 0:e.querySelector("ha-card");if(!i)return;const n={entity:o.entity,tap_action:o.global_action.tap_action,hold_action:o.global_action.hold_action,double_tap_action:o.global_action.double_tap_action};this._cardActionCleanup=kt(i,n,t=>Ct(i,n,t))}_getAnimClass(t,e,o){if(!t||"none"===t)return"";const i=null!=e?e:"always";if("always"!==i&&o){const t=Xt(o);if("active"===i&&!t)return"";if("inactive"===i&&t)return""}return`anim-${t}`}_getAnimDur(t,e){var o,i;if(t&&"none"!==t)return null!==(o=null===(i=ee[t])||void 0===i?void 0:i[null!=e?e:"normal"])&&void 0!==o?o:"2s"}_setCSSVar(t,e){void 0!==e&&""!==e?this.style.setProperty(t,e):this.style.removeProperty(t)}render(){var t,e,o,i,n,a,s,l,r,d,c,u,h;if(!this._config)return J;const p=this._config,b=Object.keys(this._templateErrors).length>0,v=!!p.global_action,_=null!==(t=this._templateResults.icon)&&void 0!==t?t:p.icon,g=null!==(e=this._templateResults.badge_icon)&&void 0!==e?e:p.badge_icon,m=this._resolveTitle(),f=!!p.title;let $;"area"===p.background_image?$=this.hass?function(t,e){var o,i,n,a;if(!e)return;const s=null===(o=t.entities)||void 0===o?void 0:o[e],l=null!==(i=null==s?void 0:s.area_id)&&void 0!==i?i:(null==s?void 0:s.device_id)?null===(n=t.devices)||void 0===n||null===(n=n[s.device_id])||void 0===n?void 0:n.area_id:void 0;if(!l)return;const r=null===(a=t.areas)||void 0===a?void 0:a[l];return(null==r?void 0:r.picture)?r.picture:void 0}(this.hass,p.entity):void 0:p.background_image&&($=p.background_image);const x=$?`background-image: url('${$}'); background-position: ${null!==(o=p.background_image_position)&&void 0!==o?o:"center"};`:"",y=p.icon_position,w=p.icon_background_position,C=!!w,k=null!==(i=p.badge_position)&&void 0!==i?i:"top-right",S=p.title_position,A=v?!1!==p.hover_highlight:!0===p.hover_highlight,B=p.entity?null===(n=this.hass)||void 0===n?void 0:n.states[p.entity]:void 0,T=this._getAnimClass(p.icon_animation,p.icon_animation_when,B),E=this._getAnimDur(p.icon_animation,p.icon_animation_speed),z=this._getAnimClass(p.badge_animation,p.badge_animation_when,B),R=this._getAnimDur(p.badge_animation,p.badge_animation_speed),G=["custom"===y?`top: ${null!==(a=p.icon_position_y)&&void 0!==a?a:"auto"}; left: ${null!==(s=p.icon_position_x)&&void 0!==s?s:"auto"}`:"",E?`--ians-anim-dur: ${E}`:""].filter(Boolean).join("; "),O=["custom"===k?`top: ${null!==(l=p.badge_position_y)&&void 0!==l?l:"auto"}; left: ${null!==(r=p.badge_position_x)&&void 0!==r?r:"auto"}`:"",R?`--ians-anim-dur: ${R}`:""].filter(Boolean).join("; "),I=g?Y`
           <div
             part="badge"
-            class=${[
-      "badge",
-      badgePosition !== "custom" ? `badge-pos-${badgePosition}` : ""
-    ].filter(Boolean).join(" ")}
-            style=${badgeContainerStyle || A}
+            class=${["badge","custom"!==k?`badge-pos-${k}`:""].filter(Boolean).join(" ")}
+            style=${O||J}
           >
-            <ha-icon part="badge-icon" .icon=${badgeIcon} class=${badgeAnimClass || A}></ha-icon>
+            <ha-icon part="badge-icon" .icon=${g} class=${z||J}></ha-icon>
           </div>
-        ` : A;
-    const iconBgOnlyEl = hasIndependentBg ? b`
+        `:J,P=C?Y`
           <div
-            class=${[
-      "icon-bg-only",
-      "icon-absolute",
-      iconBgPosition !== "custom" ? `icon-pos-${iconBgPosition}` : ""
-    ].filter(Boolean).join(" ")}
-            style=${iconBgPosition === "custom" ? `top: ${(_j = c2.icon_background_position_y) != null ? _j : "auto"}; left: ${(_k = c2.icon_background_position_x) != null ? _k : "auto"};` : ""}
+            class=${["icon-bg-only","icon-absolute","custom"!==w?`icon-pos-${w}`:""].filter(Boolean).join(" ")}
+            style=${"custom"===w?`top: ${null!==(d=p.icon_background_position_y)&&void 0!==d?d:"auto"}; left: ${null!==(c=p.icon_background_position_x)&&void 0!==c?c:"auto"};`:""}
           ></div>
-        ` : A;
-    const iconEl = icon !== void 0 ? iconPosition ? b`
+        `:J,j=void 0!==_?y?Y`
               <div
                 part="icon-container"
-                class=${[
-      "icon-container",
-      "icon-absolute",
-      hasIndependentBg ? "icon-no-bg" : "",
-      iconPosition !== "custom" ? `icon-pos-${iconPosition}` : ""
-    ].filter(Boolean).join(" ")}
-                style=${iconContainerStyle || A}
+                class=${["icon-container","icon-absolute",C?"icon-no-bg":"","custom"!==y?`icon-pos-${y}`:""].filter(Boolean).join(" ")}
+                style=${G||J}
               >
-                <ha-icon part="icon" .icon=${icon} class=${iconAnimClass || A}></ha-icon>
-                ${badgeEl}
+                <ha-icon part="icon" .icon=${_} class=${T||J}></ha-icon>
+                ${I}
               </div>
-            ` : b`
+            `:Y`
               <div
                 part="icon-container"
-                class=${["icon-container", hasIndependentBg ? "icon-no-bg" : ""].filter(Boolean).join(" ")}
-                style=${iconContainerStyle || A}
+                class=${["icon-container",C?"icon-no-bg":""].filter(Boolean).join(" ")}
+                style=${G||J}
               >
-                <ha-icon part="icon" .icon=${icon} class=${iconAnimClass || A}></ha-icon>
-                ${badgeEl}
+                <ha-icon part="icon" .icon=${_} class=${T||J}></ha-icon>
+                ${I}
               </div>
-            ` : A;
-    const titleAbsoluteEl = titleConfigured && titlePosition ? b`
+            `:J,F=f&&S?Y`
           <span
             part="title"
-            class=${[
-      "card-title-absolute",
-      titlePosition !== "custom" ? `card-title-abs-${titlePosition}` : "",
-      title ? "" : "pending"
-    ].filter(Boolean).join(" ")}
-            style=${titlePosition === "custom" ? `top: ${(_l = c2.title_position_y) != null ? _l : "auto"}; left: ${(_m = c2.title_position_x) != null ? _m : "auto"};` : ""}
-          >${title != null ? title : ""}</span>` : A;
-    return b`
+            class=${["card-title-absolute","custom"!==S?`card-title-abs-${S}`:"",m?"":"pending"].filter(Boolean).join(" ")}
+            style=${"custom"===S?`top: ${null!==(u=p.title_position_y)&&void 0!==u?u:"auto"}; left: ${null!==(h=p.title_position_x)&&void 0!==h?h:"auto"};`:""}
+          >${null!=m?m:""}</span>`:J;return Y`
       <ha-card
         part="card"
-        class=${[
-      hasErrors ? "has-template-error" : "",
-      isInteractive ? "interactive" : "",
-      showHighlight ? "highlight-on-hover" : ""
-    ].filter(Boolean).join(" ")}
-        role=${isInteractive ? "button" : A}
-        tabindex=${isInteractive ? "0" : A}
-        aria-label=${isInteractive && title ? title : A}
+        class=${[b?"has-template-error":"",v?"interactive":"",A?"highlight-on-hover":""].filter(Boolean).join(" ")}
+        role=${v?"button":J}
+        tabindex=${v?"0":J}
+        aria-label=${v&&m?m:J}
       >
         <div part="background" class="card-background-color"></div>
-        ${bgImageStyle ? b`<div class="card-background-image" style=${bgImageStyle}></div>` : A}
-        ${showHighlight ? b`<div class="hover-ripple"></div>` : A}
+        ${x?Y`<div class="card-background-image" style=${x}></div>`:J}
+        ${A?Y`<div class="hover-ripple"></div>`:J}
 
         <!-- Independent icon background (before card-inner so it's below content) -->
-        ${iconBgOnlyEl}
+        ${P}
 
         <!-- Absolutely positioned icon — z-index 2, BEFORE card-inner so card-inner (same z-index, later in DOM) renders on top -->
-        ${iconPosition ? iconEl : A}
+        ${y?j:J}
 
         <div class="card-inner">
           <div part="header" class="card-header">
-            ${!iconPosition ? iconEl : titleConfigured && !titlePosition && (iconPosition === "top-left" || iconPosition === "center-left" || iconPosition === "bottom-left") ? b`<div class="icon-spacer"></div>` : A}
-            ${titleConfigured && !titlePosition ? b`<span part="title" class=${["card-title", title ? "" : "pending"].filter(Boolean).join(" ")}>${title != null ? title : ""}</span>` : A}
+            ${y?!f||S||"top-left"!==y&&"center-left"!==y&&"bottom-left"!==y?J:Y`<div class="icon-spacer"></div>`:j}
+            ${f&&!S?Y`<span part="title" class=${["card-title",m?"":"pending"].filter(Boolean).join(" ")}>${null!=m?m:""}</span>`:J}
           </div>
 
-          ${hasErrors ? b`
+          ${b?Y`
                 <div class="template-error">
                   <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
                   <span>Template error — check browser console</span>
                 </div>
-              ` : A}
+              `:J}
 
           ${this._renderSubButtons()}
         </div>
 
         <!-- Absolute title — rendered after card-inner so it paints on top -->
-        ${titleAbsoluteEl}
+        ${F}
       </ha-card>
-    `;
-  }
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  _renderSubButtons() {
-    var _a2, _b2, _c2;
-    const c2 = this._config;
-    if (!c2) return A;
-    if ((_a2 = c2.sub_button_groups) == null ? void 0 : _a2.length) {
-      return c2.sub_button_groups.slice(0, 4).map(
-        (group, gIdx) => this._renderGroup(group, gIdx)
-      );
-    }
-    if (!((_b2 = c2.sub_buttons) == null ? void 0 : _b2.length)) return A;
-    const layout = (_c2 = c2.sub_buttons_layout) != null ? _c2 : "bottom-row";
-    const isGlobal = !!c2.global_action;
-    const buttons = c2.sub_buttons.map(
-      (btn, i2) => this._renderSingleButton(btn, i2, null, layout, isGlobal)
-    );
-    const containerClasses = [
-      "sub-buttons",
-      `layout-${layout}`,
-      layout === "grid" && c2.sub_buttons_grid_cell_layout === "horizontal" ? "grid-horizontal" : ""
-    ].filter(Boolean).join(" ");
-    return b`<div part="sub-buttons" class=${containerClasses}>${buttons}</div>`;
-  }
-  _deriveGroupPosition(layout) {
-    switch (layout) {
-      case "top-row":
-        return "top-row";
-      case "left-column":
-        return "left-column";
-      case "right-column":
-        return "right-column";
-      case "corners":
-      case "custom":
-        return "full";
-      default:
-        return "bottom-row";
-    }
-  }
-  _renderGroup(group, groupIndex) {
-    var _a2, _b2, _c2, _d2, _e2, _f2;
-    const c2 = this._config;
-    const layout = (_a2 = group.layout) != null ? _a2 : "bottom-row";
-    const isGlobal = !!c2.global_action;
-    const isColumn = layout === "left-column" || layout === "right-column";
-    const isGrid = layout === "grid";
-    const effectivePos = (_b2 = group.position) != null ? _b2 : this._deriveGroupPosition(layout);
-    const groupStyle = [
-      effectivePos === "custom" ? `top: ${(_c2 = group.position_y) != null ? _c2 : "auto"}; left: ${(_d2 = group.position_x) != null ? _d2 : "auto"}` : "",
-      group.gap !== void 0 ? `--ians-sub-button-gap: ${group.gap}px` : "",
-      group.icon_color ? `--ians-sub-button-icon-color: ${group.icon_color}` : "",
-      group.background_color ? `--ians-sub-button-background-color: ${group.background_color}` : "",
-      group.opacity !== void 0 ? `opacity: ${group.opacity}` : "",
-      isColumn && group.column_justify ? `--ians-sub-buttons-column-justify: ${(_e2 = COLUMN_JUSTIFY_MAP[group.column_justify]) != null ? _e2 : "flex-start"}` : "",
-      isGrid && group.grid_columns ? `--ians-sub-buttons-grid-template-columns: repeat(${group.grid_columns}, 1fr)` : isGrid && group.grid_min_width ? `--ians-sub-buttons-grid-template-columns: repeat(auto-fill, minmax(${group.grid_min_width}px, 1fr))` : ""
-    ].filter(Boolean).join("; ");
-    const containerClass = [
-      "sub-button-group",
-      `group-pos-${effectivePos}`,
-      isGrid ? "group-layout-grid" : "",
-      isGrid && group.grid_cell_layout === "horizontal" ? "grid-horizontal" : ""
-    ].filter(Boolean).join(" ");
-    const buttons = ((_f2 = group.buttons) != null ? _f2 : []).map(
-      (btn, i2) => this._renderSingleButton(btn, i2, groupIndex, layout, isGlobal)
-    );
-    return b`<div class=${containerClass} part="sub-button-group" style=${groupStyle || A}>${buttons}</div>`;
-  }
-  _renderSingleButton(btn, btnIndex, groupIndex, layout, isGlobal) {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
-    const entityState = btn.entity ? (_a2 = this.hass) == null ? void 0 : _a2.states[btn.entity] : void 0;
-    const domain = (_c2 = (_b2 = btn.entity) == null ? void 0 : _b2.split(".")[0]) != null ? _c2 : "";
-    const domainIcon = domain ? (_d2 = DOMAIN_ICONS[domain]) != null ? _d2 : "mdi:circle" : "mdi:circle";
-    const keyPfx = groupIndex !== null ? `g${groupIndex}_sub_${btnIndex}` : `sub_${btnIndex}`;
-    const explicitIcon = (_e2 = this._subTemplateResults[`${keyPfx}_icon`]) != null ? _e2 : btn.icon;
-    const useStateIcon = !explicitIcon && !!entityState && !!customElements.get("ha-state-icon");
-    const icon = (_f2 = explicitIcon != null ? explicitIcon : entityState == null ? void 0 : entityState.attributes.icon) != null ? _f2 : domainIcon;
-    let label;
-    if (btn.label !== void 0) {
-      if (btn.label === "entity" && entityState) {
-        label = (_g = entityState.attributes.friendly_name) != null ? _g : btn.entity;
-      } else {
-        label = (_h = this._subTemplateResults[`${keyPfx}_label`]) != null ? _h : btn.label;
-      }
-    }
-    let posClass = "";
-    if (layout === "corners") {
-      posClass = `pos-${(_i = CORNER_POSITIONS[btnIndex]) != null ? _i : "bottom-right"}`;
-    } else if (layout === "custom" && btn.position) {
-      posClass = `pos-${btn.position}`;
-    }
-    const classes = [
-      "sub-button",
-      btn.background !== false ? "has-background" : "",
-      isGlobal ? "display-only" : "",
-      posClass
-    ].filter(Boolean).join(" ");
-    let btnIconColor = btn.icon_color;
-    if (btn.state_based_color && entityState) {
-      const isActive = isStateActive(entityState);
-      btnIconColor = isActive ? (_k = (_j = btn.icon_color_on) != null ? _j : DOMAIN_ACTIVE_COLORS[domain]) != null ? _k : btn.icon_color : (_l = btn.icon_color_off) != null ? _l : btn.icon_color;
-    }
-    const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
-    const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
-    const stateDisplay = entityState ? (_o = (_n = (_m = this.hass).formatEntityState) == null ? void 0 : _n.call(_m, entityState)) != null ? _o : `${entityState.state}${entityState.attributes.unit_of_measurement ? ` ${entityState.attributes.unit_of_measurement}` : ""}` : "";
-    const ariaLabel = (_q = (_p = label != null ? label : entityState == null ? void 0 : entityState.attributes.friendly_name) != null ? _p : btn.entity) != null ? _q : explicitIcon;
-    const btnStyle = [
-      btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
-      btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
-      btn.opacity !== void 0 ? `opacity: ${btn.opacity}` : "",
-      btnAnimDur ? `--ians-anim-dur: ${btnAnimDur}` : "",
-      btn.state_font_size !== void 0 ? `--ians-sub-button-state-font-size: ${btn.state_font_size}px` : "",
-      btn.state_font_weight !== void 0 ? `--ians-sub-button-state-font-weight: ${btn.state_font_weight}` : "",
-      btn.text_max_width !== void 0 ? `--ians-sub-button-text-max-width: ${btn.text_max_width}px` : ""
-    ].filter(Boolean).join("; ");
-    return b`
-      <div class=${classes} part="sub-button" style=${btnStyle || A}
-        data-index=${String(btnIndex)}
-        data-group=${groupIndex !== null ? String(groupIndex) : A}
-        role=${isGlobal ? A : "button"}
-        tabindex=${isGlobal ? A : "0"}
-        aria-label=${!isGlobal && ariaLabel ? ariaLabel : A}
+    `}_renderSubButtons(){var t,e,o;const i=this._config;if(!i)return J;if(null===(t=i.sub_button_groups)||void 0===t?void 0:t.length)return i.sub_button_groups.slice(0,4).map((t,e)=>this._renderGroup(t,e));if(!(null===(e=i.sub_buttons)||void 0===e?void 0:e.length))return J;const n=null!==(o=i.sub_buttons_layout)&&void 0!==o?o:"bottom-row",a=!!i.global_action,s=i.sub_buttons.map((t,e)=>this._renderSingleButton(t,e,null,n,a)),l=["sub-buttons",`layout-${n}`,"grid"===n&&"horizontal"===i.sub_buttons_grid_cell_layout?"grid-horizontal":""].filter(Boolean).join(" ");return Y`<div part="sub-buttons" class=${l}>${s}</div>`}_deriveGroupPosition(t){switch(t){case"top-row":return"top-row";case"left-column":return"left-column";case"right-column":return"right-column";case"corners":case"custom":return"full";default:return"bottom-row"}}_renderGroup(t,e){var o,i,n,a,s,l;const r=this._config,d=null!==(o=t.layout)&&void 0!==o?o:"bottom-row",c=!!r.global_action,u="left-column"===d||"right-column"===d,h="grid"===d,p=null!==(i=t.position)&&void 0!==i?i:this._deriveGroupPosition(d),b=["custom"===p?`top: ${null!==(n=t.position_y)&&void 0!==n?n:"auto"}; left: ${null!==(a=t.position_x)&&void 0!==a?a:"auto"}`:"",void 0!==t.gap?`--ians-sub-button-gap: ${t.gap}px`:"",t.icon_color?`--ians-sub-button-icon-color: ${t.icon_color}`:"",t.background_color?`--ians-sub-button-background-color: ${t.background_color}`:"",void 0!==t.opacity?`opacity: ${t.opacity}`:"",u&&t.column_justify?`--ians-sub-buttons-column-justify: ${null!==(s=Zt[t.column_justify])&&void 0!==s?s:"flex-start"}`:"",h&&t.grid_columns?`--ians-sub-buttons-grid-template-columns: repeat(${t.grid_columns}, 1fr)`:h&&t.grid_min_width?`--ians-sub-buttons-grid-template-columns: repeat(auto-fill, minmax(${t.grid_min_width}px, 1fr))`:""].filter(Boolean).join("; "),v=["sub-button-group",`group-pos-${p}`,h?"group-layout-grid":"",h&&"horizontal"===t.grid_cell_layout?"grid-horizontal":""].filter(Boolean).join(" "),_=(null!==(l=t.buttons)&&void 0!==l?l:[]).map((t,o)=>this._renderSingleButton(t,o,e,d,c));return Y`<div class=${v} part="sub-button-group" style=${b||J}>${_}</div>`}_renderSingleButton(t,e,o,i,n){var a,s,l,r,d,c,u,h,p,b,v,_;const g=t.entity?null===(a=this.hass)||void 0===a?void 0:a.states[t.entity]:void 0,m=null!==(s=null===(l=t.entity)||void 0===l?void 0:l.split(".")[0])&&void 0!==s?s:"",f=m&&null!==(r=Kt[m])&&void 0!==r?r:"mdi:circle",$=null!==o?`g${o}_sub_${e}`:`sub_${e}`,x=null!==(d=this._subTemplateResults[`${$}_icon`])&&void 0!==d?d:t.icon,y=!x&&!!g&&!!customElements.get("ha-state-icon"),w=null!==(c=null!=x?x:null==g?void 0:g.attributes.icon)&&void 0!==c?c:f;let C;var k,S;void 0!==t.label&&(C="entity"===t.label&&g?null!==(k=g.attributes.friendly_name)&&void 0!==k?k:t.entity:null!==(S=this._subTemplateResults[`${$}_label`])&&void 0!==S?S:t.label);let A="";var B;"corners"===i?A=`pos-${null!==(B=oe[e])&&void 0!==B?B:"bottom-right"}`:"custom"===i&&t.position&&(A=`pos-${t.position}`);const T=["sub-button",!1!==t.background?"has-background":"",n?"display-only":"",A].filter(Boolean).join(" ");let E=t.icon_color;var z,R,G;t.state_based_color&&g&&(E=Xt(g)?null!==(z=null!==(R=t.icon_color_on)&&void 0!==R?R:Jt[m])&&void 0!==z?z:t.icon_color:null!==(G=t.icon_color_off)&&void 0!==G?G:t.icon_color);const O=this._getAnimClass(t.animation,t.animation_when,g),I=this._getAnimDur(t.animation,t.animation_speed),P=g?null!==(u=null===(h=(p=this.hass).formatEntityState)||void 0===h?void 0:h.call(p,g))&&void 0!==u?u:`${g.state}${g.attributes.unit_of_measurement?` ${g.attributes.unit_of_measurement}`:""}`:"",j=null!==(b=null!==(v=null!==(_=C)&&void 0!==_?_:null==g?void 0:g.attributes.friendly_name)&&void 0!==v?v:t.entity)&&void 0!==b?b:x,F=[E?`--ians-sub-button-icon-color: ${E}`:"",t.background_color?`--ians-sub-button-background-color: ${t.background_color}`:"",void 0!==t.opacity?`opacity: ${t.opacity}`:"",I?`--ians-anim-dur: ${I}`:"",void 0!==t.state_font_size?`--ians-sub-button-state-font-size: ${t.state_font_size}px`:"",void 0!==t.state_font_weight?`--ians-sub-button-state-font-weight: ${t.state_font_weight}`:"",void 0!==t.text_max_width?`--ians-sub-button-text-max-width: ${t.text_max_width}px`:""].filter(Boolean).join("; ");return Y`
+      <div class=${T} part="sub-button" style=${F||J}
+        data-index=${String(e)}
+        data-group=${null!==o?String(o):J}
+        role=${n?J:"button"}
+        tabindex=${n?J:"0"}
+        aria-label=${!n&&j?j:J}
       >
-        ${btn.show_icon !== false ? useStateIcon ? b`<ha-state-icon part="sub-button-icon" .hass=${this.hass} .stateObj=${entityState} class=${btnAnimClass || A}></ha-state-icon>` : b`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || A}></ha-icon>` : A}
-        ${btn.show_label && label ? b`<span part="sub-button-label" class="sub-button-label">${label}</span>` : A}
-        ${btn.show_state && entityState ? b`<span part="sub-button-state" class="sub-button-state">${stateDisplay}</span>` : A}
+        ${!1!==t.show_icon?y?Y`<ha-state-icon part="sub-button-icon" .hass=${this.hass} .stateObj=${g} class=${O||J}></ha-state-icon>`:Y`<ha-icon part="sub-button-icon" .icon=${w} class=${O||J}></ha-icon>`:J}
+        ${t.show_label&&C?Y`<span part="sub-button-label" class="sub-button-label">${C}</span>`:J}
+        ${t.show_state&&g?Y`<span part="sub-button-state" class="sub-button-state">${P}</span>`:J}
       </div>
-    `;
-  }
-  _resolveTitle() {
-    var _a2, _b2;
-    const c2 = this._config;
-    if (!c2) return void 0;
-    if (this._templateResults.title) return this._templateResults.title;
-    if (!c2.title) return void 0;
-    if (isTemplate(c2.title)) return void 0;
-    if (c2.title === "entity" && c2.entity && this.hass) {
-      return (_b2 = (_a2 = this.hass.states[c2.entity]) == null ? void 0 : _a2.attributes.friendly_name) != null ? _b2 : c2.entity;
-    }
-    return c2.title;
-  }
-  // ── Styles ─────────────────────────────────────────────────────────────────
-  static get styles() {
-    return cardStyles;
-  }
-};
-__decorateClass([
-  n2({ attribute: false })
-], _IansCustomRoomCard.prototype, "hass");
-__decorateClass([
-  r()
-], _IansCustomRoomCard.prototype, "_config");
-__decorateClass([
-  r()
-], _IansCustomRoomCard.prototype, "_templateResults");
-__decorateClass([
-  r()
-], _IansCustomRoomCard.prototype, "_templateErrors");
-__decorateClass([
-  r()
-], _IansCustomRoomCard.prototype, "_subTemplateResults");
-let IansCustomRoomCard = _IansCustomRoomCard;
-if (!customElements.get(CARD_TYPE)) {
-  customElements.define(CARD_TYPE, IansCustomRoomCard);
-  console.info(
-    `%c IANS-CUSTOM-ROOM-CARD %c v${VERSION} `,
-    "color: white; background: #03a9f4; font-weight: 700;",
-    "color: #03a9f4; background: white; font-weight: 700;"
-  );
-}
-window.customCards = window.customCards || [];
-if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
-  window.customCards.push({
-    type: CARD_TYPE,
-    name: CARD_NAME,
-    description: CARD_DESCRIPTION,
-    preview: false,
-    documentationURL: "https://github.com/linkian19/ha-ians-custom-room-card"
-  });
-}
-export {
-  IansCustomRoomCard
-};
+    `}_resolveTitle(){const t=this._config;if(t){if(this._templateResults.title)return this._templateResults.title;var e,o;if(t.title&&!yt(t.title))return"entity"===t.title&&t.entity&&this.hass?null!==(e=null===(o=this.hass.states[t.entity])||void 0===o?void 0:o.attributes.friendly_name)&&void 0!==e?e:t.entity:t.title}}static get styles(){return xt}};St([mt({attribute:!1})],ae.prototype,"hass",void 0),St([ft()],ae.prototype,"_config",void 0),St([ft()],ae.prototype,"_templateResults",void 0),St([ft()],ae.prototype,"_templateErrors",void 0),St([ft()],ae.prototype,"_subTemplateResults",void 0),customElements.get("ians-custom-room-card")||(customElements.define($t,ae),console.info("%c IANS-CUSTOM-ROOM-CARD %c v0.3.1 ","color: white; background: #03a9f4; font-weight: 700;","color: #03a9f4; background: white; font-weight: 700;")),window.customCards=window.customCards||[],window.customCards.some(t=>"ians-custom-room-card"===t.type)||window.customCards.push({type:$t,name:"Ian's Custom Room Card",description:"A highly customizable room card with icon, badge, sub-button groups, animations, templates, and more",preview:!1,documentationURL:"https://github.com/linkian19/ha-ians-custom-room-card"});export{ae as IansCustomRoomCard};

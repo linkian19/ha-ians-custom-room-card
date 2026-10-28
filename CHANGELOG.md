@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-28
+
+### Added
+- Move up/down buttons on sub-button rows in the editor (single-group and group modes) — reordering now works on touch screens and with the keyboard; mouse drag-and-drop still works.
+- CI: `Validate` workflow on every push/PR — typecheck + build, checks the committed `dist/` matches the build, and runs HACS validation.
+
+### Changed
+- Editor entity and icon fields use `ha-selector` (entity/icon selectors) instead of HA's internal `ha-entity-picker` / `ha-icon-picker` elements, which change between HA releases.
+- Release workflow: Node 24, fails if the tag doesn't match `package.json` or the committed `dist/` is stale.
+- Build tooling: Vite 5 → 8, TypeScript 5 → 7, terser 5.51. Bundle is ~17% smaller (168 kB → 140 kB).
+
+- `LICENSE` file (MIT, matching `package.json`).
+
+### Removed
+- `info.md` — HACS 2.x shows the README instead.
+
 ## [0.3.0] - 2026-10-28
 
 ### Added

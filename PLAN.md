@@ -1,5 +1,7 @@
 # ians-custom-room-card — Architecture Plan
 
+> **Historical:** this is the original v0.1.0 design document. The card has moved on since (sub-button groups, animations, HA-native state formatting, etc.). See README.md, docs/ and CHANGELOG.md for current behaviour.
+
 ## Context
 
 Ian uses Bubble Card and Mushroom Cards on a Sections-based Frosted Glass dashboard. Neither is a purpose-built "room card" combining a room icon, title, entity-driven badge, configurable sub-buttons, and a navigable tap action in one card with a complete visual editor. This card fills that gap and is HACS-installable from this repo.
