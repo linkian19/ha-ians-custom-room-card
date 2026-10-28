@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-28
+
+### Added
+- Keyboard accessibility: interactive cards (`global_action`) and sub-buttons are focusable (`role="button"`, `tabindex="0"`, `aria-label`) with a focus ring, and Enter/Space fires the tap action.
+- Animations are disabled when the OS/browser "reduce motion" setting is on.
+- `getCardSize()` for masonry dashboards (uses `grid_options.rows`, default 2).
+- Default active colors for `climate`, `vacuum`, `humidifier`, `water_heater`.
+
+### Changed
+- Sub-button state text is formatted by Home Assistant (`hass.formatEntityState`) — translated ("On" not `on`), locale number formatting, units, dates.
+- Sub-buttons without an explicit `icon` use HA's `<ha-state-icon>`, so icons follow device class, icon translations and state (door open/closed, etc.). The domain icon map is now only a fallback.
+- "Active" state detection (state-based colors, `animation_when`) now mirrors HA's own rules per domain. Notably climate `heat`/`cool`, cover `opening`, vacuum `cleaning` and numeric sensor values now count as active; `unavailable`/`unknown` count as inactive.
+- A long press only triggers `hold_action` when one is configured (not `none`); otherwise it acts as a tap. Previously a card-level `global_action` without `hold_action` opened more-info on long press. The browser context menu is only suppressed when a hold action exists.
+
+### Fixed
+- Swiping on an interactive card or sub-button now scrolls the dashboard on touch devices (`touch-action: none` → `manipulation`).
+- Performance: the card skips re-rendering on HA state updates that don't involve its own entities (previously every card re-rendered on every state change in the system).
+
 ## [0.2.12] - 2026-10-28
 
 ### Fixed

@@ -101,7 +101,7 @@ Each visual region is exposed as a CSS part on the `ha-card` element.
 | `title` | Title span | Room name text |
 | `sub-buttons` | Sub-buttons container | Layout wrapper for all sub-buttons |
 | `sub-button` | Individual sub-button div | One sub-button pill |
-| `sub-button-icon` | `ha-icon` in sub-button | Sub-button icon |
+| `sub-button-icon` | `ha-icon` (or `ha-state-icon` when the icon comes from the entity) in sub-button | Sub-button icon |
 | `sub-button-label` | Label span | Sub-button label text |
 | `sub-button-state` | State span | Sub-button entity state text |
 
@@ -140,7 +140,7 @@ These classes appear on elements inside the shadow DOM. They are set programmati
 
 ### Animation
 
-These classes are applied to `ha-icon` elements (main icon, badge icon, sub-button icons) when an animation is active. The `--ians-anim-dur` CSS variable is set on the icon's parent container and inherited by the icon.
+These classes are applied to icon elements (`ha-icon` / `ha-state-icon`) (main icon, badge icon, sub-button icons) when an animation is active. The `--ians-anim-dur` CSS variable is set on the icon's parent container and inherited by the icon.
 
 | Class | Animation |
 |---|---|

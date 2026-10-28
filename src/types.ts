@@ -40,6 +40,11 @@ export interface HomeAssistant {
   // Entity registry (may be undefined on older HA versions)
   entities?: Record<string, HassEntityRegistryEntry>;
   devices?: Record<string, HassDeviceRegistryEntry>;
+  // Opaque here — compared by reference to detect theme/language changes
+  themes?: unknown;
+  locale?: unknown;
+  // Localized, formatted state ("On", "21.5 °C") — HA 2023.9+
+  formatEntityState?: (stateObj: HassEntity, state?: string) => string;
   connection: {
     subscribeMessage<T>(
       callback: (msg: T) => void,

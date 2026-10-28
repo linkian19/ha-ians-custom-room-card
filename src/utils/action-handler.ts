@@ -65,6 +65,11 @@ export function dispatchAction(
 /**
  * Attaches pointer-event-based gesture detection to an element.
  * Detects tap, hold (500ms), and double-tap (two taps within 350ms).
+ * Enter/Space on a focused element fires tap (keyboard accessibility).
+ *
+ * Hold is only detected when a hold_action other than "none" is configured —
+ * otherwise a long press is a normal tap (matches HA's own action handler,
+ * and avoids HA's fallback of opening more-info for an unset hold_action).
  *
  * Returns a cleanup function that removes all listeners.
  */
@@ -85,6 +90,9 @@ export function attachActionHandler(
   const hasDoubleTap =
     config.double_tap_action?.action !== undefined &&
     config.double_tap_action.action !== "none";
+  const hasHold =
+    config.hold_action?.action !== undefined &&
+    config.hold_action.action !== "none";
 
   const clearHold = () => {
     if (holdTimeout) {
@@ -110,6 +118,7 @@ export function attachActionHandler(
     moved = false;
     holdFired = false;
 
+    if (!hasHold) return;
     holdTimeout = setTimeout(() => {
       holdTimeout = null;
       if (!moved) {
@@ -157,9 +166,17 @@ export function attachActionHandler(
     moved = true;
   };
 
-  // Prevent native context menu from interrupting hold gesture on mobile
+  // Prevent native context menu from interrupting hold gesture on mobile —
+  // only when a hold action exists, so right-click/long-press work otherwise
   const onContextMenu = (e: Event) => {
+    if (hasHold) e.preventDefault();
+  };
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (e.target !== element || e.repeat) return;
     e.preventDefault();
+    dispatch("tap");
   };
 
   element.addEventListener("pointerdown", onPointerDown);
@@ -167,6 +184,7 @@ export function attachActionHandler(
   element.addEventListener("pointerup", onPointerUp);
   element.addEventListener("pointercancel", onPointerCancel);
   element.addEventListener("contextmenu", onContextMenu);
+  element.addEventListener("keydown", onKeyDown);
 
   return () => {
     clearHold();
@@ -176,5 +194,6 @@ export function attachActionHandler(
     element.removeEventListener("pointerup", onPointerUp);
     element.removeEventListener("pointercancel", onPointerCancel);
     element.removeEventListener("contextmenu", onContextMenu);
+    element.removeEventListener("keydown", onKeyDown);
   };
 }

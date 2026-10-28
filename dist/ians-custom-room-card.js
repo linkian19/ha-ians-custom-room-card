@@ -602,7 +602,7 @@ function r(r2) {
 const CARD_TYPE = "ians-custom-room-card";
 const CARD_NAME = "Ian's Custom Room Card";
 const CARD_DESCRIPTION = "A highly customizable room card with icon, badge, sub-button groups, animations, templates, and more";
-const VERSION = "0.2.12";
+const VERSION = "0.3.0";
 const cardStyles = i$3`
   :host {
     display: block;
@@ -855,7 +855,15 @@ const cardStyles = i$3`
   /* ── Interactive card ────────────────────────────────────────────────────── */
   ha-card.interactive {
     cursor: pointer;
-    touch-action: none; /* prevent scroll interference during global-action gesture detection */
+    /* manipulation (not none) so swipes on the card still scroll the dashboard;
+       the gesture handler cancels on pointercancel/movement */
+    touch-action: manipulation;
+  }
+
+  ha-card.interactive:focus-visible,
+  .sub-button:focus-visible {
+    outline: 2px solid var(--primary-color, #03a9f4);
+    outline-offset: 2px;
   }
 
   /* ── Hover highlight ripple ──────────────────────────────────────────────── */
@@ -961,7 +969,7 @@ const cardStyles = i$3`
     cursor: pointer;
     pointer-events: auto;
     user-select: none;
-    touch-action: none;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.15s;
     opacity: var(--ians-sub-button-opacity);
@@ -984,7 +992,8 @@ const cardStyles = i$3`
     cursor: default;
   }
 
-  .sub-button ha-icon {
+  .sub-button ha-icon,
+  .sub-button ha-state-icon {
     --mdc-icon-size: calc(var(--ians-sub-button-size) * 0.65);
     color: var(--ians-sub-button-icon-color);
     display: flex;
@@ -1144,12 +1153,19 @@ const cardStyles = i$3`
     40%, 80%    { transform: translateX(5px); }
   }
 
-  /* --ians-anim-dur is set on the icon container via inline style and inherited by ha-icon */
-  ha-icon.anim-spin   { animation: ians-spin   var(--ians-anim-dur, 2s)   linear      infinite; }
-  ha-icon.anim-pulse  { animation: ians-pulse  var(--ians-anim-dur, 1.5s) ease-in-out infinite; }
-  ha-icon.anim-blink  { animation: ians-blink  var(--ians-anim-dur, 1.2s) ease-in-out infinite; }
-  ha-icon.anim-bounce { animation: ians-bounce var(--ians-anim-dur, 0.8s) ease-in-out infinite; }
-  ha-icon.anim-shake  { animation: ians-shake  var(--ians-anim-dur, 0.6s) ease-in-out infinite; }
+  /* --ians-anim-dur is set on the icon container via inline style and inherited by the icon */
+  .anim-spin   { animation: ians-spin   var(--ians-anim-dur, 2s)   linear      infinite; }
+  .anim-pulse  { animation: ians-pulse  var(--ians-anim-dur, 1.5s) ease-in-out infinite; }
+  .anim-blink  { animation: ians-blink  var(--ians-anim-dur, 1.2s) ease-in-out infinite; }
+  .anim-bounce { animation: ians-bounce var(--ians-anim-dur, 0.8s) ease-in-out infinite; }
+  .anim-shake  { animation: ians-shake  var(--ians-anim-dur, 0.6s) ease-in-out infinite; }
+
+  /* Respect the OS "reduce motion" setting */
+  @media (prefers-reduced-motion: reduce) {
+    .anim-spin, .anim-pulse, .anim-blink, .anim-bounce, .anim-shake {
+      animation: none;
+    }
+  }
 
   /* ── Template error state ────────────────────────────────────────────────── */
   ha-card.has-template-error {
@@ -1234,7 +1250,7 @@ function dispatchAction(element, config, action) {
   element.dispatchEvent(event);
 }
 function attachActionHandler(element, config, dispatch) {
-  var _a2;
+  var _a2, _b2;
   let holdTimeout = null;
   let tapTimeout = null;
   let tapCount = 0;
@@ -1243,6 +1259,7 @@ function attachActionHandler(element, config, dispatch) {
   let moved = false;
   let holdFired = false;
   const hasDoubleTap = ((_a2 = config.double_tap_action) == null ? void 0 : _a2.action) !== void 0 && config.double_tap_action.action !== "none";
+  const hasHold = ((_b2 = config.hold_action) == null ? void 0 : _b2.action) !== void 0 && config.hold_action.action !== "none";
   const clearHold = () => {
     if (holdTimeout) {
       clearTimeout(holdTimeout);
@@ -1264,6 +1281,7 @@ function attachActionHandler(element, config, dispatch) {
     startY = e2.clientY;
     moved = false;
     holdFired = false;
+    if (!hasHold) return;
     holdTimeout = setTimeout(() => {
       holdTimeout = null;
       if (!moved) {
@@ -1305,13 +1323,20 @@ function attachActionHandler(element, config, dispatch) {
     moved = true;
   };
   const onContextMenu = (e2) => {
+    if (hasHold) e2.preventDefault();
+  };
+  const onKeyDown = (e2) => {
+    if (e2.key !== "Enter" && e2.key !== " ") return;
+    if (e2.target !== element || e2.repeat) return;
     e2.preventDefault();
+    dispatch("tap");
   };
   element.addEventListener("pointerdown", onPointerDown);
   element.addEventListener("pointermove", onPointerMove);
   element.addEventListener("pointerup", onPointerUp);
   element.addEventListener("pointercancel", onPointerCancel);
   element.addEventListener("contextmenu", onContextMenu);
+  element.addEventListener("keydown", onKeyDown);
   return () => {
     clearHold();
     clearTap();
@@ -1320,6 +1345,7 @@ function attachActionHandler(element, config, dispatch) {
     element.removeEventListener("pointerup", onPointerUp);
     element.removeEventListener("pointercancel", onPointerCancel);
     element.removeEventListener("contextmenu", onContextMenu);
+    element.removeEventListener("keydown", onKeyDown);
   };
 }
 async function loadHaComponents() {
@@ -3321,7 +3347,41 @@ const TEMPLATE_FIELDS = [
   "border_color",
   "title"
 ];
-const ACTIVE_STATES = /* @__PURE__ */ new Set(["on", "open", "home", "playing", "unlocked", "connected"]);
+const INACTIVE_STATES = /* @__PURE__ */ new Set(["unavailable", "unknown", "off"]);
+function isStateActive(stateObj) {
+  const state2 = stateObj.state;
+  if (INACTIVE_STATES.has(state2)) return false;
+  switch (stateObj.entity_id.split(".")[0]) {
+    case "alarm_control_panel":
+      return state2 !== "disarmed";
+    case "alert":
+      return state2 !== "idle";
+    case "cover":
+    case "valve":
+      return state2 !== "closed";
+    case "device_tracker":
+    case "person":
+      return state2 !== "not_home";
+    case "lawn_mower":
+      return state2 === "mowing" || state2 === "error";
+    case "lock":
+      return state2 !== "locked";
+    case "media_player":
+      return state2 !== "standby";
+    case "vacuum":
+      return !["idle", "docked", "paused"].includes(state2);
+    case "plant":
+      return state2 === "problem";
+    case "group":
+      return ["on", "home", "open", "locked", "problem"].includes(state2);
+    case "timer":
+      return state2 === "active";
+    case "camera":
+      return state2 === "streaming";
+    default:
+      return true;
+  }
+}
 const DOMAIN_ACTIVE_COLORS = {
   light: "var(--state-light-active-color, #FDD835)",
   switch: "var(--state-switch-active-color, #FDD835)",
@@ -3330,7 +3390,11 @@ const DOMAIN_ACTIVE_COLORS = {
   cover: "var(--state-cover-active-color, #FDD835)",
   lock: "var(--success-color, #4CAF50)",
   binary_sensor: "var(--state-binary_sensor-active-color, #FDD835)",
-  alarm_control_panel: "var(--error-color, #db4437)"
+  alarm_control_panel: "var(--error-color, #db4437)",
+  climate: "var(--state-climate-active-color, #FF9800)",
+  vacuum: "var(--state-vacuum-active-color, #26A69A)",
+  humidifier: "var(--state-humidifier-active-color, #2196F3)",
+  water_heater: "var(--state-water_heater-active-color, #FF9800)"
 };
 const DOMAIN_ICONS = {
   light: "mdi:lightbulb",
@@ -3408,6 +3472,7 @@ const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
     this._subButtonCleanups = [];
     this._templateGen = 0;
     this._subTemplateGen = 0;
+    this._watchedEntities = [];
   }
   // ── Static card metadata ───────────────────────────────────────────────────
   static getStubConfig(hass) {
@@ -3447,10 +3512,39 @@ const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
   static getConfigElement() {
     return document.createElement(`${CARD_TYPE}-editor`);
   }
+  // Masonry layout height hint (1 unit ≈ 50px). Sections layout uses
+  // getGridOptions instead.
+  getCardSize() {
+    var _a2, _b2, _c2;
+    return (_c2 = (_b2 = (_a2 = this._config) == null ? void 0 : _a2.grid_options) == null ? void 0 : _b2.rows) != null ? _c2 : 2;
+  }
   // ── Config ─────────────────────────────────────────────────────────────────
   setConfig(config) {
     if (!config) throw new Error("Invalid configuration");
     this._config = config;
+    this._watchedEntities = this._collectEntities(config);
+  }
+  _collectEntities(config) {
+    var _a2, _b2;
+    const ids = /* @__PURE__ */ new Set();
+    if (config.entity) ids.add(config.entity);
+    const buttons = ((_a2 = config.sub_button_groups) == null ? void 0 : _a2.length) ? config.sub_button_groups.flatMap((g2) => {
+      var _a3;
+      return (_a3 = g2.buttons) != null ? _a3 : [];
+    }) : (_b2 = config.sub_buttons) != null ? _b2 : [];
+    for (const btn of buttons) if (btn.entity) ids.add(btn.entity);
+    return [...ids];
+  }
+  // Skip re-rendering on hass updates that don't touch this card — HA pushes
+  // a new hass object on every state change anywhere in the system
+  shouldUpdate(changedProps) {
+    if (!changedProps.has("hass") || changedProps.size > 1) return true;
+    const oldHass = changedProps.get("hass");
+    if (!oldHass || !this.hass) return true;
+    if (oldHass.themes !== this.hass.themes || oldHass.locale !== this.hass.locale || oldHass.formatEntityState !== this.hass.formatEntityState || oldHass.entities !== this.hass.entities || oldHass.devices !== this.hass.devices || oldHass.areas !== this.hass.areas) {
+      return true;
+    }
+    return this._watchedEntities.some((id) => oldHass.states[id] !== this.hass.states[id]);
   }
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   connectedCallback() {
@@ -3665,7 +3759,7 @@ const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
       const es = this.hass.states[c2.entity];
       const domain = c2.entity.split(".")[0];
       if (es) {
-        const isActive = ACTIVE_STATES.has(es.state);
+        const isActive = isStateActive(es);
         iconColor = isActive ? (_b2 = (_a2 = c2.icon_color_on) != null ? _a2 : DOMAIN_ACTIVE_COLORS[domain]) != null ? _b2 : iconColor : (_c2 = c2.icon_color_off) != null ? _c2 : iconColor;
       }
     }
@@ -3780,7 +3874,7 @@ const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
     if (!animation || animation === "none") return "";
     const whenMode = when != null ? when : "always";
     if (whenMode !== "always" && entityState) {
-      const isActive = ACTIVE_STATES.has(entityState.state);
+      const isActive = isStateActive(entityState);
       if (whenMode === "active" && !isActive) return "";
       if (whenMode === "inactive" && isActive) return "";
     }
@@ -3899,6 +3993,9 @@ const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
       isInteractive ? "interactive" : "",
       showHighlight ? "highlight-on-hover" : ""
     ].filter(Boolean).join(" ")}
+        role=${isInteractive ? "button" : A}
+        tabindex=${isInteractive ? "0" : A}
+        aria-label=${isInteractive && title ? title : A}
       >
         <div part="background" class="card-background-color"></div>
         ${bgImageStyle ? b`<div class="card-background-image" style=${bgImageStyle}></div>` : A}
@@ -3998,23 +4095,25 @@ const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
     return b`<div class=${containerClass} part="sub-button-group" style=${groupStyle || A}>${buttons}</div>`;
   }
   _renderSingleButton(btn, btnIndex, groupIndex, layout, isGlobal) {
-    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m;
+    var _a2, _b2, _c2, _d2, _e2, _f2, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
     const entityState = btn.entity ? (_a2 = this.hass) == null ? void 0 : _a2.states[btn.entity] : void 0;
     const domain = (_c2 = (_b2 = btn.entity) == null ? void 0 : _b2.split(".")[0]) != null ? _c2 : "";
     const domainIcon = domain ? (_d2 = DOMAIN_ICONS[domain]) != null ? _d2 : "mdi:circle" : "mdi:circle";
     const keyPfx = groupIndex !== null ? `g${groupIndex}_sub_${btnIndex}` : `sub_${btnIndex}`;
-    const icon = (_g = (_f2 = (_e2 = this._subTemplateResults[`${keyPfx}_icon`]) != null ? _e2 : btn.icon) != null ? _f2 : entityState == null ? void 0 : entityState.attributes.icon) != null ? _g : domainIcon;
+    const explicitIcon = (_e2 = this._subTemplateResults[`${keyPfx}_icon`]) != null ? _e2 : btn.icon;
+    const useStateIcon = !explicitIcon && !!entityState && !!customElements.get("ha-state-icon");
+    const icon = (_f2 = explicitIcon != null ? explicitIcon : entityState == null ? void 0 : entityState.attributes.icon) != null ? _f2 : domainIcon;
     let label;
     if (btn.label !== void 0) {
       if (btn.label === "entity" && entityState) {
-        label = (_h = entityState.attributes.friendly_name) != null ? _h : btn.entity;
+        label = (_g = entityState.attributes.friendly_name) != null ? _g : btn.entity;
       } else {
-        label = (_i = this._subTemplateResults[`${keyPfx}_label`]) != null ? _i : btn.label;
+        label = (_h = this._subTemplateResults[`${keyPfx}_label`]) != null ? _h : btn.label;
       }
     }
     let posClass = "";
     if (layout === "corners") {
-      posClass = `pos-${(_j = CORNER_POSITIONS[btnIndex]) != null ? _j : "bottom-right"}`;
+      posClass = `pos-${(_i = CORNER_POSITIONS[btnIndex]) != null ? _i : "bottom-right"}`;
     } else if (layout === "custom" && btn.position) {
       posClass = `pos-${btn.position}`;
     }
@@ -4026,12 +4125,13 @@ const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
     ].filter(Boolean).join(" ");
     let btnIconColor = btn.icon_color;
     if (btn.state_based_color && entityState) {
-      const isActive = ACTIVE_STATES.has(entityState.state);
-      btnIconColor = isActive ? (_l = (_k = btn.icon_color_on) != null ? _k : DOMAIN_ACTIVE_COLORS[domain]) != null ? _l : btn.icon_color : (_m = btn.icon_color_off) != null ? _m : btn.icon_color;
+      const isActive = isStateActive(entityState);
+      btnIconColor = isActive ? (_k = (_j = btn.icon_color_on) != null ? _j : DOMAIN_ACTIVE_COLORS[domain]) != null ? _k : btn.icon_color : (_l = btn.icon_color_off) != null ? _l : btn.icon_color;
     }
     const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
     const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
-    const stateDisplay = entityState ? `${entityState.state}${entityState.attributes.unit_of_measurement ? ` ${entityState.attributes.unit_of_measurement}` : ""}` : "";
+    const stateDisplay = entityState ? (_o = (_n = (_m = this.hass).formatEntityState) == null ? void 0 : _n.call(_m, entityState)) != null ? _o : `${entityState.state}${entityState.attributes.unit_of_measurement ? ` ${entityState.attributes.unit_of_measurement}` : ""}` : "";
+    const ariaLabel = (_q = (_p = label != null ? label : entityState == null ? void 0 : entityState.attributes.friendly_name) != null ? _p : btn.entity) != null ? _q : explicitIcon;
     const btnStyle = [
       btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
       btn.background_color ? `--ians-sub-button-background-color: ${btn.background_color}` : "",
@@ -4045,8 +4145,11 @@ const _IansCustomRoomCard = class _IansCustomRoomCard2 extends i {
       <div class=${classes} part="sub-button" style=${btnStyle || A}
         data-index=${String(btnIndex)}
         data-group=${groupIndex !== null ? String(groupIndex) : A}
+        role=${isGlobal ? A : "button"}
+        tabindex=${isGlobal ? A : "0"}
+        aria-label=${!isGlobal && ariaLabel ? ariaLabel : A}
       >
-        ${btn.show_icon !== false ? b`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || A}></ha-icon>` : A}
+        ${btn.show_icon !== false ? useStateIcon ? b`<ha-state-icon part="sub-button-icon" .hass=${this.hass} .stateObj=${entityState} class=${btnAnimClass || A}></ha-state-icon>` : b`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || A}></ha-icon>` : A}
         ${btn.show_label && label ? b`<span part="sub-button-label" class="sub-button-label">${label}</span>` : A}
         ${btn.show_state && entityState ? b`<span part="sub-button-state" class="sub-button-state">${stateDisplay}</span>` : A}
       </div>

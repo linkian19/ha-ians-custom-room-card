@@ -252,7 +252,15 @@ export const cardStyles = css`
   /* ── Interactive card ────────────────────────────────────────────────────── */
   ha-card.interactive {
     cursor: pointer;
-    touch-action: none; /* prevent scroll interference during global-action gesture detection */
+    /* manipulation (not none) so swipes on the card still scroll the dashboard;
+       the gesture handler cancels on pointercancel/movement */
+    touch-action: manipulation;
+  }
+
+  ha-card.interactive:focus-visible,
+  .sub-button:focus-visible {
+    outline: 2px solid var(--primary-color, #03a9f4);
+    outline-offset: 2px;
   }
 
   /* ── Hover highlight ripple ──────────────────────────────────────────────── */
@@ -358,7 +366,7 @@ export const cardStyles = css`
     cursor: pointer;
     pointer-events: auto;
     user-select: none;
-    touch-action: none;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.15s;
     opacity: var(--ians-sub-button-opacity);
@@ -381,7 +389,8 @@ export const cardStyles = css`
     cursor: default;
   }
 
-  .sub-button ha-icon {
+  .sub-button ha-icon,
+  .sub-button ha-state-icon {
     --mdc-icon-size: calc(var(--ians-sub-button-size) * 0.65);
     color: var(--ians-sub-button-icon-color);
     display: flex;
@@ -541,12 +550,19 @@ export const cardStyles = css`
     40%, 80%    { transform: translateX(5px); }
   }
 
-  /* --ians-anim-dur is set on the icon container via inline style and inherited by ha-icon */
-  ha-icon.anim-spin   { animation: ians-spin   var(--ians-anim-dur, 2s)   linear      infinite; }
-  ha-icon.anim-pulse  { animation: ians-pulse  var(--ians-anim-dur, 1.5s) ease-in-out infinite; }
-  ha-icon.anim-blink  { animation: ians-blink  var(--ians-anim-dur, 1.2s) ease-in-out infinite; }
-  ha-icon.anim-bounce { animation: ians-bounce var(--ians-anim-dur, 0.8s) ease-in-out infinite; }
-  ha-icon.anim-shake  { animation: ians-shake  var(--ians-anim-dur, 0.6s) ease-in-out infinite; }
+  /* --ians-anim-dur is set on the icon container via inline style and inherited by the icon */
+  .anim-spin   { animation: ians-spin   var(--ians-anim-dur, 2s)   linear      infinite; }
+  .anim-pulse  { animation: ians-pulse  var(--ians-anim-dur, 1.5s) ease-in-out infinite; }
+  .anim-blink  { animation: ians-blink  var(--ians-anim-dur, 1.2s) ease-in-out infinite; }
+  .anim-bounce { animation: ians-bounce var(--ians-anim-dur, 0.8s) ease-in-out infinite; }
+  .anim-shake  { animation: ians-shake  var(--ians-anim-dur, 0.6s) ease-in-out infinite; }
+
+  /* Respect the OS "reduce motion" setting */
+  @media (prefers-reduced-motion: reduce) {
+    .anim-spin, .anim-pulse, .anim-blink, .anim-bounce, .anim-shake {
+      animation: none;
+    }
+  }
 
   /* ── Template error state ────────────────────────────────────────────────── */
   ha-card.has-template-error {
