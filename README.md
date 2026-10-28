@@ -14,7 +14,8 @@ A highly customizable room card for Home Assistant's Lovelace dashboard. Combine
 - **Sub-buttons** with 7 layout presets and per-button tap/hold/double-tap actions
 - **Sub-button groups** — up to 4 independent groups, each with its own layout, position, and style
 - **Grid cell layout** — buttons can be vertical (icon above label) or horizontal (icon beside label, pill shape)
-- **Unit of measurement** — entity state display automatically appends the unit (°F, %, hPa, etc.)
+- **Localized state display** — sub-button states are formatted by Home Assistant (translated, number formatting, units)
+- **Accessible** — keyboard focus and Enter/Space activation on interactive cards and sub-buttons; animations respect the OS "reduce motion" setting
 - **Sub-button column alignment** — justify left/right-column layouts to top, center, bottom, or spaced
 - **Global action** — makes the entire card a single tap target (sub-buttons become decorative)
 - **HA Jinja2 templates** for icon, colors, badge, title, and icon background color
@@ -108,7 +109,7 @@ sub_buttons:
 | `badge_position_x` | string | — | — | CSS offset value for `badge_position: custom` |
 | `badge_position_y` | string | — | — | CSS offset value for `badge_position: custom` |
 | `icon_animation` | string | — | — | Animation for main icon: `spin`, `pulse`, `blink`, `bounce`, `shake` |
-| `icon_animation_when` | string | `always` | — | When to animate: `always`, `active` (entity on/open/playing), `inactive` (entity off/closed) |
+| `icon_animation_when` | string | `always` | — | When to animate: `always`, `active`, `inactive` (see [State-based icon color](#state-based-icon-color) for what counts as active) |
 | `icon_animation_speed` | string | `normal` | — | Animation speed: `slow`, `normal`, `fast` |
 | `badge_animation` | string | — | — | Animation for the badge icon; same values as `icon_animation` |
 | `badge_animation_when` | string | `always` | — | When to animate the badge; same values as `icon_animation_when` |
@@ -189,7 +190,7 @@ grid_options:
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `entity` | string | — | Entity to drive icon, label, and state |
-| `icon` | string | entity icon or `mdi:circle` | MDI icon string |
+| `icon` | string | HA's icon for the entity | MDI icon string. When unset, Home Assistant picks the icon (device class and state aware, e.g. door open/closed) |
 | `label` | string | — | Static text, `"entity"` (friendly_name), or HA template |
 | `show_icon` | boolean | `true` | Show icon |
 | `show_label` | boolean | `false` | Show label text |
@@ -203,7 +204,7 @@ grid_options:
 | `opacity` | float | — | Opacity for this button (overrides global `sub_button_opacity`) |
 | `position` | string | — | Absolute position when `sub_buttons_layout: custom` |
 | `tap_action` | action | `toggle` | Action on tap |
-| `hold_action` | action | `more-info` | Action on hold |
+| `hold_action` | action | `more-info` | Action on hold. Set to `none` to make a long press behave like a tap |
 | `double_tap_action` | action | `none` | Action on double-tap |
 | `animation` | string | — | Animation for this button's icon: `spin`, `pulse`, `blink`, `bounce`, `shake` |
 | `animation_when` | string | `always` | When to animate: `always`, `active`, `inactive` (uses button's `entity`) |
@@ -284,9 +285,9 @@ icon_color_on: "#ffcc00"         # optional override for active color
 icon_color_off: "#555555"        # optional override for inactive color
 ```
 
-Active states: `on`, `open`, `home`, `playing`, `unlocked`, `connected`
+Active state follows Home Assistant's own rules (same as HA's tile cards): `unavailable`, `unknown` and `off` are inactive; otherwise per domain — e.g. cover/valve not `closed`, lock not `locked`, person/device_tracker not `not_home`, alarm not `disarmed`, media_player not `standby`, vacuum not `idle`/`docked`/`paused`, timer `active`. Any other state (including climate `heat`/`cool` and numeric sensor values) counts as active.
 
-Domain defaults for active color: `light` → yellow, `fan` → teal, `alarm_control_panel` → red, others → yellow.
+Domain defaults for active color: `light`/`switch`/`cover`/`media_player`/`binary_sensor` → yellow, `fan`/`vacuum` → teal, `climate`/`water_heater` → orange, `humidifier` → blue, `lock` → green, `alarm_control_panel` → red. Other domains use `icon_color_on` or the normal icon color.
 
 ### Action config
 
@@ -310,6 +311,8 @@ start_listening: false
 ### global_action
 
 > **Warning:** When `global_action` is set, all sub-button tap/hold/double-tap actions are completely disabled. Sub-buttons become display-only decorations. The entire card surface is a single tap target.
+
+If `hold_action` is omitted (or `none`), a long press on the card acts as a normal tap. The card is keyboard-focusable and Enter/Space triggers `tap_action`.
 
 ```yaml
 global_action:
@@ -363,7 +366,7 @@ icon_animation_speed: normal   # "slow" | "normal" | "fast"
 
 Available animations: `spin`, `pulse` (scale breathe), `blink` (opacity flash), `bounce` (vertical hop), `shake` (horizontal wiggle).
 
-`animation_when: active` triggers when entity state is `on`, `open`, `home`, `playing`, `unlocked`, or `connected`. `animation_when: inactive` triggers on all other states. `always` (default) runs regardless of state.
+`animation_when: active` triggers when the entity is active (same rules as [State-based icon color](#state-based-icon-color)). `animation_when: inactive` triggers otherwise. `always` (default) runs regardless of state. All animations are disabled when the OS/browser "reduce motion" setting is on.
 
 Sub-buttons each take their own `animation`, `animation_when`, and `animation_speed` fields driven by the button's `entity`.
 

@@ -1,4 +1,5 @@
 import { LitElement, html, nothing } from "lit";
+import type { PropertyValues } from "lit";
 import { property, state } from "lit/decorators.js";
 import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape, CardShape, SubButtonGroup, SubButtonsLayout, SubButtonConfig } from "./types";
 import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION, VERSION } from "./const";
@@ -24,8 +25,31 @@ const TEMPLATE_FIELDS = [
 
 type TemplateField = (typeof TEMPLATE_FIELDS)[number];
 
-// Entity states considered "active" for state-based coloring
-const ACTIVE_STATES = new Set(["on", "open", "home", "playing", "unlocked", "connected"]);
+// "Active" state logic for state-based coloring and animation_when — mirrors
+// HA frontend's stateActive() so cards agree with HA's own tiles
+const INACTIVE_STATES = new Set(["unavailable", "unknown", "off"]);
+
+function isStateActive(stateObj: HassEntity): boolean {
+  const state = stateObj.state;
+  if (INACTIVE_STATES.has(state)) return false;
+  switch (stateObj.entity_id.split(".")[0]) {
+    case "alarm_control_panel": return state !== "disarmed";
+    case "alert":               return state !== "idle";
+    case "cover":
+    case "valve":               return state !== "closed";
+    case "device_tracker":
+    case "person":              return state !== "not_home";
+    case "lawn_mower":          return state === "mowing" || state === "error";
+    case "lock":                return state !== "locked";
+    case "media_player":        return state !== "standby";
+    case "vacuum":              return !["idle", "docked", "paused"].includes(state);
+    case "plant":               return state === "problem";
+    case "group":               return ["on", "home", "open", "locked", "problem"].includes(state);
+    case "timer":               return state === "active";
+    case "camera":              return state === "streaming";
+    default:                    return true;
+  }
+}
 
 // Default icon color when entity is in an active state, keyed by domain
 const DOMAIN_ACTIVE_COLORS: Record<string, string> = {
@@ -37,9 +61,14 @@ const DOMAIN_ACTIVE_COLORS: Record<string, string> = {
   lock:                "var(--success-color, #4CAF50)",
   binary_sensor:       "var(--state-binary_sensor-active-color, #FDD835)",
   alarm_control_panel: "var(--error-color, #db4437)",
+  climate:             "var(--state-climate-active-color, #FF9800)",
+  vacuum:              "var(--state-vacuum-active-color, #26A69A)",
+  humidifier:          "var(--state-humidifier-active-color, #2196F3)",
+  water_heater:        "var(--state-water_heater-active-color, #FF9800)",
 };
 
-// Default icon per entity domain, used when no icon is configured or found in entity attributes
+// Fallback icon per entity domain — only used if HA's <ha-state-icon> isn't
+// available; normally HA picks the icon (translations, device_class, state)
 const DOMAIN_ICONS: Record<string, string> = {
   light: "mdi:lightbulb",
   switch: "mdi:toggle-switch",
@@ -181,11 +210,52 @@ export class IansCustomRoomCard extends LitElement {
     return document.createElement(`${CARD_TYPE}-editor`);
   }
 
+  // Masonry layout height hint (1 unit ≈ 50px). Sections layout uses
+  // getGridOptions instead.
+  public getCardSize(): number {
+    return this._config?.grid_options?.rows ?? 2;
+  }
+
   // ── Config ─────────────────────────────────────────────────────────────────
 
   public setConfig(config: CardConfig): void {
     if (!config) throw new Error("Invalid configuration");
     this._config = config;
+    this._watchedEntities = this._collectEntities(config);
+  }
+
+  // Entities whose state changes can affect rendering — card entity plus all
+  // sub-button entities. Templates are evaluated server-side and push their
+  // own updates, so they don't need to be watched here.
+  private _watchedEntities: string[] = [];
+
+  private _collectEntities(config: CardConfig): string[] {
+    const ids = new Set<string>();
+    if (config.entity) ids.add(config.entity);
+    const buttons = config.sub_button_groups?.length
+      ? config.sub_button_groups.flatMap((g) => g.buttons ?? [])
+      : config.sub_buttons ?? [];
+    for (const btn of buttons) if (btn.entity) ids.add(btn.entity);
+    return [...ids];
+  }
+
+  // Skip re-rendering on hass updates that don't touch this card — HA pushes
+  // a new hass object on every state change anywhere in the system
+  protected shouldUpdate(changedProps: PropertyValues): boolean {
+    if (!changedProps.has("hass") || changedProps.size > 1) return true;
+    const oldHass = changedProps.get("hass") as HomeAssistant | undefined;
+    if (!oldHass || !this.hass) return true;
+    if (
+      oldHass.themes !== this.hass.themes ||
+      oldHass.locale !== this.hass.locale ||
+      oldHass.formatEntityState !== this.hass.formatEntityState ||
+      oldHass.entities !== this.hass.entities ||
+      oldHass.devices !== this.hass.devices ||
+      oldHass.areas !== this.hass.areas
+    ) {
+      return true;
+    }
+    return this._watchedEntities.some((id) => oldHass.states[id] !== this.hass.states[id]);
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -450,7 +520,7 @@ export class IansCustomRoomCard extends LitElement {
       const es = this.hass.states[c.entity];
       const domain = c.entity.split(".")[0];
       if (es) {
-        const isActive = ACTIVE_STATES.has(es.state);
+        const isActive = isStateActive(es);
         iconColor = isActive
           ? (c.icon_color_on ?? DOMAIN_ACTIVE_COLORS[domain] ?? iconColor)
           : (c.icon_color_off ?? iconColor);
@@ -589,7 +659,7 @@ export class IansCustomRoomCard extends LitElement {
     if (!animation || animation === "none") return "";
     const whenMode = when ?? "always";
     if (whenMode !== "always" && entityState) {
-      const isActive = ACTIVE_STATES.has(entityState.state);
+      const isActive = isStateActive(entityState);
       if (whenMode === "active" && !isActive) return "";
       if (whenMode === "inactive" && isActive) return "";
     }
@@ -755,6 +825,9 @@ export class IansCustomRoomCard extends LitElement {
         ]
           .filter(Boolean)
           .join(" ")}
+        role=${isInteractive ? "button" : nothing}
+        tabindex=${isInteractive ? "0" : nothing}
+        aria-label=${isInteractive && title ? title : nothing}
       >
         <div part="background" class="card-background-color"></div>
         ${bgImageStyle
@@ -886,9 +959,12 @@ export class IansCustomRoomCard extends LitElement {
     const domainIcon = domain ? (DOMAIN_ICONS[domain] ?? "mdi:circle") : "mdi:circle";
     const keyPfx = groupIndex !== null ? `g${groupIndex}_sub_${btnIndex}` : `sub_${btnIndex}`;
 
+    // Explicit icon (template result or config) wins; otherwise let HA's
+    // <ha-state-icon> pick it (icon translations, device_class, state-aware)
+    const explicitIcon = this._subTemplateResults[`${keyPfx}_icon`] ?? btn.icon;
+    const useStateIcon = !explicitIcon && !!entityState && !!customElements.get("ha-state-icon");
     const icon =
-      this._subTemplateResults[`${keyPfx}_icon`] ??
-      btn.icon ??
+      explicitIcon ??
       (entityState?.attributes.icon as string | undefined) ??
       domainIcon;
 
@@ -917,7 +993,7 @@ export class IansCustomRoomCard extends LitElement {
 
     let btnIconColor = btn.icon_color;
     if (btn.state_based_color && entityState) {
-      const isActive = ACTIVE_STATES.has(entityState.state);
+      const isActive = isStateActive(entityState);
       btnIconColor = isActive
         ? (btn.icon_color_on ?? DOMAIN_ACTIVE_COLORS[domain] ?? btn.icon_color)
         : (btn.icon_color_off ?? btn.icon_color);
@@ -926,9 +1002,17 @@ export class IansCustomRoomCard extends LitElement {
     const btnAnimClass = this._getAnimClass(btn.animation, btn.animation_when, entityState);
     const btnAnimDur = this._getAnimDur(btn.animation, btn.animation_speed);
 
+    // Localized + formatted by HA ("On", "21.5 °C", relative dates); raw
+    // fallback for very old frontends without formatEntityState
     const stateDisplay = entityState
-      ? `${entityState.state}${entityState.attributes.unit_of_measurement ? ` ${entityState.attributes.unit_of_measurement}` : ""}`
+      ? this.hass.formatEntityState?.(entityState) ??
+        `${entityState.state}${entityState.attributes.unit_of_measurement ? ` ${entityState.attributes.unit_of_measurement}` : ""}`
       : "";
+
+    const ariaLabel = label
+      ?? (entityState?.attributes.friendly_name as string | undefined)
+      ?? btn.entity
+      ?? explicitIcon;
 
     const btnStyle = [
       btnIconColor ? `--ians-sub-button-icon-color: ${btnIconColor}` : "",
@@ -944,9 +1028,14 @@ export class IansCustomRoomCard extends LitElement {
       <div class=${classes} part="sub-button" style=${btnStyle || nothing}
         data-index=${String(btnIndex)}
         data-group=${groupIndex !== null ? String(groupIndex) : nothing}
+        role=${isGlobal ? nothing : "button"}
+        tabindex=${isGlobal ? nothing : "0"}
+        aria-label=${!isGlobal && ariaLabel ? ariaLabel : nothing}
       >
         ${btn.show_icon !== false
-          ? html`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || nothing}></ha-icon>`
+          ? useStateIcon
+            ? html`<ha-state-icon part="sub-button-icon" .hass=${this.hass} .stateObj=${entityState} class=${btnAnimClass || nothing}></ha-state-icon>`
+            : html`<ha-icon part="sub-button-icon" .icon=${icon} class=${btnAnimClass || nothing}></ha-icon>`
           : nothing}
         ${btn.show_label && label
           ? html`<span part="sub-button-label" class="sub-button-label">${label}</span>`

@@ -98,12 +98,17 @@ entity: light.living_room
 state_based_color: true
 ```
 
-When the entity is in an active state (`on`, `open`, `home`, `playing`, `unlocked`, `connected`), the icon gets a domain-appropriate color. The defaults are:
+When the entity is active, the icon gets a domain-appropriate color. Active state follows Home Assistant's own rules (same as HA's tile cards): `unavailable`, `unknown` and `off` are inactive; otherwise per domain — e.g. cover/valve not `closed`, lock not `locked`, person/device_tracker not `not_home`, alarm not `disarmed`, media_player not `standby`, vacuum not `idle`/`docked`/`paused`, timer `active`. Any other state (including climate `heat`/`cool` and numeric sensor values) counts as active.
+
+The default active colors are:
 
 | Domain | Active color |
 |---|---|
 | `light`, `switch`, `media_player`, `cover`, `binary_sensor` | Yellow (`--state-light-active-color`) |
 | `fan` | Teal (`--state-fan-active-color`) |
+| `climate`, `water_heater` | Orange (`--state-climate-active-color`) |
+| `vacuum` | Teal (`--state-vacuum-active-color`) |
+| `humidifier` | Blue (`--state-humidifier-active-color`) |
 | `lock` | Green (`--success-color`) |
 | `alarm_control_panel` | Red (`--error-color`) |
 
