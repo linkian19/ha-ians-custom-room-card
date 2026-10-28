@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import type {
   HomeAssistant, CardConfig, SubButtonConfig, SubButtonGroup,
   SubButtonsLayout, SubButtonGroupPosition, IconPosition, BadgePosition,
@@ -162,7 +162,6 @@ function cssToHex(value: string): string {
 
 // ── Editor component ──────────────────────────────────────────────────────────
 
-@customElement(`${CARD_TYPE}-editor`)
 export class IansCustomRoomCardEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config?: CardConfig;
@@ -2037,4 +2036,8 @@ export class IansCustomRoomCardEditor extends LitElement {
       }
     `;
   }
+}
+
+if (!customElements.get(`${CARD_TYPE}-editor`)) {
+  customElements.define(`${CARD_TYPE}-editor`, IansCustomRoomCardEditor);
 }

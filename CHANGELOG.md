@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-10-28
+
+### Fixed
+- Template subscriptions no longer leak — overlapping subscribe runs (initial mount, rapid editor changes, card removed mid-subscribe) used to orphan `render_template` subscriptions that kept running until the browser tab reloaded. Each run now carries a generation number and stale runs close their own subscriptions. Card templates also subscribe in parallel instead of one at a time.
+- Templates now subscribe when `hass` arrives after the config (previously they could silently never subscribe).
+- The navigation template cache is keyed on the full card config, so cards sharing the same template text (e.g. `{{ states(entity) }}`) no longer briefly show each other's values after navigating.
+- `background_image: area` now falls back to the device's area — previously only an area set directly on the entity was found, so most cards showed no image.
+- Sub-button templated icons/labels no longer flash the raw template on every config change; previous results are kept until the new ones arrive (matches the title behaviour from v0.2.9).
+- Loading the card resource twice no longer throws "already defined" and breaks the dashboard; registration is now guarded.
+
+### Changed
+- Template variable `entity` is now the entity ID string (Mushroom convention) instead of a frozen state snapshot. Use `{{ states(entity) }}` / `is_state(entity, ...)`; `{{ entity.state }}` no longer works (it never updated anyway).
+- Minimum Home Assistant version raised to 2024.11 in `hacs.json` (the card already relied on `perform-action` and sections `grid_options`).
+- Card version is injected from `package.json` at build time and logged to the browser console on load.
+
 ## [0.2.11] - 2026-06-25
 
 ### Fixed

@@ -14,7 +14,16 @@ Inside any template field, these variables are available:
 |---|---|
 | `config` | The full card config object |
 | `user` | The logged-in user's name |
-| `entity` | The `hass.states` entry for `config.entity` (if set) |
+| `entity` | The entity ID string of `config.entity` (or the sub-button's `entity` in sub-button templates) |
+
+Because `entity` is an ID string, use it with HA's template helpers — these stay live as the entity changes:
+
+```yaml
+title: "{{ state_attr(entity, 'friendly_name') }} — {{ states(entity) }}"
+icon: "{{ 'mdi:lightbulb-on' if is_state(entity, 'on') else 'mdi:lightbulb' }}"
+```
+
+> **Changed in v0.2.12:** `entity` used to be a one-time snapshot of the state object, so `{{ entity.state }}` never updated. Use `{{ states(entity) }}` instead.
 
 ### Icon changes with entity state
 
@@ -490,7 +499,7 @@ background_image: "area"
 entity: light.living_room
 ```
 
-When set to `"area"`, the card looks up the entity's assigned area and uses that area's picture from HA. If the entity has no area, or the area has no picture, no image is shown (no error).
+When set to `"area"`, the card looks up the entity's area — the area set on the entity itself, or else the area of its device — and uses that area's picture from HA. If the entity has no area, or the area has no picture, no image is shown (no error).
 
 Area pictures are configured in HA's Area Registry: **Settings → Areas & Zones → [Area] → Edit → Upload image**.
 

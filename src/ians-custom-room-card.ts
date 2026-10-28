@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape, CardShape, SubButtonGroup, SubButtonsLayout, SubButtonConfig } from "./types";
-import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION } from "./const";
+import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION, VERSION } from "./const";
 import { cardStyles } from "./utils/styles";
 import { resolveAreaImage } from "./utils/area-image";
 import { subscribeTemplate, isTemplate } from "./utils/template-manager";
@@ -107,16 +107,16 @@ const CORNER_POSITIONS = [
 
 // Module-level cache: preserves last known template results across card
 // reconnects (e.g. HA dashboard navigation destroys and recreates cards).
-// Key = template field values; TTL = 2s covers any navigation round-trip.
+// Key = full serialized config — templates receive `config` and `entity` as
+// variables, so two cards with identical template text can still render
+// different results. TTL = 2s covers any navigation round-trip.
 const _templateResultsCache = new Map<string, Partial<Record<TemplateField, string>>>();
 const _CACHE_TTL = 2000;
 
 function _templateCacheKey(config: CardConfig): string {
-  const c = config as unknown as Record<string, unknown>;
-  return TEMPLATE_FIELDS.map((f) => `${f}:${c[f] ?? ""}`).join("\x00");
+  return JSON.stringify(config);
 }
 
-@customElement(CARD_TYPE)
 export class IansCustomRoomCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config?: CardConfig;
@@ -130,6 +130,13 @@ export class IansCustomRoomCard extends LitElement {
   @state() private _subTemplateResults: Record<string, string> = {};
   private _subTemplateUnsubs = new Map<string, () => Promise<void>>();
   private _subButtonCleanups: Array<() => void> = [];
+
+  // Subscription generations — bumped on every (re)subscribe and on disconnect.
+  // A subscribe run that finishes after its generation is superseded closes
+  // its own subscriptions instead of storing them, so overlapping runs
+  // (initial mount, rapid editor changes, disconnect mid-subscribe) can't leak.
+  private _templateGen = 0;
+  private _subTemplateGen = 0;
 
   // ── Static card metadata ───────────────────────────────────────────────────
 
@@ -191,6 +198,9 @@ export class IansCustomRoomCard extends LitElement {
       const cached = _templateResultsCache.get(_templateCacheKey(this._config));
       if (cached) this._templateResults = { ...cached };
     }
+    // On first connect, updated() subscribes and wires handlers once _config
+    // lands — only reconnects (no config change) need to do it here
+    if (!this.hasUpdated) return;
     if (this._config && this.hass) {
       this._subscribeTemplates();
       this._subscribeSubButtonTemplates();
@@ -214,6 +224,8 @@ export class IansCustomRoomCard extends LitElement {
       _templateResultsCache.set(key, { ...this._templateResults });
       window.setTimeout(() => _templateResultsCache.delete(key), _CACHE_TTL);
     }
+    this._templateGen++;
+    this._subTemplateGen++;
     this._unsubscribeTemplates();
     this._unsubscribeSubButtonTemplates();
     this._cardActionCleanup?.();
@@ -228,9 +240,14 @@ export class IansCustomRoomCard extends LitElement {
     const templateResultsChanged = changedProps.has("_templateResults");
     const hassChanged = changedProps.has("hass");
 
-    if (configChanged) {
+    // First hass assignment after config — subscriptions were skipped without it
+    const hassArrived = hassChanged && changedProps.get("hass") === undefined;
+
+    if (configChanged || hassArrived) {
       this._subscribeTemplates();
       this._subscribeSubButtonTemplates();
+    }
+    if (configChanged) {
       this._setupCardActionHandler();
     }
 
@@ -247,7 +264,9 @@ export class IansCustomRoomCard extends LitElement {
   // ── Template subscriptions ─────────────────────────────────────────────────
 
   private async _subscribeTemplates(): Promise<void> {
+    const gen = ++this._templateGen;
     await this._unsubscribeTemplates();
+    if (gen !== this._templateGen) return;
 
     const c = this._config;
     if (!c || !this.hass) return;
@@ -265,123 +284,144 @@ export class IansCustomRoomCard extends LitElement {
     }
     this._templateResults = staleResults;
 
+    // `entity` is the entity ID string (same convention as Mushroom) — use
+    // states(entity) / state_attr(entity, ...) so results stay live
     const variables: Record<string, unknown> = {
       config: c,
       user: this.hass.user?.name ?? "",
-      entity: c.entity ? this.hass.states[c.entity] : undefined,
+      entity: c.entity,
     };
 
-    const templateErrors: Partial<Record<TemplateField, string>> = {};
-
-    for (const field of TEMPLATE_FIELDS) {
+    const fields = TEMPLATE_FIELDS.filter((field) => {
       const value = c[field as keyof CardConfig] as string | undefined;
-      if (!value || !isTemplate(value)) continue;
+      return !!value && isTemplate(value);
+    });
 
+    await Promise.all(fields.map(async (field) => {
+      const value = c[field as keyof CardConfig] as string;
       try {
         const unsub = await subscribeTemplate(
           this.hass,
           value,
           variables,
           (result) => {
+            if (gen !== this._templateGen) return;
             this._templateResults = { ...this._templateResults, [field]: result };
             // Clear any prior error for this field
-            const errs = { ...this._templateErrors };
-            delete errs[field as TemplateField];
-            this._templateErrors = errs;
+            if (field in this._templateErrors) {
+              const errs = { ...this._templateErrors };
+              delete errs[field];
+              this._templateErrors = errs;
+            }
           },
           (error) => {
+            if (gen !== this._templateGen) return;
             console.warn(`[ians-room-card] Template error in ${field}:`, error);
             this._templateErrors = { ...this._templateErrors, [field]: error };
           }
         );
+        if (gen !== this._templateGen) {
+          unsub().catch(() => undefined);
+          return;
+        }
         this._templateUnsubs.set(field, unsub);
       } catch (e) {
+        if (gen !== this._templateGen) return;
         console.error(`[ians-room-card] Failed to subscribe template for ${field}:`, e);
-        templateErrors[field] = String(e);
+        this._templateErrors = { ...this._templateErrors, [field]: String(e) };
       }
-    }
-
-    if (Object.keys(templateErrors).length > 0) {
-      this._templateErrors = { ...this._templateErrors, ...templateErrors };
-    }
+    }));
   }
 
   private async _unsubscribeTemplates(): Promise<void> {
-    for (const unsub of this._templateUnsubs.values()) {
+    // Snapshot and clear before awaiting so a newer subscribe run can't have
+    // its handles wiped by this cleanup
+    const unsubs = [...this._templateUnsubs.values()];
+    this._templateUnsubs.clear();
+    // Do NOT clear _templateResults here — stale values are preserved across
+    // config transitions so _subscribeTemplates can selectively evict them
+    this._templateErrors = {};
+    for (const unsub of unsubs) {
       try {
         await unsub();
       } catch {
         // ignore cleanup errors
       }
     }
-    this._templateUnsubs.clear();
-    // Do NOT clear _templateResults here — stale values are preserved across
-    // config transitions so _subscribeTemplates can selectively evict them
-    this._templateErrors = {};
   }
 
   private async _subscribeSubButtonTemplates(): Promise<void> {
+    const gen = ++this._subTemplateGen;
     await this._unsubscribeSubButtonTemplates();
+    if (gen !== this._subTemplateGen) return;
 
     const c = this._config;
-    if (!this.hass) return;
+    if (!c || !this.hass) return;
 
     const variables: Record<string, unknown> = {
       config: c,
       user: this.hass.user?.name ?? "",
     };
 
-    if (c?.sub_button_groups?.length) {
-      // Multi-group mode: keys are "g{g}_sub_{i}_{field}"
-      for (const [g, group] of c.sub_button_groups.slice(0, 4).entries()) {
-        for (const [i, btn] of (group.buttons ?? []).entries()) {
-          const btnVars = { ...variables, entity: btn.entity ? this.hass.states[btn.entity] : undefined };
-          for (const field of ["icon", "label"] as const) {
-            const value = btn[field];
-            if (!value || !isTemplate(value)) continue;
-            const key = `g${g}_sub_${i}_${field}`;
-            try {
-              const unsub = await subscribeTemplate(this.hass, value, btnVars,
-                (result) => { this._subTemplateResults = { ...this._subTemplateResults, [key]: result }; }
-              );
-              this._subTemplateUnsubs.set(key, unsub);
-            } catch (e) {
-              console.warn(`[ians-room-card] Group button template error (${key}):`, e);
-            }
-          }
-        }
-      }
-    } else if (c?.sub_buttons) {
-      // Single-group mode
-      for (const [i, btn] of c.sub_buttons.entries()) {
-        const btnVars = { ...variables, entity: btn.entity ? this.hass.states[btn.entity] : undefined };
+    // Collect every templated sub-button field with its result key:
+    // multi-group mode → "g{g}_sub_{i}_{field}", single-group → "sub_{i}_{field}"
+    const jobs: Array<{ key: string; template: string; entity?: string }> = [];
+    const collect = (buttons: SubButtonConfig[], prefix: string) => {
+      for (const [i, btn] of buttons.entries()) {
         for (const field of ["icon", "label"] as const) {
           const value = btn[field];
           if (!value || !isTemplate(value)) continue;
-          const key = `sub_${i}_${field}`;
-          try {
-            const unsub = await subscribeTemplate(this.hass, value, btnVars,
-              (result) => { this._subTemplateResults = { ...this._subTemplateResults, [key]: result }; }
-            );
-            this._subTemplateUnsubs.set(key, unsub);
-          } catch (e) {
-            console.warn(`[ians-room-card] Sub-button template error (${key}):`, e);
-          }
+          jobs.push({ key: `${prefix}sub_${i}_${field}`, template: value, entity: btn.entity });
         }
       }
+    };
+    if (c.sub_button_groups?.length) {
+      for (const [g, group] of c.sub_button_groups.slice(0, 4).entries()) {
+        collect(group.buttons ?? [], `g${g}_`);
+      }
+    } else if (c.sub_buttons) {
+      collect(c.sub_buttons, "");
     }
+
+    // Keep previous results for keys that are still templates so buttons show
+    // the old value instead of the raw template until the new result arrives
+    const liveKeys = new Set(jobs.map((j) => j.key));
+    const staleResults: Record<string, string> = {};
+    for (const [key, val] of Object.entries(this._subTemplateResults)) {
+      if (liveKeys.has(key)) staleResults[key] = val;
+    }
+    this._subTemplateResults = staleResults;
+
+    await Promise.all(jobs.map(async ({ key, template, entity }) => {
+      try {
+        const unsub = await subscribeTemplate(this.hass, template, { ...variables, entity },
+          (result) => {
+            if (gen !== this._subTemplateGen) return;
+            this._subTemplateResults = { ...this._subTemplateResults, [key]: result };
+          }
+        );
+        if (gen !== this._subTemplateGen) {
+          unsub().catch(() => undefined);
+          return;
+        }
+        this._subTemplateUnsubs.set(key, unsub);
+      } catch (e) {
+        console.warn(`[ians-room-card] Sub-button template error (${key}):`, e);
+      }
+    }));
   }
 
   private async _unsubscribeSubButtonTemplates(): Promise<void> {
-    for (const unsub of this._subTemplateUnsubs.values()) {
+    const unsubs = [...this._subTemplateUnsubs.values()];
+    this._subTemplateUnsubs.clear();
+    // Do NOT clear _subTemplateResults here — see _subscribeSubButtonTemplates
+    for (const unsub of unsubs) {
       try {
         await unsub();
       } catch {
         // ignore
       }
     }
-    this._subTemplateUnsubs.clear();
-    this._subTemplateResults = {};
   }
 
   // ── CSS variable application ───────────────────────────────────────────────
@@ -945,14 +985,28 @@ export class IansCustomRoomCard extends LitElement {
   }
 }
 
+// Guarded registration — the resource can be loaded twice (duplicate dashboard
+// resource, HACS cache-busting URL change) and customElements.define throws
+// on a second definition, which would break every card on the dashboard
+if (!customElements.get(CARD_TYPE)) {
+  customElements.define(CARD_TYPE, IansCustomRoomCard);
+  console.info(
+    `%c IANS-CUSTOM-ROOM-CARD %c v${VERSION} `,
+    "color: white; background: #03a9f4; font-weight: 700;",
+    "color: #03a9f4; background: white; font-weight: 700;"
+  );
+}
+
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: CARD_TYPE,
-  name: CARD_NAME,
-  description: CARD_DESCRIPTION,
-  preview: false,
-  documentationURL: "https://github.com/linkian19/ha-ians-custom-room-card",
-});
+if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
+  window.customCards.push({
+    type: CARD_TYPE,
+    name: CARD_NAME,
+    description: CARD_DESCRIPTION,
+    preview: false,
+    documentationURL: "https://github.com/linkian19/ha-ians-custom-room-card",
+  });
+}
 
 declare global {
   interface Window {
