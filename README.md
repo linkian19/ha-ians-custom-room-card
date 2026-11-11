@@ -28,13 +28,19 @@ A highly customizable room card for Home Assistant's Lovelace dashboard. Combine
 
 Requires Home Assistant **2024.11** or newer.
 
-### Via HACS (recommended)
+### Via the Marketplace (recommended)
 
-1. In HACS → Integrations → ⋮ → Custom Repositories
-2. Repository URL: `https://github.com/linkian19/ha-ians-custom-room-card`
-3. Category: Dashboard
-4. Click Add → search "Ian's Custom Room Card" → Install
-5. Restart Home Assistant (or reload Lovelace resources)
+Home Assistant 2026.11 replaced HACS with the built-in **Marketplace**. This card is a custom repository:
+
+1. In Home Assistant, open **Settings → Marketplace**
+2. Select **Add from link** and enter `https://github.com/linkian19/ha-ians-custom-room-card`
+3. Select **Install** — the Marketplace adds the dashboard resource for you
+4. Reload your browser
+
+The Marketplace asks you to connect a GitHub account (a one-time device sign-in) the first time you add a custom repository.
+If you manage dashboard resources in YAML, the install dialog shows the resource entry to add yourself.
+
+> On Home Assistant versions before 2026.11, add the same URL under **HACS → ⋮ → Custom repositories** with category **Dashboard** instead.
 
 ### Manual
 
