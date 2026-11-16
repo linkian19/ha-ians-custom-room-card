@@ -214,7 +214,7 @@ export class IansCustomRoomCardEditor extends LitElement {
     if (!this._config) return;
     this._fireConfigChanged({
       ...this._config,
-      grid_options: { ...(this._config.grid_options ?? {}), [field]: value },
+      grid_options: { ...this._config.grid_options, [field]: value },
     });
   }
 
@@ -222,7 +222,7 @@ export class IansCustomRoomCardEditor extends LitElement {
     if (!this._config) return;
     this._fireConfigChanged({
       ...this._config,
-      global_action: { ...(this._config.global_action ?? {}), [field]: value },
+      global_action: { ...this._config.global_action, [field]: value },
     });
   }
 
@@ -334,7 +334,8 @@ export class IansCustomRoomCardEditor extends LitElement {
 
   private _toggleTemplateMode(field: string): void {
     const next = new Set(this._templateMode);
-    next.has(field) ? next.delete(field) : next.add(field);
+    if (next.has(field)) next.delete(field);
+    else next.add(field);
     this._templateMode = next;
   }
 
