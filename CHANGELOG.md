@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- CI: lint (oxlint) and unit/render tests (Vitest + happy-dom) run before the build. Tests cover action normalization, tap/hold/double-tap detection, area images, template subscriptions, and card rendering of static, entity and template titles.
+
+### Fixed
+- Lint cleanups with no behaviour change: an unused type import, redundant `?? {}` spread fallbacks, and a ternary used as a statement in the editor.
+
 ## [0.3.1] - 2026-10-28
 
 ### Added

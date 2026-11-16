@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import type { PropertyValues } from "lit";
 import { property, state } from "lit/decorators.js";
-import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, BadgePosition, IconBackgroundShape, CardShape, SubButtonGroup, SubButtonsLayout, SubButtonConfig } from "./types";
+import type { HomeAssistant, HassEntity, CardConfig, GridOptions, IconPosition, IconBackgroundShape, CardShape, SubButtonGroup, SubButtonsLayout, SubButtonConfig } from "./types";
 import { CARD_TYPE, CARD_NAME, CARD_DESCRIPTION, VERSION } from "./const";
 import { cardStyles } from "./utils/styles";
 import { resolveAreaImage } from "./utils/area-image";

@@ -21,4 +21,9 @@ export default defineConfig({
     target: "es2018",
     outDir: "dist",
   },
+  // Vitest runs the unit and render tests in a simulated DOM
+  test: {
+    environment: "happy-dom",
+    include: ["tests/**/*.test.ts"],
+  },
 });

@@ -396,6 +396,19 @@ See [docs/css-classes.md](docs/css-classes.md) for the complete reference.
 
 ---
 
+## Development
+
+```bash
+npm install
+npm run lint    # oxlint (TypeScript-aware; typescript-eslint doesn't support TypeScript 7 yet)
+npm test        # Vitest unit + render tests (tests/) in a simulated DOM
+npm run build   # type check (tsc) + bundle to dist/ians-custom-room-card.js
+```
+
+Commit the rebuilt `dist/` file with your changes. Every push runs lint, tests, the type check and build, a check that the committed `dist/` matches the build, and HACS validation.
+
+---
+
 ## Attribution
 
 Inspired by [mushroom-cards](https://github.com/piitaya/lovelace-mushroom) and [bubble-card](https://github.com/Clooos/Bubble-Card).
